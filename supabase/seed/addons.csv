@@ -1,0 +1,3 @@
+name,price_inr,is_veg,applies_to
+Extra cheese,59,true,"Pizza;Pasta;Garlic Bread / Bruschetta;Fries;Nachos;Sandwich – Veg;Sandwich – Non-Veg;Burgers"
+Add egg,29,false,"Salads;Burgers"

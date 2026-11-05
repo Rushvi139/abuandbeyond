@@ -1,0 +1,577 @@
+category,menu_item,ingredient,cost_per_use_inr
+Salads,Chicken Tikka Caesar Salad,Romaine lettuce,8.8
+Salads,Chicken Tikka Caesar Salad,Chicken breast,32
+Salads,Chicken Tikka Caesar Salad,Yogurt,4.5
+Salads,Chicken Tikka Caesar Salad,Tandoori/tikka masala,7.8
+Salads,Chicken Tikka Caesar Salad,Ginger-garlic paste,1.6
+Salads,Chicken Tikka Caesar Salad,Caesar dressing,7.6
+Salads,Chicken Tikka Caesar Salad,Parmesan cheese,18
+Salads,Chicken Tikka Caesar Salad,Croutons,3.2
+Salads,Chicken Tikka Caesar Salad,Cherry tomato,4.8
+Salads,Paneer Tikka Caesar Salad,Romaine lettuce,8.8
+Salads,Paneer Tikka Caesar Salad,Paneer,38
+Salads,Paneer Tikka Caesar Salad,Yogurt,4.5
+Salads,Paneer Tikka Caesar Salad,Tandoori/tikka masala,7.8
+Salads,Paneer Tikka Caesar Salad,Ginger-garlic paste,1.6
+Salads,Paneer Tikka Caesar Salad,Caesar dressing,7.6
+Salads,Paneer Tikka Caesar Salad,Parmesan cheese,18
+Salads,Paneer Tikka Caesar Salad,Croutons,3.2
+Salads,Paneer Tikka Caesar Salad,Cherry tomato,4.8
+Salads,Triple Cheese Falafel Salad,Mixed greens,8.8
+Salads,Triple Cheese Falafel Salad,Falafel,17.6
+Salads,Triple Cheese Falafel Salad,Cheddar cheese,15.6
+Salads,Triple Cheese Falafel Salad,Mozzarella cheese,18.4
+Salads,Triple Cheese Falafel Salad,Parmesan cheese,18
+Salads,Triple Cheese Falafel Salad,Cherry tomato,4.8
+Salads,Triple Cheese Falafel Salad,Cucumber,0.9
+Salads,Triple Cheese Falafel Salad,Hummus/tahini dressing,7.2
+Salads,Pesto Chicken Salad,Mixed greens,8.8
+Salads,Pesto Chicken Salad,Chicken breast,32
+Salads,Pesto Chicken Salad,Pesto sauce,15
+Salads,Pesto Chicken Salad,Parmesan cheese,18
+Salads,Pesto Chicken Salad,Cherry tomato,4.8
+Salads,Pesto Chicken Salad,Olive oil,7.5
+Salads,Pesto Paneer Salad,Mixed greens,8.8
+Salads,Pesto Paneer Salad,Paneer,38
+Salads,Pesto Paneer Salad,Pesto sauce,15
+Salads,Pesto Paneer Salad,Parmesan cheese,18
+Salads,Pesto Paneer Salad,Cherry tomato,4.8
+Salads,Pesto Paneer Salad,Olive oil,7.5
+Salads,Mexican Salad,Lettuce,8
+Salads,Mexican Salad,Kidney beans,5.2
+Salads,Mexican Salad,Corn,4
+Salads,Mexican Salad,Bell pepper (capsicum),2.8
+Salads,Mexican Salad,Onion,1.4
+Salads,Mexican Salad,Tomato,2
+Salads,Mexican Salad,Jalapeno,5
+Salads,Mexican Salad,Cheddar cheese,15.6
+Salads,Mexican Salad,Tortilla strips,3
+Salads,Mexican Salad,Salsa,7.8
+Salads,Mexican Salad,Sour cream,9
+Salads,Add Egg (extra),Boiled egg,7
+Starters - Vegetarian,Paneer Chilly,Paneer,38
+Starters - Vegetarian,Paneer Chilly,Capsicum,2.8
+Starters - Vegetarian,Paneer Chilly,Onion,1.4
+Starters - Vegetarian,Paneer Chilly,Garlic,1.6
+Starters - Vegetarian,Paneer Chilly,Ginger,0.8
+Starters - Vegetarian,Paneer Chilly,Soy sauce,1.6
+Starters - Vegetarian,Paneer Chilly,Green chilli sauce,1.6
+Starters - Vegetarian,Paneer Chilly,Vinegar,0.45
+Starters - Vegetarian,Paneer Chilly,Cornflour,0.7
+Starters - Vegetarian,Paneer Chilly,Spring onion,0.6
+Starters - Vegetarian,Honey Chilly Potato,Potato,2.5
+Starters - Vegetarian,Honey Chilly Potato,Cornflour,0.7
+Starters - Vegetarian,Honey Chilly Potato,Garlic,1.6
+Starters - Vegetarian,Honey Chilly Potato,Green chilli sauce,1.6
+Starters - Vegetarian,Honey Chilly Potato,Honey,3.8
+Starters - Vegetarian,Honey Chilly Potato,Sesame seeds,0.78
+Starters - Vegetarian,Honey Chilly Potato,Spring onion,0.6
+Starters - Vegetarian,Veg Manchurian,Cabbage,1.5
+Starters - Vegetarian,Veg Manchurian,Carrot,1.2
+Starters - Vegetarian,Veg Manchurian,Cornflour,0.7
+Starters - Vegetarian,Veg Manchurian,Garlic,1.6
+Starters - Vegetarian,Veg Manchurian,Ginger,0.8
+Starters - Vegetarian,Veg Manchurian,Soy sauce,1.6
+Starters - Vegetarian,Veg Manchurian,Green chilli sauce,1.6
+Starters - Vegetarian,Veg Manchurian,Spring onion,0.6
+Starters - Vegetarian,Harabhara Kebab,Spinach,2.25
+Starters - Vegetarian,Harabhara Kebab,Green peas,2.7
+Starters - Vegetarian,Harabhara Kebab,Potato,2.5
+Starters - Vegetarian,Harabhara Kebab,Paneer,38
+Starters - Vegetarian,Harabhara Kebab,Coriander,0.2
+Starters - Vegetarian,Harabhara Kebab,Green chilli,0.3
+Starters - Vegetarian,Harabhara Kebab,Chaat masala,0.96
+Starters - Vegetarian,Harabhara Kebab,Breadcrumbs,2.4
+Starters - Vegetarian,Grilled Paneer (Pesto/Peri Peri),Paneer,38
+Starters - Vegetarian,Grilled Paneer (Pesto/Peri Peri),Pesto sauce,15
+Starters - Vegetarian,Grilled Paneer (Pesto/Peri Peri),Peri peri sauce,7.6
+Starters - Vegetarian,Grilled Paneer (Pesto/Peri Peri),Capsicum,2.8
+Starters - Vegetarian,Grilled Paneer (Pesto/Peri Peri),Onion,1.4
+Starters - Vegetarian,Grilled Paneer (Pesto/Peri Peri),Olive oil,7.5
+Starters - Vegetarian,Exotic Veg Cheese Spring Rolls,Spring roll sheets,6.6
+Starters - Vegetarian,Exotic Veg Cheese Spring Rolls,Cabbage,1.5
+Starters - Vegetarian,Exotic Veg Cheese Spring Rolls,Carrot,1.2
+Starters - Vegetarian,Exotic Veg Cheese Spring Rolls,Capsicum,2.8
+Starters - Vegetarian,Exotic Veg Cheese Spring Rolls,Mozzarella cheese,18.4
+Starters - Vegetarian,Exotic Veg Cheese Spring Rolls,Corn,4
+Starters - Vegetarian,Exotic Veg Cheese Spring Rolls,Soy sauce,1.6
+Starters - Vegetarian,Pepper Garlic Mushroom,Button mushroom,11.4
+Starters - Vegetarian,Pepper Garlic Mushroom,Garlic,1.6
+Starters - Vegetarian,Pepper Garlic Mushroom,Black pepper,1.9
+Starters - Vegetarian,Pepper Garlic Mushroom,Butter,7.5
+Starters - Vegetarian,Pepper Garlic Mushroom,Spring onion,0.6
+Starters - Non-Vegetarian,Thai Basil Chilly Chicken,Chicken breast,32
+Starters - Non-Vegetarian,Thai Basil Chilly Chicken,Basil,2.1
+Starters - Non-Vegetarian,Thai Basil Chilly Chicken,Garlic,1.6
+Starters - Non-Vegetarian,Thai Basil Chilly Chicken,Thai chilli,0.6
+Starters - Non-Vegetarian,Thai Basil Chilly Chicken,Soy sauce,1.6
+Starters - Non-Vegetarian,Thai Basil Chilly Chicken,Oyster sauce,2.56
+Starters - Non-Vegetarian,Thai Basil Chilly Chicken,Capsicum,2.8
+Starters - Non-Vegetarian,Thai Basil Chilly Chicken,Onion,1.4
+Starters - Non-Vegetarian,Chicken Wings (BBQ),Chicken wings,39
+Starters - Non-Vegetarian,Chicken Wings (BBQ),BBQ sauce,6.4
+Starters - Non-Vegetarian,Chicken Wings (BBQ),Garlic,1.6
+Starters - Non-Vegetarian,Chicken Wings (BBQ),Butter,7.5
+Starters - Non-Vegetarian,Chicken Wings (Peri Peri),Chicken wings,39
+Starters - Non-Vegetarian,Chicken Wings (Peri Peri),Peri peri sauce,7.6
+Starters - Non-Vegetarian,Chicken Wings (Peri Peri),Garlic,1.6
+Starters - Non-Vegetarian,Chicken Wings (Peri Peri),Butter,7.5
+Starters - Non-Vegetarian,Garlic Lemon Pepper Chicken,Chicken breast,32
+Starters - Non-Vegetarian,Garlic Lemon Pepper Chicken,Garlic,1.6
+Starters - Non-Vegetarian,Garlic Lemon Pepper Chicken,Lemon,1.8
+Starters - Non-Vegetarian,Garlic Lemon Pepper Chicken,Black pepper,1.9
+Starters - Non-Vegetarian,Garlic Lemon Pepper Chicken,Butter,7.5
+Starters - Non-Vegetarian,Garlic Lemon Pepper Chicken,Olive oil,7.5
+Starters - Non-Vegetarian,Chicken Cheese Spring Rolls,Spring roll sheets,6.6
+Starters - Non-Vegetarian,Chicken Cheese Spring Rolls,Chicken mince,24
+Starters - Non-Vegetarian,Chicken Cheese Spring Rolls,Mozzarella cheese,18.4
+Starters - Non-Vegetarian,Chicken Cheese Spring Rolls,Cabbage,1.5
+Starters - Non-Vegetarian,Chicken Cheese Spring Rolls,Carrot,1.2
+Starters - Non-Vegetarian,Chicken Cheese Spring Rolls,Soy sauce,1.6
+Starters - Non-Vegetarian,Grilled Chicken (Pesto/Peri Peri),Chicken breast,32
+Starters - Non-Vegetarian,Grilled Chicken (Pesto/Peri Peri),Pesto sauce,15
+Starters - Non-Vegetarian,Grilled Chicken (Pesto/Peri Peri),Peri peri sauce,7.6
+Starters - Non-Vegetarian,Grilled Chicken (Pesto/Peri Peri),Olive oil,7.5
+Starters - Non-Vegetarian,Chicken Dana,Chicken breast,32
+Starters - Non-Vegetarian,Chicken Dana,Cornflour,0.7
+Starters - Non-Vegetarian,Chicken Dana,Egg,7
+Starters - Non-Vegetarian,Chicken Dana,Garlic,1.6
+Starters - Non-Vegetarian,Chicken Dana,Green chilli sauce,1.6
+Starters - Non-Vegetarian,Chicken Dana,Soy sauce,1.6
+Biryani/Rice/Noodles - Vegetarian,Veg Biryani,Basmati rice,16.5
+Biryani/Rice/Noodles - Vegetarian,Veg Biryani,Mixed vegetables,4.4
+Biryani/Rice/Noodles - Vegetarian,Veg Biryani,Biryani masala,3
+Biryani/Rice/Noodles - Vegetarian,Veg Biryani,Fried onion,3
+Biryani/Rice/Noodles - Vegetarian,Veg Biryani,Mint,0.4
+Biryani/Rice/Noodles - Vegetarian,Veg Biryani,Coriander,0.2
+Biryani/Rice/Noodles - Vegetarian,Veg Biryani,Yogurt,4.5
+Biryani/Rice/Noodles - Vegetarian,Veg Biryani,Ghee,5.6
+Biryani/Rice/Noodles - Vegetarian,Basil Stir Fried Rice,Basmati rice,16.5
+Biryani/Rice/Noodles - Vegetarian,Basil Stir Fried Rice,Basil,2.1
+Biryani/Rice/Noodles - Vegetarian,Basil Stir Fried Rice,Garlic,1.6
+Biryani/Rice/Noodles - Vegetarian,Basil Stir Fried Rice,Mixed vegetables,4.4
+Biryani/Rice/Noodles - Vegetarian,Basil Stir Fried Rice,Soy sauce,1.6
+Biryani/Rice/Noodles - Vegetarian,Basil Stir Fried Rice,Butter,7.5
+Biryani/Rice/Noodles - Vegetarian,Veg Fried Rice,Basmati rice,16.5
+Biryani/Rice/Noodles - Vegetarian,Veg Fried Rice,Mixed vegetables,4.4
+Biryani/Rice/Noodles - Vegetarian,Veg Fried Rice,Garlic,1.6
+Biryani/Rice/Noodles - Vegetarian,Veg Fried Rice,Spring onion,0.6
+Biryani/Rice/Noodles - Vegetarian,Veg Fried Rice,Soy sauce,1.6
+Biryani/Rice/Noodles - Vegetarian,Veg Fried Rice,Vinegar,0.45
+Biryani/Rice/Noodles - Vegetarian,Mexican Hot Pot (Veg),Basmati rice,16.5
+Biryani/Rice/Noodles - Vegetarian,Mexican Hot Pot (Veg),Kidney beans,5.2
+Biryani/Rice/Noodles - Vegetarian,Mexican Hot Pot (Veg),Corn,4
+Biryani/Rice/Noodles - Vegetarian,Mexican Hot Pot (Veg),Bell pepper (capsicum),2.8
+Biryani/Rice/Noodles - Vegetarian,Mexican Hot Pot (Veg),Tomato salsa,7.8
+Biryani/Rice/Noodles - Vegetarian,Mexican Hot Pot (Veg),Cheddar cheese,15.6
+Biryani/Rice/Noodles - Vegetarian,Mexican Hot Pot (Veg),Jalapeno,5
+Biryani/Rice/Noodles - Vegetarian,Mexican Hot Pot (Veg),Sour cream,9
+Biryani/Rice/Noodles - Vegetarian,Dal Khichdi,Basmati rice,16.5
+Biryani/Rice/Noodles - Vegetarian,Dal Khichdi,Yellow moong dal,7.2
+Biryani/Rice/Noodles - Vegetarian,Dal Khichdi,Turmeric,0.64
+Biryani/Rice/Noodles - Vegetarian,Dal Khichdi,Cumin,0.84
+Biryani/Rice/Noodles - Vegetarian,Dal Khichdi,Ghee,5.6
+Biryani/Rice/Noodles - Vegetarian,Dal Khichdi,Onion,1.4
+Biryani/Rice/Noodles - Vegetarian,Dal Khichdi,Tomato,2
+Biryani/Rice/Noodles - Vegetarian,Burnt Garlic Noodles (Veg),Noodles,10.8
+Biryani/Rice/Noodles - Vegetarian,Burnt Garlic Noodles (Veg),Garlic,1.6
+Biryani/Rice/Noodles - Vegetarian,Burnt Garlic Noodles (Veg),Soy sauce,1.6
+Biryani/Rice/Noodles - Vegetarian,Burnt Garlic Noodles (Veg),Vinegar,0.45
+Biryani/Rice/Noodles - Vegetarian,Burnt Garlic Noodles (Veg),Spring onion,0.6
+Biryani/Rice/Noodles - Vegetarian,Burnt Garlic Noodles (Veg),Mixed vegetables,4.4
+Pizza (Veg/Non-Veg),Classic Margherita,Pizza dough base,28
+Pizza (Veg/Non-Veg),Classic Margherita,Pizza/tomato sauce,6
+Pizza (Veg/Non-Veg),Classic Margherita,Mozzarella cheese,18.4
+Pizza (Veg/Non-Veg),Classic Margherita,Basil,2.1
+Pizza (Veg/Non-Veg),Classic Margherita,Olive oil,7.5
+Pizza (Veg/Non-Veg),Chicken Pepperoni,Pizza dough base,28
+Pizza (Veg/Non-Veg),Chicken Pepperoni,Pizza/tomato sauce,6
+Pizza (Veg/Non-Veg),Chicken Pepperoni,Mozzarella cheese,18.4
+Pizza (Veg/Non-Veg),Chicken Pepperoni,Chicken pepperoni,16.5
+Pizza (Veg/Non-Veg),Indiano,Pizza dough base,28
+Pizza (Veg/Non-Veg),Indiano,Pizza/tomato sauce,6
+Pizza (Veg/Non-Veg),Indiano,Mozzarella cheese,18.4
+Pizza (Veg/Non-Veg),Indiano,Paneer tikka,40
+Pizza (Veg/Non-Veg),Indiano,Onion,1.4
+Pizza (Veg/Non-Veg),Indiano,Capsicum,2.8
+Pizza (Veg/Non-Veg),Indiano,Jalapeno,5
+Pizza (Veg/Non-Veg),Quattro Formaggi (Veg/Non-Veg),Pizza dough base,28
+Pizza (Veg/Non-Veg),Quattro Formaggi (Veg/Non-Veg),Mozzarella cheese,18.4
+Pizza (Veg/Non-Veg),Quattro Formaggi (Veg/Non-Veg),Cheddar cheese,15.6
+Pizza (Veg/Non-Veg),Quattro Formaggi (Veg/Non-Veg),Parmesan cheese,18
+Pizza (Veg/Non-Veg),Quattro Formaggi (Veg/Non-Veg),Processed cheese,8.4
+Pizza (Veg/Non-Veg),Quattro Formaggi (Veg/Non-Veg),Chicken breast,32
+Pizza (Veg/Non-Veg),Crema di Fungi Pizza,Pizza dough base,28
+Pizza (Veg/Non-Veg),Crema di Fungi Pizza,White/alfredo sauce,15.6
+Pizza (Veg/Non-Veg),Crema di Fungi Pizza,Button mushroom,11.4
+Pizza (Veg/Non-Veg),Crema di Fungi Pizza,Mozzarella cheese,18.4
+Pizza (Veg/Non-Veg),Crema di Fungi Pizza,Oregano,1.2
+Pizza (Veg/Non-Veg),Chicken Dominator,Pizza dough base,28
+Pizza (Veg/Non-Veg),Chicken Dominator,Pizza/tomato sauce,6
+Pizza (Veg/Non-Veg),Chicken Dominator,Mozzarella cheese,18.4
+Pizza (Veg/Non-Veg),Chicken Dominator,Chicken breast,32
+Pizza (Veg/Non-Veg),Chicken Dominator,BBQ sauce,6.4
+Pizza (Veg/Non-Veg),Chicken Dominator,Onion,1.4
+Pizza (Veg/Non-Veg),Chicken Dominator,Capsicum,2.8
+Biryani/Rice/Noodles - Non-Vegetarian,Murg Makhani Biryani,Basmati rice,16.5
+Biryani/Rice/Noodles - Non-Vegetarian,Murg Makhani Biryani,Chicken breast,32
+Biryani/Rice/Noodles - Non-Vegetarian,Murg Makhani Biryani,Tomato,2
+Biryani/Rice/Noodles - Non-Vegetarian,Murg Makhani Biryani,Butter,7.5
+Biryani/Rice/Noodles - Non-Vegetarian,Murg Makhani Biryani,Cream,9
+Biryani/Rice/Noodles - Non-Vegetarian,Murg Makhani Biryani,Biryani masala,3
+Biryani/Rice/Noodles - Non-Vegetarian,Murg Makhani Biryani,Fried onion,3
+Biryani/Rice/Noodles - Non-Vegetarian,Dum Chicken Biryani,Basmati rice,16.5
+Biryani/Rice/Noodles - Non-Vegetarian,Dum Chicken Biryani,Chicken breast,32
+Biryani/Rice/Noodles - Non-Vegetarian,Dum Chicken Biryani,Yogurt,4.5
+Biryani/Rice/Noodles - Non-Vegetarian,Dum Chicken Biryani,Biryani masala,3
+Biryani/Rice/Noodles - Non-Vegetarian,Dum Chicken Biryani,Fried onion,3
+Biryani/Rice/Noodles - Non-Vegetarian,Dum Chicken Biryani,Mint,0.4
+Biryani/Rice/Noodles - Non-Vegetarian,Dum Chicken Biryani,Coriander,0.2
+Biryani/Rice/Noodles - Non-Vegetarian,Dum Chicken Biryani,Ghee,5.6
+Biryani/Rice/Noodles - Non-Vegetarian,Dum Egg Biryani,Basmati rice,16.5
+Biryani/Rice/Noodles - Non-Vegetarian,Dum Egg Biryani,Boiled egg,7
+Biryani/Rice/Noodles - Non-Vegetarian,Dum Egg Biryani,Yogurt,4.5
+Biryani/Rice/Noodles - Non-Vegetarian,Dum Egg Biryani,Biryani masala,3
+Biryani/Rice/Noodles - Non-Vegetarian,Dum Egg Biryani,Fried onion,3
+Biryani/Rice/Noodles - Non-Vegetarian,Dum Egg Biryani,Mint,0.4
+Biryani/Rice/Noodles - Non-Vegetarian,Dum Egg Biryani,Coriander,0.2
+Biryani/Rice/Noodles - Non-Vegetarian,Dum Egg Biryani,Ghee,5.6
+Biryani/Rice/Noodles - Non-Vegetarian,Garlic Noodles (Chicken/Egg),Noodles,10.8
+Biryani/Rice/Noodles - Non-Vegetarian,Garlic Noodles (Chicken/Egg),Chicken breast,32
+Biryani/Rice/Noodles - Non-Vegetarian,Garlic Noodles (Chicken/Egg),Egg,7
+Biryani/Rice/Noodles - Non-Vegetarian,Garlic Noodles (Chicken/Egg),Garlic,1.6
+Biryani/Rice/Noodles - Non-Vegetarian,Garlic Noodles (Chicken/Egg),Soy sauce,1.6
+Biryani/Rice/Noodles - Non-Vegetarian,Garlic Noodles (Chicken/Egg),Spring onion,0.6
+Pasta,Al Arrabbiata,Penne/spaghetti/ravioli,22.5
+Pasta,Al Arrabbiata,Tomato,2
+Pasta,Al Arrabbiata,Garlic,1.6
+Pasta,Al Arrabbiata,Red chilli flakes,1.04
+Pasta,Al Arrabbiata,Basil,2.1
+Pasta,Al Arrabbiata,Olive oil,7.5
+Pasta,Al Arrabbiata,Parmesan cheese,18
+Pasta,Crema di Fungi Pasta,Penne/spaghetti/ravioli,22.5
+Pasta,Crema di Fungi Pasta,Button mushroom,11.4
+Pasta,Crema di Fungi Pasta,Cream,9
+Pasta,Crema di Fungi Pasta,Garlic,1.6
+Pasta,Crema di Fungi Pasta,Butter,7.5
+Pasta,Crema di Fungi Pasta,Parmesan cheese,18
+Pasta,Pasta al Pesto,Penne/spaghetti/ravioli,22.5
+Pasta,Pasta al Pesto,Pesto sauce,15
+Pasta,Pasta al Pesto,Parmesan cheese,18
+Pasta,Pasta al Pesto,Cherry tomato,4.8
+Pasta,Aglio Olio,Penne/spaghetti/ravioli,22.5
+Pasta,Aglio Olio,Garlic,1.6
+Pasta,Aglio Olio,Olive oil,7.5
+Pasta,Aglio Olio,Red chilli flakes,1.04
+Pasta,Aglio Olio,Parsley,2.1
+Pasta,Al Arrabbiata Cremosa,Penne/spaghetti/ravioli,22.5
+Pasta,Al Arrabbiata Cremosa,Tomato,2
+Pasta,Al Arrabbiata Cremosa,Cream,9
+Pasta,Al Arrabbiata Cremosa,Garlic,1.6
+Pasta,Al Arrabbiata Cremosa,Red chilli flakes,1.04
+Pasta,Al Arrabbiata Cremosa,Basil,2.1
+Garlic Bread / Bruschettas,Garlic Bread,Bread loaf,8
+Garlic Bread / Bruschettas,Garlic Bread,Garlic butter,9.2
+Garlic Bread / Bruschettas,Garlic Bread,Parsley,2.1
+Garlic Bread / Bruschettas,Cheese Garlic Bread,Bread loaf,8
+Garlic Bread / Bruschettas,Cheese Garlic Bread,Garlic butter,9.2
+Garlic Bread / Bruschettas,Cheese Garlic Bread,Mozzarella cheese,18.4
+Garlic Bread / Bruschettas,Napoli Bruschetta,Bread loaf,8
+Garlic Bread / Bruschettas,Napoli Bruschetta,Tomato,2
+Garlic Bread / Bruschettas,Napoli Bruschetta,Garlic,1.6
+Garlic Bread / Bruschettas,Napoli Bruschetta,Basil,2.1
+Garlic Bread / Bruschettas,Napoli Bruschetta,Olive oil,7.5
+Garlic Bread / Bruschettas,Fungi Bruschetta,Bread loaf,8
+Garlic Bread / Bruschettas,Fungi Bruschetta,Button mushroom,11.4
+Garlic Bread / Bruschettas,Fungi Bruschetta,Garlic,1.6
+Garlic Bread / Bruschettas,Fungi Bruschetta,Cream,9
+Garlic Bread / Bruschettas,Fungi Bruschetta,Mozzarella cheese,18.4
+Garlic Bread / Bruschettas,Pesto Sundried Bruschetta,Bread loaf,8
+Garlic Bread / Bruschettas,Pesto Sundried Bruschetta,Pesto sauce,15
+Garlic Bread / Bruschettas,Pesto Sundried Bruschetta,Sundried tomato,10
+Garlic Bread / Bruschettas,Pesto Sundried Bruschetta,Parmesan cheese,18
+Garlic Bread / Bruschettas,Cheese Chilly Toast,Bread loaf,8
+Garlic Bread / Bruschettas,Cheese Chilly Toast,Cheddar cheese,15.6
+Garlic Bread / Bruschettas,Cheese Chilly Toast,Green chilli,0.3
+Garlic Bread / Bruschettas,Cheese Chilly Toast,Onion,1.4
+Garlic Bread / Bruschettas,Cheese Chilly Toast,Butter,7.5
+Momos,Veg Momos,Refined flour (maida),1.8
+Momos,Veg Momos,Cabbage,1.5
+Momos,Veg Momos,Carrot,1.2
+Momos,Veg Momos,Onion,1.4
+Momos,Veg Momos,Garlic,1.6
+Momos,Veg Momos,Ginger,0.8
+Momos,Chicken and Cheese Momos,Refined flour (maida),1.8
+Momos,Chicken and Cheese Momos,Chicken mince,24
+Momos,Chicken and Cheese Momos,Mozzarella cheese,18.4
+Momos,Chicken and Cheese Momos,Onion,1.4
+Momos,Chicken and Cheese Momos,Garlic,1.6
+Momos,Chicken and Cheese Momos,Ginger,0.8
+Momos,Cheese Corn Momos,Refined flour (maida),1.8
+Momos,Cheese Corn Momos,Mozzarella cheese,18.4
+Momos,Cheese Corn Momos,Corn,4
+Momos,Cheese Corn Momos,Onion,1.4
+Sandwich - Non-Veg,Chicken Salami & Cheddar Cheese Sandwich,Sandwich bread,6
+Sandwich - Non-Veg,Chicken Salami & Cheddar Cheese Sandwich,Chicken salami,18
+Sandwich - Non-Veg,Chicken Salami & Cheddar Cheese Sandwich,Cheddar cheese,15.6
+Sandwich - Non-Veg,Chicken Salami & Cheddar Cheese Sandwich,Mayonnaise,3.3
+Sandwich - Non-Veg,Chicken Salami & Cheddar Cheese Sandwich,Lettuce,8
+Sandwich - Non-Veg,Chicken Club Sandwich,Sandwich bread,6
+Sandwich - Non-Veg,Chicken Club Sandwich,Chicken breast,32
+Sandwich - Non-Veg,Chicken Club Sandwich,Cheddar cheese,15.6
+Sandwich - Non-Veg,Chicken Club Sandwich,Lettuce,8
+Sandwich - Non-Veg,Chicken Club Sandwich,Tomato,2
+Sandwich - Non-Veg,Chicken Club Sandwich,Mayonnaise,3.3
+Sandwich - Non-Veg,Chicken Club Sandwich,Boiled egg,7
+Sandwich - Non-Veg,Pesto Chicken Sandwich,Sandwich bread,6
+Sandwich - Non-Veg,Pesto Chicken Sandwich,Chicken breast,32
+Sandwich - Non-Veg,Pesto Chicken Sandwich,Pesto sauce,15
+Sandwich - Non-Veg,Pesto Chicken Sandwich,Mozzarella cheese,18.4
+Sandwich - Non-Veg,Pesto Chicken Sandwich,Lettuce,8
+Sandwich - Non-Veg,Classic Chicken Mayo Sandwich,Sandwich bread,6
+Sandwich - Non-Veg,Classic Chicken Mayo Sandwich,Chicken breast,32
+Sandwich - Non-Veg,Classic Chicken Mayo Sandwich,Mayonnaise,3.3
+Sandwich - Non-Veg,Classic Chicken Mayo Sandwich,Lettuce,8
+Sandwich - Non-Veg,Classic Chicken Mayo Sandwich,Black pepper,1.9
+Sandwich - Non-Veg,Egg Sando Sandwich,Sandwich bread,6
+Sandwich - Non-Veg,Egg Sando Sandwich,Boiled egg,7
+Sandwich - Non-Veg,Egg Sando Sandwich,Mayonnaise,3.3
+Sandwich - Non-Veg,Egg Sando Sandwich,Butter,7.5
+Burgers,Chicken Burger,Burger bun,14
+Burgers,Chicken Burger,Chicken patty,45
+Burgers,Chicken Burger,Lettuce,8
+Burgers,Chicken Burger,Tomato,2
+Burgers,Chicken Burger,Mayonnaise,3.3
+Burgers,Chicken Burger,Cheddar cheese,15.6
+Burgers,Veg Cheese Burger,Burger bun,14
+Burgers,Veg Cheese Burger,Veg patty,30
+Burgers,Veg Cheese Burger,Cheddar cheese,15.6
+Burgers,Veg Cheese Burger,Lettuce,8
+Burgers,Veg Cheese Burger,Tomato,2
+Burgers,Veg Cheese Burger,Mayonnaise,3.3
+Burgers,Add Egg (Burger),Fried egg,8
+Sandwich - Veg,Veg Club Sandwich,Sandwich bread,6
+Sandwich - Veg,Veg Club Sandwich,Cucumber,0.9
+Sandwich - Veg,Veg Club Sandwich,Tomato,2
+Sandwich - Veg,Veg Club Sandwich,Lettuce,8
+Sandwich - Veg,Veg Club Sandwich,Cheddar cheese,15.6
+Sandwich - Veg,Veg Club Sandwich,Mayonnaise,3.3
+Sandwich - Veg,Veg Club Sandwich,Boiled egg,7
+Sandwich - Veg,Pesto Paneer Sandwich,Sandwich bread,6
+Sandwich - Veg,Pesto Paneer Sandwich,Paneer,38
+Sandwich - Veg,Pesto Paneer Sandwich,Pesto sauce,15
+Sandwich - Veg,Pesto Paneer Sandwich,Mozzarella cheese,18.4
+Sandwich - Veg,Pesto Paneer Sandwich,Lettuce,8
+Sandwich - Veg,The Big Cheese Sandwich,Sandwich bread,6
+Sandwich - Veg,The Big Cheese Sandwich,Cheddar cheese,15.6
+Sandwich - Veg,The Big Cheese Sandwich,Mozzarella cheese,18.4
+Sandwich - Veg,The Big Cheese Sandwich,Processed cheese,8.4
+Sandwich - Veg,The Big Cheese Sandwich,Butter,7.5
+Sandwich - Veg,Bombay Grill Sandwich,Sandwich bread,6
+Sandwich - Veg,Bombay Grill Sandwich,Potato,2.5
+Sandwich - Veg,Bombay Grill Sandwich,Onion,1.4
+Sandwich - Veg,Bombay Grill Sandwich,Tomato,2
+Sandwich - Veg,Bombay Grill Sandwich,Capsicum,2.8
+Sandwich - Veg,Bombay Grill Sandwich,Green chutney,2.25
+Sandwich - Veg,Bombay Grill Sandwich,Butter,7.5
+Sandwich - Veg,Bombay Grill Sandwich,Cheddar cheese,15.6
+Sandwich - Veg,Mushroom Caramel Crunch,Sandwich bread,6
+Sandwich - Veg,Mushroom Caramel Crunch,Button mushroom,11.4
+Sandwich - Veg,Mushroom Caramel Crunch,Caramelised onion,3.3
+Sandwich - Veg,Mushroom Caramel Crunch,Mozzarella cheese,18.4
+Sandwich - Veg,Nutella Peanut Butter Sandwich,Sandwich bread,6
+Sandwich - Veg,Nutella Peanut Butter Sandwich,Nutella,21.6
+Sandwich - Veg,Nutella Peanut Butter Sandwich,Peanut butter,12.5
+Sandwich - Veg,Nutella Peanut Butter Sandwich,Butter,7.5
+Fries,Salted / Peri Peri Fries,Potato fries,22.5
+Fries,Salted / Peri Peri Fries,Salt,0.05
+Fries,Salted / Peri Peri Fries,Peri peri seasoning,3
+Fries,BBQ Fries,Potato fries,22.5
+Fries,BBQ Fries,BBQ sauce/seasoning,4.8
+Fries,Cheese Fries,Potato fries,22.5
+Fries,Cheese Fries,Cheese sauce,14
+Fries,Chicken Cheese Fries,Potato fries,22.5
+Fries,Chicken Cheese Fries,Chicken breast,32
+Fries,Chicken Cheese Fries,Cheese sauce,14
+Fries,Mushroom Cheese Fries,Potato fries,22.5
+Fries,Mushroom Cheese Fries,Button mushroom,11.4
+Fries,Mushroom Cheese Fries,Cheese sauce,14
+Nachos,Classic Cheese Nachos,Tortilla chips,18
+Nachos,Classic Cheese Nachos,Cheese sauce,14
+Nachos,Classic Cheese Nachos,Salsa,7.8
+Nachos,Classic Cheese Nachos,Jalapeno,5
+Nachos,Mexican Nachos with Veggies,Tortilla chips,18
+Nachos,Mexican Nachos with Veggies,Cheese sauce,14
+Nachos,Mexican Nachos with Veggies,Salsa,7.8
+Nachos,Mexican Nachos with Veggies,Bell pepper (capsicum),2.8
+Nachos,Mexican Nachos with Veggies,Onion,1.4
+Nachos,Mexican Nachos with Veggies,Kidney beans,5.2
+Nachos,Mexican Nachos with Veggies,Corn,4
+Nachos,Mexican Nachos with Veggies,Sour cream,9
+Nachos,Mexican Nachos with Veggies,Jalapeno,5
+Nachos,Mexican Nachos with Chicken,Tortilla chips,18
+Nachos,Mexican Nachos with Chicken,Cheese sauce,14
+Nachos,Mexican Nachos with Chicken,Salsa,7.8
+Nachos,Mexican Nachos with Chicken,Chicken breast,32
+Nachos,Mexican Nachos with Chicken,Sour cream,9
+Nachos,Mexican Nachos with Chicken,Jalapeno,5
+Rolls / Lafa - Veg,Paneer Makhani Roll,Lafa/tortilla wrap,16
+Rolls / Lafa - Veg,Paneer Makhani Roll,Paneer,38
+Rolls / Lafa - Veg,Paneer Makhani Roll,Tomato,2
+Rolls / Lafa - Veg,Paneer Makhani Roll,Butter,7.5
+Rolls / Lafa - Veg,Paneer Makhani Roll,Cream,9
+Rolls / Lafa - Veg,Paneer Makhani Roll,Onion,1.4
+Rolls / Lafa - Veg,Crispy Potato Roll,Lafa/tortilla wrap,16
+Rolls / Lafa - Veg,Crispy Potato Roll,Potato,2.5
+Rolls / Lafa - Veg,Crispy Potato Roll,Mayonnaise,3.3
+Rolls / Lafa - Veg,Crispy Potato Roll,Onion,1.4
+Rolls / Lafa - Veg,Crispy Potato Roll,Green chutney,2.25
+Rolls / Lafa - Veg,Mexican Casa Roll,Lafa/tortilla wrap,16
+Rolls / Lafa - Veg,Mexican Casa Roll,Kidney beans,5.2
+Rolls / Lafa - Veg,Mexican Casa Roll,Corn,4
+Rolls / Lafa - Veg,Mexican Casa Roll,Cheddar cheese,15.6
+Rolls / Lafa - Veg,Mexican Casa Roll,Salsa,7.8
+Rolls / Lafa - Veg,Mexican Casa Roll,Lettuce,8
+Rolls / Lafa - Veg,Falafel Hummus Roll,Lafa/tortilla wrap,16
+Rolls / Lafa - Veg,Falafel Hummus Roll,Falafel,17.6
+Rolls / Lafa - Veg,Falafel Hummus Roll,Hummus,12.8
+Rolls / Lafa - Veg,Falafel Hummus Roll,Lettuce,8
+Rolls / Lafa - Veg,Falafel Hummus Roll,Tomato,2
+Rolls / Lafa - Veg,Falafel Hummus Roll,Pickled vegetables,3.15
+Rolls / Lafa - Veg,Pesto Paneer Roll,Lafa/tortilla wrap,16
+Rolls / Lafa - Veg,Pesto Paneer Roll,Paneer,38
+Rolls / Lafa - Veg,Pesto Paneer Roll,Pesto sauce,15
+Rolls / Lafa - Veg,Pesto Paneer Roll,Mozzarella cheese,18.4
+Rolls - Non-Veg,Butter Chicken Roll,Lafa/tortilla wrap,16
+Rolls - Non-Veg,Butter Chicken Roll,Chicken breast,32
+Rolls - Non-Veg,Butter Chicken Roll,Tomato,2
+Rolls - Non-Veg,Butter Chicken Roll,Butter,7.5
+Rolls - Non-Veg,Butter Chicken Roll,Cream,9
+Rolls - Non-Veg,Butter Chicken Roll,Onion,1.4
+Rolls - Non-Veg,Bhuna Chicken Roll,Lafa/tortilla wrap,16
+Rolls - Non-Veg,Bhuna Chicken Roll,Chicken breast,32
+Rolls - Non-Veg,Bhuna Chicken Roll,Onion,1.4
+Rolls - Non-Veg,Bhuna Chicken Roll,Tomato,2
+Rolls - Non-Veg,Bhuna Chicken Roll,Bhuna masala,8.4
+Rolls - Non-Veg,Egg and Cheese Roll,Lafa/tortilla wrap,16
+Rolls - Non-Veg,Egg and Cheese Roll,Egg,7
+Rolls - Non-Veg,Egg and Cheese Roll,Cheddar cheese,15.6
+Rolls - Non-Veg,Egg and Cheese Roll,Onion,1.4
+Rolls - Non-Veg,Mediterranean Chicken Roll,Lafa/tortilla wrap,16
+Rolls - Non-Veg,Mediterranean Chicken Roll,Chicken breast,32
+Rolls - Non-Veg,Mediterranean Chicken Roll,Hummus,12.8
+Rolls - Non-Veg,Mediterranean Chicken Roll,Lettuce,8
+Rolls - Non-Veg,Mediterranean Chicken Roll,Tomato,2
+Rolls - Non-Veg,Mediterranean Chicken Roll,Pickled vegetables,3.15
+Rolls - Non-Veg,Pesto Chicken Roll,Lafa/tortilla wrap,16
+Rolls - Non-Veg,Pesto Chicken Roll,Chicken breast,32
+Rolls - Non-Veg,Pesto Chicken Roll,Pesto sauce,15
+Rolls - Non-Veg,Pesto Chicken Roll,Mozzarella cheese,18.4
+Bowls & Combos,Butter Chicken Bowl (Rice/Paratha),Basmati rice,16.5
+Bowls & Combos,Butter Chicken Bowl (Rice/Paratha),Whole wheat paratha,16
+Bowls & Combos,Butter Chicken Bowl (Rice/Paratha),Chicken breast,32
+Bowls & Combos,Butter Chicken Bowl (Rice/Paratha),Tomato,2
+Bowls & Combos,Butter Chicken Bowl (Rice/Paratha),Butter,7.5
+Bowls & Combos,Butter Chicken Bowl (Rice/Paratha),Cream,9
+Bowls & Combos,Bhuna Chicken (Rice/Paratha),Basmati rice,16.5
+Bowls & Combos,Bhuna Chicken (Rice/Paratha),Whole wheat paratha,16
+Bowls & Combos,Bhuna Chicken (Rice/Paratha),Chicken breast,32
+Bowls & Combos,Bhuna Chicken (Rice/Paratha),Onion,1.4
+Bowls & Combos,Bhuna Chicken (Rice/Paratha),Tomato,2
+Bowls & Combos,Bhuna Chicken (Rice/Paratha),Bhuna masala,8.4
+Bowls & Combos,Paneer Makhani (Rice/Paratha),Basmati rice,16.5
+Bowls & Combos,Paneer Makhani (Rice/Paratha),Whole wheat paratha,16
+Bowls & Combos,Paneer Makhani (Rice/Paratha),Paneer,38
+Bowls & Combos,Paneer Makhani (Rice/Paratha),Tomato,2
+Bowls & Combos,Paneer Makhani (Rice/Paratha),Butter,7.5
+Bowls & Combos,Paneer Makhani (Rice/Paratha),Cream,9
+Bowls & Combos,Manchurian (Fried Rice/Noodles),Basmati rice,16.5
+Bowls & Combos,Manchurian (Fried Rice/Noodles),Noodles,10.8
+Bowls & Combos,Manchurian (Fried Rice/Noodles),Cabbage,1.5
+Bowls & Combos,Manchurian (Fried Rice/Noodles),Carrot,1.2
+Bowls & Combos,Manchurian (Fried Rice/Noodles),Cornflour,0.7
+Bowls & Combos,Manchurian (Fried Rice/Noodles),Soy sauce,1.6
+Bowls & Combos,Dal Rice Combo,Basmati rice,16.5
+Bowls & Combos,Dal Rice Combo,Yellow moong dal,7.2
+Bowls & Combos,Dal Rice Combo,Ghee,5.6
+Bowls & Combos,Dal Rice Combo,Cumin,0.84
+Bowls & Combos,Dal Rice Combo,Onion,1.4
+Bowls & Combos,Dal Rice Combo,Tomato,2
+Bowls & Combos,Paneer Chilly (Rice/Noodles),Basmati rice,16.5
+Bowls & Combos,Paneer Chilly (Rice/Noodles),Noodles,10.8
+Bowls & Combos,Paneer Chilly (Rice/Noodles),Paneer,38
+Bowls & Combos,Paneer Chilly (Rice/Noodles),Capsicum,2.8
+Bowls & Combos,Paneer Chilly (Rice/Noodles),Onion,1.4
+Bowls & Combos,Paneer Chilly (Rice/Noodles),Soy sauce,1.6
+Bowls & Combos,Chilly Chicken (Rice/Noodles),Basmati rice,16.5
+Bowls & Combos,Chilly Chicken (Rice/Noodles),Noodles,10.8
+Bowls & Combos,Chilly Chicken (Rice/Noodles),Chicken breast,32
+Bowls & Combos,Chilly Chicken (Rice/Noodles),Capsicum,2.8
+Bowls & Combos,Chilly Chicken (Rice/Noodles),Onion,1.4
+Bowls & Combos,Chilly Chicken (Rice/Noodles),Soy sauce,1.6
+Bowls & Combos,Grilled Chicken Pesto Rice Combo,Basmati rice,16.5
+Bowls & Combos,Grilled Chicken Pesto Rice Combo,Chicken breast,32
+Bowls & Combos,Grilled Chicken Pesto Rice Combo,Pesto sauce,15
+Bowls & Combos,Manchurian Mexican Hot Pot Combo,Basmati rice,16.5
+Bowls & Combos,Manchurian Mexican Hot Pot Combo,Cabbage,1.5
+Bowls & Combos,Manchurian Mexican Hot Pot Combo,Kidney beans,5.2
+Bowls & Combos,Manchurian Mexican Hot Pot Combo,Corn,4
+Bowls & Combos,Manchurian Mexican Hot Pot Combo,Cheddar cheese,15.6
+Bowls & Combos,Manchurian Mexican Hot Pot Combo,Salsa,7.8
+Bowls & Combos,Mezze Platter,Hummus,12.8
+Bowls & Combos,Mezze Platter,Falafel,17.6
+Bowls & Combos,Mezze Platter,Pita bread,16
+Bowls & Combos,Mezze Platter,Pickled vegetables,3.15
+Bowls & Combos,Mezze Platter,Olives,6.2
+Bowls & Combos,Mezze Platter,Tahini,7
+Bowls & Combos,Grilled Paneer Pesto Rice Combo,Basmati rice,16.5
+Bowls & Combos,Grilled Paneer Pesto Rice Combo,Paneer,38
+Bowls & Combos,Grilled Paneer Pesto Rice Combo,Pesto sauce,15
+Pancakes / Dessert,Nutella Pancake,"Pancake batter (flour, egg, milk)",8.4
+Pancakes / Dessert,Nutella Pancake,Nutella,21.6
+Pancakes / Dessert,Nutella Banana Pancake,"Pancake batter (flour, egg, milk)",8.4
+Pancakes / Dessert,Nutella Banana Pancake,Nutella,21.6
+Pancakes / Dessert,Nutella Banana Pancake,Banana,3.6
+Pancakes / Dessert,Peanut Butter Caramel Pancake,"Pancake batter (flour, egg, milk)",8.4
+Pancakes / Dessert,Peanut Butter Caramel Pancake,Peanut butter,12.5
+Pancakes / Dessert,Peanut Butter Caramel Pancake,Caramel sauce,8
+Pancakes / Dessert,Brownie Pudding,Brownie,28
+Pancakes / Dessert,Brownie Pudding,Chocolate sauce,7.2
+Pancakes / Dessert,Brownie Pudding,Vanilla ice cream,15.6
+Shakes / Drinks,Cold Coffee,Milk,13
+Shakes / Drinks,Cold Coffee,Coffee decoction,18
+Shakes / Drinks,Cold Coffee,Sugar,0.48
+Shakes / Drinks,Cold Coffee,Vanilla ice cream,15.6
+Shakes / Drinks,Banana Milkshake,Milk,13
+Shakes / Drinks,Banana Milkshake,Banana,3.6
+Shakes / Drinks,Banana Milkshake,Sugar,0.48
+Shakes / Drinks,Banana Milkshake,Vanilla ice cream,15.6
+Shakes / Drinks,Oreo Milkshake,Milk,13
+Shakes / Drinks,Oreo Milkshake,Oreo cookies,6.6
+Shakes / Drinks,Oreo Milkshake,Sugar,0.48
+Shakes / Drinks,Oreo Milkshake,Vanilla ice cream,15.6
+Shakes / Drinks,Nutella Milkshake,Milk,13
+Shakes / Drinks,Nutella Milkshake,Nutella,21.6
+Shakes / Drinks,Nutella Milkshake,Sugar,0.48
+Shakes / Drinks,Nutella Milkshake,Vanilla ice cream,15.6
+Shakes / Drinks,Peanut Butter Caramel Shake,Milk,13
+Shakes / Drinks,Peanut Butter Caramel Shake,Peanut butter,12.5
+Shakes / Drinks,Peanut Butter Caramel Shake,Caramel sauce,8
+Shakes / Drinks,Peanut Butter Caramel Shake,Vanilla ice cream,15.6
+Shakes / Drinks,Peanut Butter Banana Shake,Milk,13
+Shakes / Drinks,Peanut Butter Banana Shake,Peanut butter,12.5
+Shakes / Drinks,Peanut Butter Banana Shake,Banana,3.6
+Shakes / Drinks,Peanut Butter Banana Shake,Vanilla ice cream,15.6
+Shakes / Drinks,Peach Iced Tea,Tea,1.26
+Shakes / Drinks,Peach Iced Tea,Peach syrup/puree,9
+Shakes / Drinks,Peach Iced Tea,Sugar,0.48
+Shakes / Drinks,Peach Iced Tea,Ice,0.3
+Shakes / Drinks,Lemon Iced Tea,Tea,1.26
+Shakes / Drinks,Lemon Iced Tea,Lemon,1.8
+Shakes / Drinks,Lemon Iced Tea,Sugar,0.48
+Shakes / Drinks,Lemon Iced Tea,Ice,0.3
+Shakes / Drinks,Virgin Mojito,Soda,6.75
+Shakes / Drinks,Virgin Mojito,Mint,0.4
+Shakes / Drinks,Virgin Mojito,Lime,1.35
+Shakes / Drinks,Virgin Mojito,Sugar syrup,0.825
+Shakes / Drinks,Virgin Mojito,Ice,0.3

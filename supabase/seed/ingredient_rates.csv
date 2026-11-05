@@ -1,0 +1,130 @@
+ingredient,qty_per_use,unit,market_rate_inr,rate_basis,cost_per_use_inr
+BBQ sauce,20,g,320,Rs. per KG,6.4
+BBQ sauce/seasoning,15,g,320,Rs. per KG,4.8
+Banana,60,g,60,Rs. per KG,3.6
+Basil,5,g,420,Rs. per KG,2.1
+Basmati rice,150,g,110,Rs. per KG,16.5
+Bell pepper (capsicum),40,g,70,Rs. per KG,2.8
+Bhuna masala,40,g,210,Rs. per KG,8.4
+Biryani masala,5,g,600,Rs. per KG,3
+Black pepper,2,g,950,Rs. per KG,1.9
+Boiled egg,1,pc,7,Rs. per PIECE,7
+Bread loaf,80,g,100,Rs. per KG,8
+Breadcrumbs,20,g,120,Rs. per KG,2.4
+Brownie,1,pc,28,Rs. per PIECE,28
+Burger bun,1,pc,14,Rs. per PIECE,14
+Butter,15,g,500,Rs. per KG,7.5
+Button mushroom,60,g,190,Rs. per KG,11.4
+Cabbage,50,g,30,Rs. per KG,1.5
+Caesar dressing,20,ml,380,Rs. per LITRE,7.6
+Capsicum,40,g,70,Rs. per KG,2.8
+Caramel sauce,20,g,400,Rs. per KG,8
+Caramelised onion,30,g,110,Rs. per KG,3.3
+Carrot,30,g,40,Rs. per KG,1.2
+Chaat masala,3,g,320,Rs. per KG,0.96
+Cheddar cheese,30,g,520,Rs. per KG,15.6
+Cheese sauce,40,g,350,Rs. per KG,14
+Cherry tomato,30,g,160,Rs. per KG,4.8
+Chicken breast,100,g,320,Rs. per KG,32
+Chicken mince,80,g,300,Rs. per KG,24
+Chicken patty,1,pc,45,Rs. per PIECE,45
+Chicken pepperoni,30,g,550,Rs. per KG,16.5
+Chicken salami,40,g,450,Rs. per KG,18
+Chicken wings,150,g,260,Rs. per KG,39
+Chocolate sauce,20,g,360,Rs. per KG,7.2
+Coffee decoction,20,ml,900,Rs. per LITRE,18
+Coriander,5,g,40,Rs. per KG,0.2
+Corn,40,g,100,Rs. per KG,4
+Cornflour,10,g,70,Rs. per KG,0.7
+Cream,30,g,300,Rs. per KG,9
+Croutons,10,g,320,Rs. per KG,3.2
+Cucumber,30,g,30,Rs. per KG,0.9
+Cumin,2,g,420,Rs. per KG,0.84
+Egg,1,pc,7,Rs. per PIECE,7
+Falafel,80,g,220,Rs. per KG,17.6
+Fried egg,1,pc,8,Rs. per PIECE,8
+Fried onion,10,g,300,Rs. per KG,3
+Garlic,10,g,160,Rs. per KG,1.6
+Garlic butter,20,g,460,Rs. per KG,9.2
+Ghee,10,g,560,Rs. per KG,5.6
+Ginger,8,g,100,Rs. per KG,0.8
+Ginger-garlic paste,10,g,160,Rs. per KG,1.6
+Green chilli,5,g,60,Rs. per KG,0.3
+Green chilli sauce,10,ml,160,Rs. per LITRE,1.6
+Green chutney,15,g,150,Rs. per KG,2.25
+Green peas,30,g,90,Rs. per KG,2.7
+Honey,10,g,380,Rs. per KG,3.8
+Hummus,40,g,320,Rs. per KG,12.8
+Hummus/tahini dressing,20,g,360,Rs. per KG,7.2
+Ice,50,g,6,Rs. per KG,0.3
+Jalapeno,10,g,500,Rs. per KG,5
+Kidney beans,40,g,130,Rs. per KG,5.2
+Lafa/tortilla wrap,1,pc,16,Rs. per PIECE,16
+Lemon,20,g,90,Rs. per KG,1.8
+Lettuce,40,g,200,Rs. per KG,8
+Lime,15,g,90,Rs. per KG,1.35
+Mayonnaise,15,g,220,Rs. per KG,3.3
+Milk,200,ml,65,Rs. per LITRE,13
+Mint,5,g,80,Rs. per KG,0.4
+Mixed greens,40,g,220,Rs. per KG,8.8
+Mixed vegetables,80,g,55,Rs. per KG,4.4
+Mozzarella cheese,40,g,460,Rs. per KG,18.4
+Noodles,120,g,90,Rs. per KG,10.8
+Nutella,30,g,720,Rs. per KG,21.6
+Olive oil,10,ml,750,Rs. per LITRE,7.5
+Olives,10,g,620,Rs. per KG,6.2
+Onion,40,g,35,Rs. per KG,1.4
+Oregano,1,g,1200,Rs. per KG,1.2
+Oreo cookies,30,g,220,Rs. per KG,6.6
+Oyster sauce,8,ml,320,Rs. per LITRE,2.56
+"Pancake batter (flour, egg, milk)",120,g,70,Rs. per KG,8.4
+Paneer,100,g,380,Rs. per KG,38
+Paneer tikka,100,g,400,Rs. per KG,40
+Parmesan cheese,15,g,1200,Rs. per KG,18
+Parsley,5,g,420,Rs. per KG,2.1
+Peach syrup/puree,30,ml,300,Rs. per LITRE,9
+Peanut butter,25,g,500,Rs. per KG,12.5
+Penne/spaghetti/ravioli,150,g,150,Rs. per KG,22.5
+Peri peri sauce,20,g,380,Rs. per KG,7.6
+Peri peri seasoning,5,g,600,Rs. per KG,3
+Pesto sauce,25,g,600,Rs. per KG,15
+Pickled vegetables,15,g,210,Rs. per KG,3.15
+Pita bread,1,pc,16,Rs. per PIECE,16
+Pizza dough base,1,pc,28,Rs. per PIECE,28
+Pizza/tomato sauce,40,g,150,Rs. per KG,6
+Potato,100,g,25,Rs. per KG,2.5
+Potato fries,150,g,150,Rs. per KG,22.5
+Processed cheese,20,g,420,Rs. per KG,8.4
+Red chilli flakes,2,g,520,Rs. per KG,1.04
+Refined flour (maida),40,g,45,Rs. per KG,1.8
+Romaine lettuce,40,g,220,Rs. per KG,8.8
+Salsa,30,g,260,Rs. per KG,7.8
+Salt,2,g,25,Rs. per KG,0.05
+Sandwich bread,1,pc,6,Rs. per PIECE,6
+Sesame seeds,3,g,260,Rs. per KG,0.78
+Soda,150,ml,45,Rs. per LITRE,6.75
+Sour cream,20,g,450,Rs. per KG,9
+Soy sauce,10,ml,160,Rs. per LITRE,1.6
+Spinach,50,g,45,Rs. per KG,2.25
+Spring onion,10,g,60,Rs. per KG,0.6
+Spring roll sheets,30,g,220,Rs. per KG,6.6
+Sugar,10,g,48,Rs. per KG,0.48
+Sugar syrup,15,ml,55,Rs. per LITRE,0.825
+Sundried tomato,8,g,1250,Rs. per KG,10
+Tahini,10,g,700,Rs. per KG,7
+Tandoori/tikka masala,15,g,520,Rs. per KG,7.8
+Tea,3,g,420,Rs. per KG,1.26
+Thai chilli,3,g,200,Rs. per KG,0.6
+Tomato,50,g,40,Rs. per KG,2
+Tomato salsa,30,g,260,Rs. per KG,7.8
+Tortilla chips,60,g,300,Rs. per KG,18
+Tortilla strips,10,g,300,Rs. per KG,3
+Turmeric,2,g,320,Rs. per KG,0.64
+Vanilla ice cream,60,g,260,Rs. per KG,15.6
+Veg patty,1,pc,30,Rs. per PIECE,30
+Vinegar,5,ml,90,Rs. per LITRE,0.45
+White/alfredo sauce,60,g,260,Rs. per KG,15.6
+Whole wheat paratha,1,pc,16,Rs. per PIECE,16
+Yellow moong dal,60,g,120,Rs. per KG,7.2
+Yogurt,50,g,90,Rs. per KG,4.5
+"Note: Quantities and rates are ESTIMATED typical portions and Mount Abu / Rajasthan retail-wholesale market rates for 2026, for a first-pass costing exercise. Replace column D with your actual vendor invoice rates and column B with your weighed recipe portions to get an exact food cost.",,,,,

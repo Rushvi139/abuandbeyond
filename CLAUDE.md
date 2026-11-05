@@ -1,0 +1,38 @@
+# CLAUDE.md — Abu & Beyond
+
+Online ordering + Kitchen ERP for Abu & Beyond, a delivery-only global kitchen
+in Mount Abu. Next.js 15 + Supabase + Razorpay + WhatsApp Cloud API.
+
+## Read first, every session
+
+1. `context/progress-tracker.md` — where we are, what's next, open questions
+2. `context/ai-workflow-rules.md` — how to work (one unit at a time)
+3. `context/project-overview.md` — what to build
+4. `context/architecture.md` — stack, boundaries, invariants (never break these)
+5. `context/code-standards.md` — conventions
+6. `context/ui-context.md` + `brand/brand-brief.md` — look and voice
+
+## Commands
+
+- `npm run dev` — local dev server
+- `npm run build` — must pass before a unit is done
+- `npm run lint`, `npm test` (Vitest)
+- `npx supabase db push` — apply migrations to the linked project
+- `npm run db:types` — regenerate `src/lib/db/types.ts`
+- `npm run seed` — import `supabase/seed/*.csv`
+
+## Hard rules
+
+- Only the Razorpay webhook (signature verified) marks an order paid.
+- Order status changes only via `src/lib/orders/transition.ts`.
+- Stock changes only via `stock_movements` inserts.
+- Money in integer paise; prices stored before 5% GST.
+- Test-mode keys only; never commit secrets; never message or charge a real
+  customer without the owner's go-ahead.
+- Never redraw or recolour the logo; use `public/brand/*`.
+- Missing requirement → add to Open Questions in the tracker, don't invent it.
+
+## When a unit is done
+
+Update `context/progress-tracker.md` (Completed, Next Up, Session Notes),
+make sure build/lint/tests pass, then commit with a clear message.

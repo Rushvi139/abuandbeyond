@@ -1,0 +1,129 @@
+ingredient,procurement_group,dish_count,used_in
+Chicken breast,Poultry - Fresh/Frozen,24,"Chicken Tikka Caesar Salad, Pesto Chicken Salad, Thai Basil Chilly Chicken, Garlic Lemon Pepper Chicken, Grilled Chicken (Pesto/Peri Peri), Chicken Dana, Quattro Formaggi (Veg/Non-Veg), Chicken Dominator, Murg Makhani Biryani, Dum Chicken Biryani, Garlic Noodles (Chicken/Egg), Chicken Club Sandwich, Pesto Chicken Sandwich, Classic Chicken Mayo Sandwich, Chicken Cheese Fries, Mexican Nachos with Chicken, Butter Chicken Roll, Bhuna Chicken Roll, Mediterranean Chicken Roll, Pesto Chicken Roll, Butter Chicken Bowl (Rice/Paratha), Bhuna Chicken (Rice/Paratha), Chilly Chicken (Rice/Noodles), Grilled Chicken Pesto Rice Combo"
+Onion,Fresh Produce,22,"Mexican Salad, Paneer Chilly, Grilled Paneer (Pesto/Peri Peri), Thai Basil Chilly Chicken, Dal Khichdi, Indiano, Chicken Dominator, Cheese Chilly Toast, Veg Momos, Chicken and Cheese Momos, Cheese Corn Momos, Bombay Grill Sandwich, Mexican Nachos with Veggies, Paneer Makhani Roll, Crispy Potato Roll, Butter Chicken Roll, Bhuna Chicken Roll, Egg and Cheese Roll, Bhuna Chicken (Rice/Paratha), Dal Rice Combo, Paneer Chilly (Rice/Noodles), Chilly Chicken (Rice/Noodles)"
+Garlic,Fresh Produce,21,"Paneer Chilly, Honey Chilly Potato, Veg Manchurian, Pepper Garlic Mushroom, Thai Basil Chilly Chicken, Chicken Wings (BBQ), Chicken Wings (Peri Peri), Garlic Lemon Pepper Chicken, Chicken Dana, Basil Stir Fried Rice, Veg Fried Rice, Burnt Garlic Noodles (Veg), Garlic Noodles (Chicken/Egg), Al Arrabbiata, Crema di Fungi Pasta, Aglio Olio, Al Arrabbiata Cremosa, Napoli Bruschetta, Fungi Bruschetta, Veg Momos, Chicken and Cheese Momos"
+Tomato,Fresh Produce,20,"Mexican Salad, Dal Khichdi, Murg Makhani Biryani, Al Arrabbiata, Al Arrabbiata Cremosa, Napoli Bruschetta, Chicken Club Sandwich, Chicken Burger, Veg Cheese Burger, Veg Club Sandwich, Bombay Grill Sandwich, Paneer Makhani Roll, Falafel Hummus Roll, Butter Chicken Roll, Bhuna Chicken Roll, Mediterranean Chicken Roll, Butter Chicken Bowl (Rice/Paratha), Bhuna Chicken (Rice/Paratha), Paneer Makhani (Rice/Paratha), Dal Rice Combo"
+Mozzarella cheese,Dairy - Cheese,19,"Triple Cheese Falafel Salad, Exotic Veg Cheese Spring Rolls, Chicken Cheese Spring Rolls, Classic Margherita, Chicken Pepperoni, Indiano, Quattro Formaggi (Veg/Non-Veg), Crema di Fungi Pizza, Chicken Dominator, Cheese Garlic Bread, Fungi Bruschetta, Chicken and Cheese Momos, Cheese Corn Momos, Pesto Chicken Sandwich, Pesto Paneer Sandwich, The Big Cheese Sandwich, Mushroom Caramel Crunch, Pesto Paneer Roll, Pesto Chicken Roll"
+Basmati rice,Grocery - Staples,18,"Veg Biryani, Basil Stir Fried Rice, Veg Fried Rice, Mexican Hot Pot (Veg), Dal Khichdi, Murg Makhani Biryani, Dum Chicken Biryani, Dum Egg Biryani, Butter Chicken Bowl (Rice/Paratha), Bhuna Chicken (Rice/Paratha), Paneer Makhani (Rice/Paratha), Manchurian (Fried Rice/Noodles), Dal Rice Combo, Paneer Chilly (Rice/Noodles), Chilly Chicken (Rice/Noodles), Grilled Chicken Pesto Rice Combo, Manchurian Mexican Hot Pot Combo, Grilled Paneer Pesto Rice Combo"
+Butter,Dairy,16,"Pepper Garlic Mushroom, Chicken Wings (BBQ), Chicken Wings (Peri Peri), Garlic Lemon Pepper Chicken, Basil Stir Fried Rice, Murg Makhani Biryani, Crema di Fungi Pasta, Cheese Chilly Toast, Egg Sando Sandwich, The Big Cheese Sandwich, Bombay Grill Sandwich, Nutella Peanut Butter Sandwich, Paneer Makhani Roll, Butter Chicken Roll, Butter Chicken Bowl (Rice/Paratha), Paneer Makhani (Rice/Paratha)"
+Cheddar cheese,Dairy - Cheese,15,"Triple Cheese Falafel Salad, Mexican Salad, Mexican Hot Pot (Veg), Quattro Formaggi (Veg/Non-Veg), Cheese Chilly Toast, Chicken Salami & Cheddar Cheese Sandwich, Chicken Club Sandwich, Chicken Burger, Veg Cheese Burger, Veg Club Sandwich, The Big Cheese Sandwich, Bombay Grill Sandwich, Mexican Casa Roll, Egg and Cheese Roll, Manchurian Mexican Hot Pot Combo"
+Soy sauce,Sauces & Dressings,13,"Paneer Chilly, Veg Manchurian, Exotic Veg Cheese Spring Rolls, Thai Basil Chilly Chicken, Chicken Cheese Spring Rolls, Chicken Dana, Basil Stir Fried Rice, Veg Fried Rice, Burnt Garlic Noodles (Veg), Garlic Noodles (Chicken/Egg), Manchurian (Fried Rice/Noodles), Paneer Chilly (Rice/Noodles), Chilly Chicken (Rice/Noodles)"
+Lettuce,Fresh Produce,12,"Mexican Salad, Chicken Salami & Cheddar Cheese Sandwich, Chicken Club Sandwich, Pesto Chicken Sandwich, Classic Chicken Mayo Sandwich, Chicken Burger, Veg Cheese Burger, Veg Club Sandwich, Pesto Paneer Sandwich, Mexican Casa Roll, Falafel Hummus Roll, Mediterranean Chicken Roll"
+Pesto sauce,Sauces & Dressings,12,"Pesto Chicken Salad, Pesto Paneer Salad, Grilled Paneer (Pesto/Peri Peri), Grilled Chicken (Pesto/Peri Peri), Pasta al Pesto, Pesto Sundried Bruschetta, Pesto Chicken Sandwich, Pesto Paneer Sandwich, Pesto Paneer Roll, Pesto Chicken Roll, Grilled Chicken Pesto Rice Combo, Grilled Paneer Pesto Rice Combo"
+Paneer,Dairy,11,"Paneer Tikka Caesar Salad, Pesto Paneer Salad, Paneer Chilly, Harabhara Kebab, Grilled Paneer (Pesto/Peri Peri), Pesto Paneer Sandwich, Paneer Makhani Roll, Pesto Paneer Roll, Paneer Makhani (Rice/Paratha), Paneer Chilly (Rice/Noodles), Grilled Paneer Pesto Rice Combo"
+Sandwich bread,Bakery,11,"Chicken Salami & Cheddar Cheese Sandwich, Chicken Club Sandwich, Pesto Chicken Sandwich, Classic Chicken Mayo Sandwich, Egg Sando Sandwich, Veg Club Sandwich, Pesto Paneer Sandwich, The Big Cheese Sandwich, Bombay Grill Sandwich, Mushroom Caramel Crunch, Nutella Peanut Butter Sandwich"
+Lafa/tortilla wrap,Bakery,10,"Paneer Makhani Roll, Crispy Potato Roll, Mexican Casa Roll, Falafel Hummus Roll, Pesto Paneer Roll, Butter Chicken Roll, Bhuna Chicken Roll, Egg and Cheese Roll, Mediterranean Chicken Roll, Pesto Chicken Roll"
+Parmesan cheese,Dairy - Cheese,10,"Chicken Tikka Caesar Salad, Paneer Tikka Caesar Salad, Triple Cheese Falafel Salad, Pesto Chicken Salad, Pesto Paneer Salad, Quattro Formaggi (Veg/Non-Veg), Al Arrabbiata, Crema di Fungi Pasta, Pasta al Pesto, Pesto Sundried Bruschetta"
+Capsicum,Fresh Produce,9,"Paneer Chilly, Grilled Paneer (Pesto/Peri Peri), Exotic Veg Cheese Spring Rolls, Thai Basil Chilly Chicken, Indiano, Chicken Dominator, Bombay Grill Sandwich, Paneer Chilly (Rice/Noodles), Chilly Chicken (Rice/Noodles)"
+Olive oil,Oils & Fats,9,"Pesto Chicken Salad, Pesto Paneer Salad, Grilled Paneer (Pesto/Peri Peri), Garlic Lemon Pepper Chicken, Grilled Chicken (Pesto/Peri Peri), Classic Margherita, Al Arrabbiata, Aglio Olio, Napoli Bruschetta"
+Cream,Dairy,8,"Murg Makhani Biryani, Crema di Fungi Pasta, Al Arrabbiata Cremosa, Fungi Bruschetta, Paneer Makhani Roll, Butter Chicken Roll, Butter Chicken Bowl (Rice/Paratha), Paneer Makhani (Rice/Paratha)"
+Mayonnaise,Sauces & Dressings,8,"Chicken Salami & Cheddar Cheese Sandwich, Chicken Club Sandwich, Classic Chicken Mayo Sandwich, Egg Sando Sandwich, Chicken Burger, Veg Cheese Burger, Veg Club Sandwich, Crispy Potato Roll"
+Corn,Frozen/Canned,7,"Mexican Salad, Exotic Veg Cheese Spring Rolls, Mexican Hot Pot (Veg), Cheese Corn Momos, Mexican Nachos with Veggies, Mexican Casa Roll, Manchurian Mexican Hot Pot Combo"
+Spring onion,Fresh Produce,7,"Paneer Chilly, Honey Chilly Potato, Veg Manchurian, Pepper Garlic Mushroom, Veg Fried Rice, Burnt Garlic Noodles (Veg), Garlic Noodles (Chicken/Egg)"
+Vanilla ice cream,Dairy - Frozen,7,"Brownie Pudding, Cold Coffee, Banana Milkshake, Oreo Milkshake, Nutella Milkshake, Peanut Butter Caramel Shake, Peanut Butter Banana Shake"
+Basil,Fresh Produce/Herbs,6,"Thai Basil Chilly Chicken, Basil Stir Fried Rice, Classic Margherita, Al Arrabbiata, Al Arrabbiata Cremosa, Napoli Bruschetta"
+Bread loaf,Bakery,6,"Garlic Bread, Cheese Garlic Bread, Napoli Bruschetta, Fungi Bruschetta, Pesto Sundried Bruschetta, Cheese Chilly Toast"
+Button mushroom,Fresh Produce,6,"Pepper Garlic Mushroom, Crema di Fungi Pizza, Crema di Fungi Pasta, Fungi Bruschetta, Mushroom Caramel Crunch, Mushroom Cheese Fries"
+Cabbage,Fresh Produce,6,"Veg Manchurian, Exotic Veg Cheese Spring Rolls, Chicken Cheese Spring Rolls, Veg Momos, Manchurian (Fried Rice/Noodles), Manchurian Mexican Hot Pot Combo"
+Cheese sauce,Dairy/Sauces,6,"Cheese Fries, Chicken Cheese Fries, Mushroom Cheese Fries, Classic Cheese Nachos, Mexican Nachos with Veggies, Mexican Nachos with Chicken"
+Cherry tomato,Fresh Produce,6,"Chicken Tikka Caesar Salad, Paneer Tikka Caesar Salad, Triple Cheese Falafel Salad, Pesto Chicken Salad, Pesto Paneer Salad, Pasta al Pesto"
+Jalapeno,Fresh Produce/Pickled,6,"Mexican Salad, Mexican Hot Pot (Veg), Indiano, Classic Cheese Nachos, Mexican Nachos with Veggies, Mexican Nachos with Chicken"
+Milk,Dairy,6,"Cold Coffee, Banana Milkshake, Oreo Milkshake, Nutella Milkshake, Peanut Butter Caramel Shake, Peanut Butter Banana Shake"
+Pizza dough base,Bakery - Prepped,6,"Classic Margherita, Chicken Pepperoni, Indiano, Quattro Formaggi (Veg/Non-Veg), Crema di Fungi Pizza, Chicken Dominator"
+Salsa,Sauces & Dressings,6,"Mexican Salad, Classic Cheese Nachos, Mexican Nachos with Veggies, Mexican Nachos with Chicken, Mexican Casa Roll, Manchurian Mexican Hot Pot Combo"
+Sugar,Grocery,6,"Cold Coffee, Banana Milkshake, Oreo Milkshake, Nutella Milkshake, Peach Iced Tea, Lemon Iced Tea"
+Boiled egg,Eggs,5,"Add Egg (extra), Dum Egg Biryani, Chicken Club Sandwich, Egg Sando Sandwich, Veg Club Sandwich"
+Carrot,Fresh Produce,5,"Veg Manchurian, Exotic Veg Cheese Spring Rolls, Chicken Cheese Spring Rolls, Veg Momos, Manchurian (Fried Rice/Noodles)"
+Cornflour,Grocery,5,"Paneer Chilly, Honey Chilly Potato, Veg Manchurian, Chicken Dana, Manchurian (Fried Rice/Noodles)"
+Ghee,Dairy,5,"Veg Biryani, Dal Khichdi, Dum Chicken Biryani, Dum Egg Biryani, Dal Rice Combo"
+Kidney beans,Grocery - Dry/Canned,5,"Mexican Salad, Mexican Hot Pot (Veg), Mexican Nachos with Veggies, Mexican Casa Roll, Manchurian Mexican Hot Pot Combo"
+Noodles,Grocery - Staples,5,"Burnt Garlic Noodles (Veg), Garlic Noodles (Chicken/Egg), Manchurian (Fried Rice/Noodles), Paneer Chilly (Rice/Noodles), Chilly Chicken (Rice/Noodles)"
+Penne/spaghetti/ravioli,Grocery - Staples,5,"Al Arrabbiata, Crema di Fungi Pasta, Pasta al Pesto, Aglio Olio, Al Arrabbiata Cremosa"
+Potato fries,Frozen,5,"Salted / Peri Peri Fries, BBQ Fries, Cheese Fries, Chicken Cheese Fries, Mushroom Cheese Fries"
+Yogurt,Dairy,5,"Chicken Tikka Caesar Salad, Paneer Tikka Caesar Salad, Veg Biryani, Dum Chicken Biryani, Dum Egg Biryani"
+Biryani masala,Spices & Masalas,4,"Veg Biryani, Murg Makhani Biryani, Dum Chicken Biryani, Dum Egg Biryani"
+Coriander,Fresh Produce,4,"Harabhara Kebab, Veg Biryani, Dum Chicken Biryani, Dum Egg Biryani"
+Fried onion,Grocery/Prepped,4,"Veg Biryani, Murg Makhani Biryani, Dum Chicken Biryani, Dum Egg Biryani"
+Ginger,Fresh Produce,4,"Paneer Chilly, Veg Manchurian, Veg Momos, Chicken and Cheese Momos"
+Green chilli sauce,Sauces & Dressings,4,"Paneer Chilly, Honey Chilly Potato, Veg Manchurian, Chicken Dana"
+Mint,Fresh Produce/Herbs,4,"Veg Biryani, Dum Chicken Biryani, Dum Egg Biryani, Virgin Mojito"
+Mixed vegetables,Fresh Produce,4,"Veg Biryani, Basil Stir Fried Rice, Veg Fried Rice, Burnt Garlic Noodles (Veg)"
+Nutella,Grocery - Spreads,4,"Nutella Peanut Butter Sandwich, Nutella Pancake, Nutella Banana Pancake, Nutella Milkshake"
+Peanut butter,Grocery - Spreads,4,"Nutella Peanut Butter Sandwich, Peanut Butter Caramel Pancake, Peanut Butter Caramel Shake, Peanut Butter Banana Shake"
+Pizza/tomato sauce,Sauces & Dressings,4,"Classic Margherita, Chicken Pepperoni, Indiano, Chicken Dominator"
+Potato,Fresh Produce,4,"Honey Chilly Potato, Harabhara Kebab, Bombay Grill Sandwich, Crispy Potato Roll"
+Sour cream,Dairy,4,"Mexican Salad, Mexican Hot Pot (Veg), Mexican Nachos with Veggies, Mexican Nachos with Chicken"
+Banana,Fresh Produce,3,"Nutella Banana Pancake, Banana Milkshake, Peanut Butter Banana Shake"
+Bell pepper (capsicum),Fresh Produce,3,"Mexican Salad, Mexican Hot Pot (Veg), Mexican Nachos with Veggies"
+Black pepper,Spices & Masalas,3,"Pepper Garlic Mushroom, Garlic Lemon Pepper Chicken, Classic Chicken Mayo Sandwich"
+Egg,Eggs,3,"Chicken Dana, Garlic Noodles (Chicken/Egg), Egg and Cheese Roll"
+Falafel,Frozen/Prepped,3,"Triple Cheese Falafel Salad, Falafel Hummus Roll, Mezze Platter"
+Hummus,Grocery - Spreads,3,"Falafel Hummus Roll, Mediterranean Chicken Roll, Mezze Platter"
+Ice,Utility,3,"Peach Iced Tea, Lemon Iced Tea, Virgin Mojito"
+Mixed greens,Fresh Produce,3,"Triple Cheese Falafel Salad, Pesto Chicken Salad, Pesto Paneer Salad"
+"Pancake batter (flour, egg, milk)",Bakery - Prepped,3,"Nutella Pancake, Nutella Banana Pancake, Peanut Butter Caramel Pancake"
+Peri peri sauce,Sauces & Dressings,3,"Grilled Paneer (Pesto/Peri Peri), Chicken Wings (Peri Peri), Grilled Chicken (Pesto/Peri Peri)"
+Pickled vegetables,Grocery - Preserved,3,"Falafel Hummus Roll, Mediterranean Chicken Roll, Mezze Platter"
+Red chilli flakes,Spices & Masalas,3,"Al Arrabbiata, Aglio Olio, Al Arrabbiata Cremosa"
+Refined flour (maida),Grocery - Staples,3,"Veg Momos, Chicken and Cheese Momos, Cheese Corn Momos"
+Tortilla chips,Bakery/Grocery,3,"Classic Cheese Nachos, Mexican Nachos with Veggies, Mexican Nachos with Chicken"
+Vinegar,Grocery,3,"Paneer Chilly, Veg Fried Rice, Burnt Garlic Noodles (Veg)"
+Whole wheat paratha,Bakery - Prepped,3,"Butter Chicken Bowl (Rice/Paratha), Bhuna Chicken (Rice/Paratha), Paneer Makhani (Rice/Paratha)"
+BBQ sauce,Sauces & Dressings,2,"Chicken Wings (BBQ), Chicken Dominator"
+Bhuna masala,Spices & Masalas,2,"Bhuna Chicken Roll, Bhuna Chicken (Rice/Paratha)"
+Burger bun,Bakery,2,"Chicken Burger, Veg Cheese Burger"
+Caesar dressing,Sauces & Dressings,2,"Chicken Tikka Caesar Salad, Paneer Tikka Caesar Salad"
+Caramel sauce,Grocery - Spreads,2,"Peanut Butter Caramel Pancake, Peanut Butter Caramel Shake"
+Chicken mince,Poultry - Fresh/Frozen,2,"Chicken Cheese Spring Rolls, Chicken and Cheese Momos"
+Chicken wings,Poultry - Fresh/Frozen,2,"Chicken Wings (BBQ), Chicken Wings (Peri Peri)"
+Croutons,Bakery,2,"Chicken Tikka Caesar Salad, Paneer Tikka Caesar Salad"
+Cucumber,Fresh Produce,2,"Triple Cheese Falafel Salad, Veg Club Sandwich"
+Cumin,Spices & Masalas,2,"Dal Khichdi, Dal Rice Combo"
+Garlic butter,Dairy/Prepped,2,"Garlic Bread, Cheese Garlic Bread"
+Ginger-garlic paste,Spices & Masalas,2,"Chicken Tikka Caesar Salad, Paneer Tikka Caesar Salad"
+Green chilli,Fresh Produce,2,"Harabhara Kebab, Cheese Chilly Toast"
+Green chutney,Sauces & Dressings,2,"Bombay Grill Sandwich, Crispy Potato Roll"
+Lemon,Fresh Produce,2,"Garlic Lemon Pepper Chicken, Lemon Iced Tea"
+Parsley,Fresh Produce/Herbs,2,"Aglio Olio, Garlic Bread"
+Processed cheese,Dairy - Cheese,2,"Quattro Formaggi (Veg/Non-Veg), The Big Cheese Sandwich"
+Romaine lettuce,Fresh Produce,2,"Chicken Tikka Caesar Salad, Paneer Tikka Caesar Salad"
+Spring roll sheets,Frozen/Bakery,2,"Exotic Veg Cheese Spring Rolls, Chicken Cheese Spring Rolls"
+Tandoori/tikka masala,Spices & Masalas,2,"Chicken Tikka Caesar Salad, Paneer Tikka Caesar Salad"
+Tea,Beverage Base,2,"Peach Iced Tea, Lemon Iced Tea"
+Yellow moong dal,Grocery - Staples,2,"Dal Khichdi, Dal Rice Combo"
+BBQ sauce/seasoning,Sauces & Dressings,1,BBQ Fries
+Breadcrumbs,Bakery/Grocery,1,Harabhara Kebab
+Brownie,Bakery - Prepped,1,Brownie Pudding
+Caramelised onion,Fresh Produce/Prepped,1,Mushroom Caramel Crunch
+Chaat masala,Spices & Masalas,1,Harabhara Kebab
+Chicken patty,Poultry - Processed,1,Chicken Burger
+Chicken pepperoni,Poultry - Processed,1,Chicken Pepperoni
+Chicken salami,Poultry - Processed,1,Chicken Salami & Cheddar Cheese Sandwich
+Chocolate sauce,Grocery - Spreads,1,Brownie Pudding
+Coffee decoction,Beverage Base,1,Cold Coffee
+Fried egg,Eggs,1,Add Egg (Burger)
+Green peas,Frozen/Fresh,1,Harabhara Kebab
+Honey,Grocery,1,Honey Chilly Potato
+Hummus/tahini dressing,Sauces & Dressings,1,Triple Cheese Falafel Salad
+Lime,Fresh Produce,1,Virgin Mojito
+Olives,Grocery - Preserved,1,Mezze Platter
+Oregano,Spices & Masalas,1,Crema di Fungi Pizza
+Oreo cookies,Bakery/Grocery,1,Oreo Milkshake
+Oyster sauce,Sauces & Dressings,1,Thai Basil Chilly Chicken
+Paneer tikka,Dairy/Prepped,1,Indiano
+Peach syrup/puree,Beverage Base,1,Peach Iced Tea
+Peri peri seasoning,Spices & Masalas,1,Salted / Peri Peri Fries
+Pita bread,Bakery,1,Mezze Platter
+Salt,Grocery,1,Salted / Peri Peri Fries
+Sesame seeds,Grocery,1,Honey Chilly Potato
+Soda,Beverage Base,1,Virgin Mojito
+Spinach,Fresh Produce,1,Harabhara Kebab
+Sugar syrup,Beverage Base,1,Virgin Mojito
+Sundried tomato,Grocery - Preserved,1,Pesto Sundried Bruschetta
+Tahini,Grocery - Spreads,1,Mezze Platter
+Thai chilli,Fresh Produce,1,Thai Basil Chilly Chicken
+Tomato salsa,Sauces & Dressings,1,Mexican Hot Pot (Veg)
+Tortilla strips,Bakery/Grocery,1,Mexican Salad
+Turmeric,Spices & Masalas,1,Dal Khichdi
+Veg patty,Frozen/Prepped,1,Veg Cheese Burger
+White/alfredo sauce,Sauces & Dressings,1,Crema di Fungi Pizza

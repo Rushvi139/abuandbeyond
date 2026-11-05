@@ -1,0 +1,12 @@
+id,name,cost_inr,components,categories
+pizza,Pizza,19.8,"12in box 12 + pizza stand 1.2 + 2 dips 4.8 + carry bag 2",Pizza
+momos,Momos,18.3,"650 ml square container 8.5 + 2 dips 4.8 + bag 2 + fork/tissue 3",Momos
+bowl_dip,Bowl + dip,15.9,"750 ml bowl 8.5 + dip 2.4 + bag 2 + cutlery/tissue 3","Salads;Starters – Veg;Starters – Non-Veg;Biryani / Noodles – Non-Veg"
+meal_box,Meal box,14.9,"3-compartment box 7.5 + dip 2.4 + bag 2 + cutlery 3",Bowls & Combos
+fries_nachos,Fries / nachos,13.9,"650 ml square container 8.5 + dip 2.4 + bag 2 + tissue 1","Fries;Nachos"
+bowl,Bowl,13.5,"750 ml bowl 8.5 + bag 2 + cutlery/tissue 3","Pasta;Rice / Noodles – Veg"
+box_wrap,Box + wrap,11.2,"6x6 bento box 5.5 + butter paper 0.3 + dip 2.4 + bag 2 + tissue 1","Burgers;Sandwich – Veg;Sandwich – Non-Veg"
+garlic_bread,Garlic bread,10.9,"bento box 5.5 + dip 2.4 + bag 2 + tissue 1",Garlic Bread / Bruschetta
+dessert,Dessert,10.5,"bento box 5.5 + bag 2 + cutlery 3",Pancakes / Dessert
+drink,Drink,10.0,"shake glass 6 + straw 2 + bag 2",Shakes / Drinks
+roll,Roll,9.2,"roll wrap 3.5 + butter paper 0.3 + dip 2.4 + bag 2 + tissue 1","Rolls – Veg;Rolls – Non-Veg"

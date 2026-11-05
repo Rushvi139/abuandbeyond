@@ -1,0 +1,55 @@
+@import "tailwindcss";
+
+/* Abu & Beyond brand tokens — see context/ui-context.md. No hex values in components. */
+:root {
+  --ab-ink: #141414;
+  --ab-clay: #ff4d14;
+  --ab-acid: #ffd400;
+  --ab-bone: #f3efe6;
+  --ab-hill: #1f3a33;
+  --ab-kraft: #d9c39c;
+  --ab-clayred: #c0402a;
+  --ab-night: #10161c;
+
+  --bg-base: var(--ab-bone);
+  --bg-surface: #ffffff;
+  --bg-night: var(--ab-night);
+  --text-primary: var(--ab-ink);
+  --text-muted: #5c5a55;
+  --text-reversed: var(--ab-bone);
+  --accent-primary: var(--ab-clay);
+  --accent-acid: var(--ab-acid);
+  --accent-hill: var(--ab-hill);
+  --accent-kraft: var(--ab-kraft);
+  --border-default: rgb(20 20 20 / 0.12);
+  --state-error: var(--ab-clayred);
+  --state-success: #1f7a4d;
+  --veg: #1f7a4d;
+  --nonveg: var(--ab-clayred);
+}
+
+@theme inline {
+  --color-base: var(--bg-base);
+  --color-surface: var(--bg-surface);
+  --color-night: var(--bg-night);
+  --color-ink: var(--text-primary);
+  --color-muted: var(--text-muted);
+  --color-reversed: var(--text-reversed);
+  --color-clay: var(--accent-primary);
+  --color-acid: var(--accent-acid);
+  --color-hill: var(--accent-hill);
+  --color-kraft: var(--accent-kraft);
+  --color-line: var(--border-default);
+  --color-error: var(--state-error);
+  --color-success: var(--state-success);
+  --color-veg: var(--veg);
+  --color-nonveg: var(--nonveg);
+  --font-sans: "Inter Variable", Arial, sans-serif;
+  --font-display: "Anton", Impact, "Arial Narrow Bold", sans-serif;
+}
+
+body {
+  background: var(--bg-base);
+  color: var(--text-primary);
+  font-family: "Inter Variable", Arial, sans-serif;
+}
