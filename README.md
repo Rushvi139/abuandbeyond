@@ -22,7 +22,7 @@ context/                   the spec: overview, architecture, UI, standards, work
 brand/brand-brief.md       locked brand brief
 public/brand/              locked logo files (never redraw)
 supabase/migrations/       database schema + RLS
-supabase/seed/             menu (105 dishes), recipes (576 lines), ingredient rates, pack kits, add-ons
+supabase/seed/             live menu (31 items), recipes (576 lines), ingredient rates, pack kits, add-ons
 src/app/                   Next.js app
 ```
 

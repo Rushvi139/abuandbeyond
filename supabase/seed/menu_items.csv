@@ -1,106 +1,32 @@
-sku,category,name,slug,is_veg,food_cost_inr,packaging_cost_inr,price_inr,gross_margin_pct,station,cuisine_sticker
-AB001,Salads,Chicken Tikka Caesar Salad,chicken-tikka-caesar-salad,False,105,16,329,63,cold_drinks,abu
-AB002,Salads,Paneer Tikka Caesar Salad,paneer-tikka-caesar-salad,True,112,16,329,61,cold_drinks,abu
-AB003,Salads,Triple Cheese Falafel Salad,triple-cheese-falafel-salad,True,110,16,329,62,cold_drinks,lebanon
-AB004,Salads,Pesto Chicken Salad,pesto-chicken-salad,False,102,16,329,64,cold_drinks,italy
-AB005,Salads,Pesto Paneer Salad,pesto-paneer-salad,True,109,16,329,62,cold_drinks,italy
-AB006,Salads,Mexican Salad,mexican-salad,True,70,16,269,68,cold_drinks,mexico
-AB007,Starters – Veg,Paneer Chilly,paneer-chilly,True,57,16,229,68,wok_momos,china
-AB008,Starters – Veg,Honey Chilly Potato,honey-chilly-potato,True,13,16,149,81,wok_momos,china
-AB009,Starters – Veg,Veg Manchurian,veg-manchurian,True,11,16,149,82,wok_momos,china
-AB010,Starters – Veg,Harabhara Kebab,harabhara-kebab,True,57,16,229,68,wok_momos,abu
-AB011,Starters – Veg,Grilled Paneer (Pesto/Peri Peri),grilled-paneer-pesto-peri-peri,True,83,16,279,65,wok_momos,italy
-AB012,Starters – Veg,Exotic Veg Cheese Spring Rolls,exotic-veg-cheese-spring-rolls,True,43,16,189,69,wok_momos,abu
-AB013,Starters – Veg,Pepper Garlic Mushroom,pepper-garlic-mushroom,True,24,16,149,73,wok_momos,abu
-AB014,Starters – Non-Veg,Thai Basil Chilly Chicken,thai-basil-chilly-chicken,False,51,16,219,69,grill_rolls,china
-AB015,Starters – Non-Veg,Chicken Wings (BBQ),chicken-wings-bbq,False,63,16,249,68,grill_rolls,abu
-AB016,Starters – Non-Veg,Chicken Wings (Peri Peri),chicken-wings-peri-peri,False,64,16,259,69,grill_rolls,abu
-AB017,Starters – Non-Veg,Garlic Lemon Pepper Chicken,garlic-lemon-pepper-chicken,False,60,16,239,68,grill_rolls,abu
-AB018,Starters – Non-Veg,Chicken Cheese Spring Rolls,chicken-cheese-spring-rolls,False,63,16,249,68,grill_rolls,abu
-AB019,Starters – Non-Veg,Grilled Chicken (Pesto/Peri Peri),grilled-chicken-pesto-peri-peri,False,71,16,279,69,grill_rolls,italy
-AB020,Starters – Non-Veg,Chicken Dana,chicken-dana,False,51,16,219,69,grill_rolls,abu
-AB021,Rice / Noodles – Veg,Veg Biryani,veg-biryani,True,43,14,179,68,wok_momos,abu
-AB022,Rice / Noodles – Veg,Basil Stir Fried Rice,basil-stir-fried-rice,True,39,14,169,69,wok_momos,china
-AB023,Rice / Noodles – Veg,Veg Fried Rice,veg-fried-rice,True,29,14,149,71,wok_momos,china
-AB024,Rice / Noodles – Veg,Mexican Hot Pot (Veg),mexican-hot-pot-veg,True,72,14,249,65,wok_momos,mexico
-AB025,Rice / Noodles – Veg,Dal Khichdi,dal-khichdi,True,39,14,169,69,wok_momos,abu
-AB026,Rice / Noodles – Veg,Burnt Garlic Noodles (Veg),burnt-garlic-noodles-veg,True,22,14,149,76,wok_momos,china
-AB027,Pizza,Classic Margherita,classic-margherita,True,73,20,299,69,pizza_oven,italy
-AB028,Pizza,Chicken Pepperoni,chicken-pepperoni,False,81,20,319,68,pizza_oven,italy
-AB029,Pizza,Indiano,indiano,True,115,20,429,69,pizza_oven,italy
-AB030,Pizza,Quattro Formaggi (Veg/Non-Veg),quattro-formaggi-veg-non-veg,True,146,20,449,63,pizza_oven,italy
-AB031,Pizza,Crema di Fungi Pizza,crema-di-fungi-pizza,True,85,20,329,68,pizza_oven,italy
-AB032,Pizza,Chicken Dominator,chicken-dominator,False,111,20,419,69,pizza_oven,italy
-AB033,Biryani / Noodles – Non-Veg,Murg Makhani Biryani,murg-makhani-biryani,False,84,16,319,69,wok_momos,abu
-AB034,Biryani / Noodles – Non-Veg,Dum Chicken Biryani,dum-chicken-biryani,False,75,16,289,69,wok_momos,abu
-AB035,Biryani / Noodles – Non-Veg,Dum Egg Biryani,dum-egg-biryani,False,46,16,199,69,wok_momos,abu
-AB036,Biryani / Noodles – Non-Veg,Garlic Noodles (Chicken/Egg),garlic-noodles-chicken-egg,False,62,16,249,69,wok_momos,china
-AB037,Pasta,Al Arrabbiata,al-arrabbiata,True,63,14,239,68,pizza_oven,italy
-AB038,Pasta,Crema di Fungi Pasta,crema-di-fungi-pasta,True,78,14,289,68,pizza_oven,italy
-AB039,Pasta,Pasta al Pesto,pasta-al-pesto,True,69,14,259,68,pizza_oven,italy
-AB040,Pasta,Aglio Olio,aglio-olio,True,36,14,199,75,pizza_oven,italy
-AB041,Pasta,Al Arrabbiata Cremosa,al-arrabbiata-cremosa,True,40,14,199,73,pizza_oven,italy
-AB042,Garlic Bread / Bruschetta,Garlic Bread,garlic-bread,True,22,11,109,70,pizza_oven,italy
-AB043,Garlic Bread / Bruschetta,Cheese Garlic Bread,cheese-garlic-bread,True,43,11,169,68,pizza_oven,italy
-AB044,Garlic Bread / Bruschetta,Napoli Bruschetta,napoli-bruschetta,True,24,11,119,71,pizza_oven,italy
-AB045,Garlic Bread / Bruschetta,Fungi Bruschetta,fungi-bruschetta,True,55,11,209,68,pizza_oven,italy
-AB046,Garlic Bread / Bruschetta,Pesto Sundried Bruschetta,pesto-sundried-bruschetta,True,62,11,229,68,pizza_oven,italy
-AB047,Garlic Bread / Bruschetta,Cheese Chilly Toast,cheese-chilly-toast,True,38,11,159,69,pizza_oven,china
-AB048,Momos,Veg Momos,veg-momos,True,10,18,119,76,wok_momos,china
-AB049,Momos,Chicken and Cheese Momos,chicken-and-cheese-momos,False,57,18,229,67,wok_momos,china
-AB050,Momos,Cheese Corn Momos,cheese-corn-momos,True,31,18,159,69,wok_momos,china
-AB051,Sandwich – Non-Veg,Chicken Salami & Cheddar Sandwich,chicken-salami-cheddar-sandwich,False,58,11,219,68,grill_rolls,abu
-AB052,Sandwich – Non-Veg,Chicken Club Sandwich,chicken-club-sandwich,False,85,11,279,66,grill_rolls,abu
-AB053,Sandwich – Non-Veg,Pesto Chicken Sandwich,pesto-chicken-sandwich,False,93,11,279,63,grill_rolls,italy
-AB054,Sandwich – Non-Veg,Classic Chicken Mayo Sandwich,classic-chicken-mayo-sandwich,False,59,11,219,68,grill_rolls,abu
-AB055,Sandwich – Non-Veg,Egg Sando Sandwich,egg-sando-sandwich,False,27,11,149,74,grill_rolls,abu
-AB056,Burgers,Chicken Burger,chicken-burger,False,101,11,279,60,grill_rolls,abu
-AB057,Burgers,Veg Cheese Burger,veg-cheese-burger,True,84,11,279,66,grill_rolls,abu
-AB058,Sandwich – Veg,Veg Club Sandwich,veg-club-sandwich,True,49,11,189,68,grill_rolls,abu
-AB059,Sandwich – Veg,Pesto Paneer Sandwich,pesto-paneer-sandwich,True,100,11,249,55,grill_rolls,italy
-AB060,Sandwich – Veg,The Big Cheese Sandwich,the-big-cheese-sandwich,True,69,11,249,68,grill_rolls,abu
-AB061,Sandwich – Veg,Bombay Grill Sandwich,bombay-grill-sandwich,True,46,11,179,68,grill_rolls,abu
-AB062,Sandwich – Veg,Mushroom Caramel Crunch,mushroom-caramel-crunch,True,45,11,179,69,grill_rolls,abu
-AB063,Sandwich – Veg,Nutella Peanut Butter Sandwich,nutella-peanut-butter-sandwich,True,55,11,209,68,grill_rolls,abu
-AB064,Fries,Salted / Peri Peri Fries,salted-peri-peri-fries,True,29,14,139,69,fryer,abu
-AB065,Fries,BBQ Fries,bbq-fries,True,31,14,149,70,fryer,abu
-AB066,Fries,Cheese Fries,cheese-fries,True,42,14,179,69,fryer,abu
-AB067,Fries,Chicken Cheese Fries,chicken-cheese-fries,False,79,14,249,63,fryer,abu
-AB068,Fries,Mushroom Cheese Fries,mushroom-cheese-fries,True,53,14,219,69,fryer,abu
-AB069,Nachos,Classic Cheese Nachos,classic-cheese-nachos,True,48,14,199,69,fryer,mexico
-AB070,Nachos,Mexican Nachos with Veggies,mexican-nachos-with-veggies,False,74,14,279,68,fryer,mexico
-AB071,Nachos,Mexican Nachos with Chicken,mexican-nachos-with-chicken,False,95,14,299,64,fryer,mexico
-AB072,Rolls – Veg,Paneer Makhani Roll,paneer-makhani-roll,True,85,9,249,62,grill_rolls,abu
-AB073,Rolls – Veg,Crispy Potato Roll,crispy-potato-roll,True,29,9,129,71,grill_rolls,abu
-AB074,Rolls – Veg,Mexican Casa Roll,mexican-casa-roll,True,65,9,239,69,grill_rolls,mexico
-AB075,Rolls – Veg,Falafel Hummus Roll,falafel-hummus-roll,True,68,9,249,69,grill_rolls,lebanon
-AB076,Rolls – Veg,Pesto Paneer Roll,pesto-paneer-roll,True,102,9,249,55,grill_rolls,italy
-AB077,Rolls – Non-Veg,Butter Chicken Roll,butter-chicken-roll,False,78,9,279,69,grill_rolls,abu
-AB078,Rolls – Non-Veg,Bhuna Chicken Roll,bhuna-chicken-roll,False,69,9,249,69,grill_rolls,abu
-AB079,Rolls – Non-Veg,Egg and Cheese Roll,egg-and-cheese-roll,False,46,9,179,69,grill_rolls,abu
-AB080,Rolls – Non-Veg,Mediterranean Chicken Roll,mediterranean-chicken-roll,False,85,9,279,66,grill_rolls,lebanon
-AB081,Rolls – Non-Veg,Pesto Chicken Roll,pesto-chicken-roll,False,95,9,279,63,grill_rolls,italy
-AB082,Bowls & Combos,Butter Chicken Bowl (Rice/Paratha),butter-chicken-bowl-rice-paratha,False,95,15,329,67,wok_momos,abu
-AB083,Bowls & Combos,Bhuna Chicken (Rice/Paratha),bhuna-chicken-rice-paratha,False,88,15,329,69,wok_momos,abu
-AB084,Bowls & Combos,Paneer Makhani (Rice/Paratha),paneer-makhani-rice-paratha,True,102,15,329,64,wok_momos,abu
-AB085,Bowls & Combos,Manchurian (Fried Rice/Noodles),manchurian-fried-rice-noodles,True,37,15,169,69,wok_momos,china
-AB086,Bowls & Combos,Dal Rice Combo,dal-rice-combo,True,39,15,169,68,wok_momos,abu
-AB087,Bowls & Combos,Paneer Chilly (Rice/Noodles),paneer-chilly-rice-noodles,True,82,15,309,69,wok_momos,china
-AB088,Bowls & Combos,Chilly Chicken (Rice/Noodles),chilly-chicken-rice-noodles,False,75,15,289,69,wok_momos,china
-AB089,Bowls & Combos,Grilled Chicken Pesto Rice Combo,grilled-chicken-pesto-rice-combo,False,73,15,279,68,wok_momos,italy
-AB090,Bowls & Combos,Manchurian Mexican Hot Pot Combo,manchurian-mexican-hot-pot-combo,True,58,15,229,68,wok_momos,china
-AB091,Bowls & Combos,Mezze Platter,mezze-platter,True,72,15,279,69,wok_momos,lebanon
-AB092,Bowls & Combos,Grilled Paneer Pesto Rice Combo,grilled-paneer-pesto-rice-combo,True,80,15,299,68,wok_momos,italy
-AB093,Pancakes / Dessert,Nutella Pancake,nutella-pancake,True,34,10,149,70,cold_drinks,abu
-AB094,Pancakes / Dessert,Nutella Banana Pancake,nutella-banana-pancake,True,39,10,159,69,cold_drinks,abu
-AB095,Pancakes / Dessert,Peanut Butter Caramel Pancake,peanut-butter-caramel-pancake,True,33,10,149,71,cold_drinks,abu
-AB096,Pancakes / Dessert,Brownie Pudding,brownie-pudding,True,55,10,209,69,cold_drinks,abu
-AB097,Shakes / Drinks,Cold Coffee,cold-coffee,True,38,10,159,70,cold_drinks,abu
-AB098,Shakes / Drinks,Banana Milkshake,banana-milkshake,True,38,10,149,68,cold_drinks,abu
-AB099,Shakes / Drinks,Oreo Milkshake,oreo-milkshake,True,41,10,169,70,cold_drinks,abu
-AB100,Shakes / Drinks,Nutella Milkshake,nutella-milkshake,True,58,10,219,69,cold_drinks,abu
-AB101,Shakes / Drinks,Peanut Butter Caramel Shake,peanut-butter-caramel-shake,True,56,10,209,68,cold_drinks,abu
-AB102,Shakes / Drinks,Peanut Butter Banana Shake,peanut-butter-banana-shake,True,51,10,199,69,cold_drinks,abu
-AB103,Shakes / Drinks,Peach Iced Tea,peach-iced-tea,True,19,10,99,71,cold_drinks,abu
-AB104,Shakes / Drinks,Lemon Iced Tea,lemon-iced-tea,True,4,10,99,86,cold_drinks,abu
-AB105,Shakes / Drinks,Virgin Mojito,virgin-mojito,True,11,10,99,79,cold_drinks,abu
+sku,category,name,slug,is_veg,price_inr,price_status,food_cost_inr,packaging_cost_inr,gross_margin_pct,station,cuisine_sticker,pack_kit,costing_ref,options
+AB001,Pizza,Margherita Pizza,margherita-pizza,True,299,costed,73,20,69,pizza_oven,italy,pizza,Classic Margherita,
+AB002,Pizza,Veggies Pizza,veggies-pizza,True,349,new,,20,,pizza_oven,italy,pizza,,
+AB003,Pizza,Four Cheese Pizza,four-cheese-pizza,True,449,costed,146,20,63,pizza_oven,italy,pizza,Quattro Formaggi (Veg/Non-Veg),
+AB004,Pizza,Pesto Pizza,pesto-pizza,True,379,new,,20,,pizza_oven,italy,pizza,,
+AB005,Pasta,Arrabbiata Pasta,arrabbiata-pasta,True,239,costed,63,14,68,pizza_oven,italy,bowl,Al Arrabbiata,
+AB006,Pasta,Alfredo Pasta,alfredo-pasta,True,269,new,,14,,pizza_oven,italy,bowl,,
+AB007,Pasta,Mix (Pink) Pasta,mix-pink-pasta,True,199,costed,40,14,73,pizza_oven,italy,bowl,Al Arrabbiata Cremosa,
+AB008,Pasta,Pesto Pasta,pesto-pasta,True,259,costed,69,14,68,pizza_oven,italy,bowl,Pasta al Pesto,
+AB009,Pasta,Aglio Olio,aglio-olio,True,199,costed,36,14,75,pizza_oven,italy,bowl,Aglio Olio,
+AB010,Pasta,Mac & Cheese,mac-cheese,True,249,new,,14,,pizza_oven,italy,bowl,,
+AB011,Laffa Rolls,Roasted Chicken Laffa Roll,roasted-chicken-laffa-roll,False,279,matched,85,9,66,grill_rolls,lebanon,roll,Mediterranean Chicken Roll,
+AB012,Laffa Rolls,Paneer Laffa Roll,paneer-laffa-roll,True,249,matched,85,9,62,grill_rolls,lebanon,roll,Paneer Makhani Roll,
+AB013,Laffa Rolls,Veggies Laffa Roll,veggies-laffa-roll,True,239,matched,65,9,69,grill_rolls,lebanon,roll,Mexican Casa Roll,
+AB014,Laffa Rolls,Falafel Laffa Roll,falafel-laffa-roll,True,249,costed,68,9,69,grill_rolls,lebanon,roll,Falafel Hummus Roll,
+AB015,Bowls,Thai Chilly Chicken Bowl,thai-chilly-chicken-bowl,False,289,matched,75,15,69,wok_momos,china,meal_box,Chilly Chicken (Rice/Noodles),Base:Burnt garlic noodles|Fried rice
+AB016,Bowls,Manchurian Bowl,manchurian-bowl,True,169,costed,37,15,69,wok_momos,china,meal_box,Manchurian (Fried Rice/Noodles),Base:Veg fried rice|Burnt garlic noodles
+AB017,Bowls,Thai Paneer Chilly Bowl,thai-paneer-chilly-bowl,True,309,matched,82,15,69,wok_momos,china,meal_box,Paneer Chilly (Rice/Noodles),Base:Burnt garlic noodles|Fried rice
+AB018,Bowls,Butter Chicken + Biryani Rice,butter-chicken-biryani-rice,False,329,matched,95,15,67,wok_momos,abu,meal_box,Butter Chicken Bowl (Rice/Paratha),
+AB019,Bowls,Mexican Hotpot (Veg),mexican-hotpot-veg,True,249,costed,72,15,65,wok_momos,mexico,meal_box,Mexican Hot Pot (Veg),
+AB020,Bowls,Mexican Hotpot (Chicken),mexican-hotpot-chicken,False,289,new,,15,,wok_momos,mexico,meal_box,,
+AB021,Bowls,Falafel Hummus Platter with Fresh Pita,falafel-hummus-platter-with-fresh-pita,True,279,matched,72,15,69,grill_rolls,lebanon,meal_box,Mezze Platter,
+AB022,Burgers,Veg Burger,veg-burger,True,279,costed,84,11,66,grill_rolls,abu,box_wrap,Veg Cheese Burger,
+AB023,Burgers,Chicken Burger,chicken-burger,False,279,costed,101,11,60,grill_rolls,abu,box_wrap,Chicken Burger,
+AB024,Fries,Fries,fries,True,139,costed,29,14,69,fryer,abu,fries_nachos,Salted / Peri Peri Fries,Flavour:Salted|Peri peri
+AB025,Garlic Bread,Cheese Garlic Bread,cheese-garlic-bread,True,169,costed,43,11,68,pizza_oven,italy,garlic_bread,Cheese Garlic Bread,
+AB026,Iced Tea,Peach Iced Tea,peach-iced-tea,True,99,costed,19,10,71,cold_drinks,abu,drink,Peach Iced Tea,
+AB027,Iced Tea,Lemon Iced Tea,lemon-iced-tea,True,99,costed,4,10,86,cold_drinks,abu,drink,Lemon Iced Tea,
+AB028,Iced Tea,Blue Lagoon,blue-lagoon,True,99,new,,10,,cold_drinks,abu,drink,,
+AB029,Shakes,Peanut Butter Caramel Shake,peanut-butter-caramel-shake,True,209,costed,56,10,68,cold_drinks,abu,drink,Peanut Butter Caramel Shake,
+AB030,Shakes,Oreo Shake,oreo-shake,True,169,costed,41,10,70,cold_drinks,abu,drink,Oreo Milkshake,
+AB031,Shakes,Nutella Shake,nutella-shake,True,219,costed,58,10,69,cold_drinks,abu,drink,Nutella Milkshake,

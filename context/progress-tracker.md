@@ -14,8 +14,12 @@ Update this file after every meaningful implementation change.
 ## Completed
 
 - Repo set up: Next.js 15 + TypeScript + Tailwind scaffold, context files,
-  brand tokens, initial Supabase migration, seed CSVs (105 dishes, 576 recipe
-  lines, 129 ingredient rates) from the indent workbook and launch price list.
+  brand tokens, initial Supabase migration, seed CSVs (576 recipe lines,
+  129 ingredient rates) from the indent workbook and launch price list.
+- Live launch menu locked (7 Nov 2026): 31 items in `supabase/seed/menu_items.csv`
+  across Pizza, Pasta, Laffa Rolls, Bowls, Burgers, Fries, Garlic Bread,
+  Iced Tea, Shakes. Migration `20261107000000_item_options.sql` adds item
+  options (bowl base, fries flavour) and `price_status`.
 
 ## In Progress
 
@@ -24,9 +28,10 @@ Update this file after every meaningful implementation change.
 ## Next Up
 
 Phase 1 — Order and pay
-1. Supabase project + apply migration; `scripts/seed.ts` imports
-   `supabase/seed/*.csv` (categories, menu items, add-ons, ingredients,
-   recipes, pack kits)
+1. Supabase project + apply migrations; `scripts/seed.ts` imports
+   `supabase/seed/*.csv`: categories, the 31 live menu items, options
+   (from the `options` column, format `Group:choice|choice`), add-ons,
+   ingredients, pack kits, and recipe lines for each item's `costing_ref`
 2. Brand tokens + fonts in `globals.css`; base layout
 3. Storefront menu page (categories, veg filter, cuisine sticker chips)
 4. Cart (client state, persisted in localStorage) + add-ons
@@ -59,10 +64,15 @@ Phase 5 — WhatsApp ordering
 
 ## Open Questions
 
-- Final menu: the launch price list has 105 dishes + 2 add-ons; the Setup
-  Tracker menu sheet lists 43 items, some not costed (Pesto Rice, Chicken
-  Nuggets, Honey Dragon Chicken, Pizza Marcos, Ravioli, Avocado Cheese Roll,
-  Tiramisu, Lal Maas, Handi Chicken). Which list goes live?
+- Prices for the 6 new dishes are provisional until their recipes are
+  costed: Veggies Pizza ₹349, Pesto Pizza ₹379, Alfredo Pasta ₹269,
+  Mac & Cheese ₹249, Mexican Hotpot (Chicken) ₹289, Blue Lagoon ₹99.
+- 7 "matched" dishes use a close costed dish's recipe (see `costing_ref`);
+  confirm the recipe is the same: Roasted Chicken / Paneer / Veggies Laffa,
+  Thai Chilly Chicken Bowl, Thai Paneer Chilly Bowl, Butter Chicken +
+  Biryani Rice, Falafel Hummus Platter.
+- Chicken Burger sits at 60% gross margin and Paneer Laffa at 62%; recipe
+  fixes or a price change?
 - Pizza size: costed at 7–8"; packaging is a 12" box. Re-price if 12".
 - Delivery fee and delivery radius (all of Mount Abu? minimum order?)
 - Opening hours and last-order time (late night per the brand: "11 pm")
@@ -89,6 +99,8 @@ Phase 5 — WhatsApp ordering
 ## Session Notes
 
 - Supabase region: Mumbai (`ap-south-1`).
+- Live menu = 31 items (user list, 7 Nov 2026). Cuisine sticker per item is
+  in the CSV; Laffa rolls are tagged ABU & LEBANON.
 - Seed sources: `Abu_and_Beyond_Indent_List 2.xlsx` (recipes, rate card,
   ingredient groups) and `Launch price list.pdf` (prices, packaging per
   category).
