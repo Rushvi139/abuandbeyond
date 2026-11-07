@@ -70,13 +70,26 @@ wide tracking.
 shadcn/ui on top of Tailwind. Components live in `src/components/ui/`
 (generated, protected). App components in `src/components/<area>/`.
 
+## Design source
+
+The canvas "Abu & Beyond — Order App Screens"
+(https://claude.ai/artifact/PEHFrxiae7wzud6DM8cvTi) holds the
+approved screens: Menu, Item options sheet, Checkout, Order confirmed,
+WhatsApp messages, Reviews wall, Review + share. Match it.
+
 ## Layout Patterns
 
 - Storefront: single column, max-w-md centred on desktop; sticky category
   tabs at top; sticky Hot clay cart bar at bottom.
 - Item card: name, veg/non-veg marker, cuisine sticker chip
   (ABU & ITALY etc.), price, add button.
-- Checkout: one page, bottom sheet for address.
+- Checkout: one scrolling page (cart, delivery form, bill) with a sticky Pay button; no separate cart page.
+- Order confirmed: Clay header band with Anton "ORDER #1042 IS IN.", vertical
+  status stepper (done = green check, current = clay dot with acid ring).
+- Reviews wall: Night ink background, Acid accents, 3-column media grid
+  (9:13 tiles, play badge on videos), review cards, sticky Acid CTA.
+- Review form: big star buttons (56 px), tag chips, upload tile, consent
+  checkbox, sticky Clay submit.
 - Kitchen Display: full-screen dark grid of KOT cards, oldest first; card
   header colour by age (normal / 10 min amber / 20 min Clay red).
 - Admin: left sidebar nav, top bar, content area with tables and filters.

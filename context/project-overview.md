@@ -23,6 +23,27 @@ It runs its own delivery rider. Tagline: "Beyond the usual."
 4. Owner closes each day with a one-screen summary: orders, revenue, average
    ticket, food + packaging %, low stock.
 
+## Routes and Screens
+
+Ordering takes three screens on a phone. Designs: "Abu & Beyond — Order App
+Screens" canvas (claude.ai artifact) — build against it.
+
+| Route | Screen | Who |
+| --- | --- | --- |
+| `/` | 1 · Menu: categories, veg filter, cart bar. Item options open as a bottom sheet (no page change) | Customer |
+| `/checkout` | 2 · Cart + delivery details + bill + Pay (Razorpay) on one page | Customer |
+| `/o/[code]` | 3 · Order confirmed + live status, chat / call buttons | Customer |
+| `/o/[code]/review` | Rate, review, upload photos or a reel (delivered orders only; link sent on WhatsApp) | Customer |
+| `/wall` | Reviews wall: rating summary, approved photos and reels, reviews, social links | Anyone |
+| `/kitchen` | Kitchen Display (KOTs) | Kitchen |
+| `/rider` | Deliveries | Rider |
+| `/admin` | Orders, menu, stock, vendors, finance | Owner, manager |
+| `/admin/wall` | Approve or reject reviews' media before they show on `/wall` | Owner, manager |
+
+Rules: no customer login; no separate cart page; no separate item page;
+every screen works one-handed at 360 px width; the primary action is always a
+sticky bottom button.
+
 ## Core User Flow
 
 1. Customer scans a QR (hamper, hotel desk, hoarding, sticker) and lands on the
@@ -90,6 +111,21 @@ paid | accepted | preparing → cancelled (owner only; triggers refund)
 - Ready orders with address, map link, tap-to-call
 - Picked up → Delivered
 
+### Reviews and wall
+
+- After delivery, WhatsApp sends a "Rate & share" link to `/o/[code]/review`
+  (one review per delivered order — keeps reviews genuine)
+- Review: 1–5 stars, quick tags (Hot & fresh, On time, Packaging, Portion
+  size, Value), optional text, up to 4 photos or 1 video (60 s, 50 MB),
+  optional Instagram handle for credit, consent checkbox to be featured
+- Uploads go to a private storage bucket; owner approves or rejects in
+  `/admin/wall`; only approved media appear on `/wall`
+- Review text is shown as written, never edited by staff; owner can hide a
+  review only for abuse or spam
+- `/wall` shows average rating and count from real reviews, approved photos
+  and reels, latest reviews, and buttons to Instagram, Google review page and
+  WhatsApp chat
+
 ### Owner / ERP
 
 - Order board: live orders by status, search, cancel + refund, assign rider
@@ -109,6 +145,7 @@ paid | accepted | preparing → cancelled (owner only; triggers refund)
 - Customer web ordering + Razorpay + WhatsApp notifications
 - Kitchen Display, rider view, owner order board
 - Stock, recipes, vendors, purchasing, expenses, revenue, P&L
+- Reviews, customer photo/video uploads with moderation, `/wall` page
 - Seed data from the indent workbook and launch price list
 
 ### Out of Scope (for now)
@@ -131,3 +168,6 @@ paid | accepted | preparing → cancelled (owner only; triggers refund)
 4. A vendor bill and payment can be logged and appear in the monthly P&L next
    to revenue.
 5. The daily summary shows food + packaging cost % for the day.
+6. A customer with a delivered order can leave a review with a photo from
+   the WhatsApp link; after owner approval it appears on `/wall`.
+7. Placing an order takes at most 3 screens from the QR scan.

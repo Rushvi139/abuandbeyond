@@ -49,6 +49,12 @@ Phase 2 — Kitchen and WhatsApp
 12. WhatsApp sender + templates + status notifications
 13. WhatsApp inbound webhook auto-reply
 
+Phase 2b — Reviews and wall
+13a. Migration `reviews` + `review_media` + `wall-uploads` bucket (done as file, apply)
+13b. `/o/[code]/review` form with uploads (delivered orders only)
+13c. `/admin/wall` moderation queue
+13d. `/wall` public page + social links
+
 Phase 3 — Stock and purchasing
 14. Ingredients, recipes, stock on hand, low-stock alerts
 15. Auto-deduct on delivered; wastage + adjustments
@@ -63,6 +69,9 @@ Phase 5 — WhatsApp ordering
 20. Catalogue in chat + Razorpay payment link into the same pipeline
 
 ## Open Questions
+
+- Social links: Instagram handle, Google Business review link, WhatsApp
+  business number for the `/wall` buttons.
 
 - Prices for the 6 new dishes are provisional until their recipes are
   costed: Veggies Pizza ₹349, Pesto Pizza ₹379, Alfredo Pasta ₹269,
@@ -99,6 +108,9 @@ Phase 5 — WhatsApp ordering
 ## Session Notes
 
 - Supabase region: Mumbai (`ap-south-1`).
+- Screens approved for build are on the "Abu & Beyond — Order App Screens"
+  canvas: ordering = 3 screens (/, /checkout, /o/[code]); item options are
+  a bottom sheet on /.
 - Live menu = 31 items (user list, 7 Nov 2026). Cuisine sticker per item is
   in the CSV; Laffa rolls are tagged ABU & LEBANON.
 - Seed sources: `Abu_and_Beyond_Indent_List 2.xlsx` (recipes, rate card,

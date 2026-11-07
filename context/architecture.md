@@ -18,6 +18,7 @@
 ## System Boundaries
 
 - `src/app/(store)` — public storefront: menu, cart, checkout, order status. No auth.
+- `src/app/(store)/wall`, `src/app/(store)/o/[code]/review` — public reviews wall and review form.
 - `src/app/kitchen` — Kitchen Display. Role: kitchen, manager, owner.
 - `src/app/rider` — rider view. Role: rider, manager, owner.
 - `src/app/admin` — ERP: orders, menu, stock, vendors, purchasing, finance, reports. Role: manager, owner (finance: owner only).
@@ -38,7 +39,9 @@
   purchase orders, bills, vendor payments, expenses, staff profiles,
   WhatsApp message log.
 - **Supabase Storage**: menu item photos (`menu-images` bucket), vendor bill
-  scans (`bills` bucket, private).
+  scans (`bills` bucket, private), customer review uploads (`wall-uploads`
+  bucket, private until approved; approved files are served via signed or
+  public copies).
 - Money is stored as integer paise (`bigint`). Quantities as `numeric(12,3)`
   in the ingredient's base unit (g, ml, pc).
 - Stock on hand is derived from `stock_movements` (sum by ingredient), cached
@@ -72,3 +75,5 @@
    `whatsapp_messages` and retried, the order continues.
 7. Money is integer paise everywhere; GST 5% is applied once, at order total.
 8. The service-role key never reaches the browser.
+9. Customer-uploaded media is never shown publicly until a staff member
+   approves it; only orders with status `delivered` can create a review.
