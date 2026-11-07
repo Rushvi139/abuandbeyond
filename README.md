@@ -14,6 +14,8 @@ finances — for Abu & Beyond, Mount Abu.
 Stack: Next.js 15 · TypeScript · Tailwind · shadcn/ui · Supabase (Postgres,
 Realtime, Auth, Mumbai region) · Razorpay · WhatsApp Cloud API · Docker on our own server.
 
+Live at `https://abuandbeyond.com` (Hostinger VPS, Docker). Code: `github.com/Rushvi139/abuandbeyond`.
+
 ## Repo map
 
 ```

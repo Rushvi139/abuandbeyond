@@ -81,7 +81,6 @@ Phase 5 — Full WhatsApp ordering (deferred)
 
 ## Open Questions
 
-- Server details: provider, region, domain name for the site.
 - Does Petpooja offer an API for pushing online orders in? Ask them before
   we plan any sync.
 - Photoshoot after site lock: 31 dishes, 1:1, drop style (see ui-context).
@@ -128,6 +127,8 @@ Phase 5 — Full WhatsApp ordering (deferred)
 ## Session Notes
 
 - Supabase region: Mumbai (`ap-south-1`).
+- Server: Hostinger VPS 93.127.166.70; domain abuandbeyond.com; repo
+  github.com/Rushvi139/abuandbeyond. Deploy steps in `docs/deploy.md`.
 - Screens approved for build are on the "Abu & Beyond — Order App Screens"
   canvas: ordering = 3 screens (/, /checkout, /o/[code]); item options are
   a bottom sheet on /.

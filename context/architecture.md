@@ -13,7 +13,7 @@
 | Messaging  | WhatsApp Cloud API (Meta), behind `lib/whatsapp` | Template notifications, inbound auto-reply |
 | Validation | Zod                                     | Every request body, webhook payload and form |
 | Automation | n8n (optional, external)                | Daily reports, low-stock alerts to WhatsApp; reads via Supabase |
-| Hosting    | Own server: Docker (Next.js standalone) behind Caddy (auto HTTPS); Supabase Cloud, Mumbai `ap-south-1` | Production. See `docs/deploy.md` |
+| Hosting    | Own server (Hostinger VPS, abuandbeyond.com): Docker (Next.js standalone) behind Caddy (auto HTTPS); Supabase Cloud, Mumbai `ap-south-1` | Production. See `docs/deploy.md` |
 
 ## System Boundaries
 
