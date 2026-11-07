@@ -1,7 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="440" height="300" viewBox="0 0 440 300"><g transform="translate(220.0 150.0) rotate(0) translate(-220.0 -150.0)">
-  <rect x="10" y="10" width="420" height="280" rx="40" fill="#FF4D14" stroke="#141414" stroke-width="10"/>
-  <text x="220" y="122" text-anchor="middle" font-family="Anton, Impact, 'Arial Narrow Bold', sans-serif" font-size="96" letter-spacing="4" fill="#141414">ABU</text>
-  <path d="M52 146 L112 146 L148 118 L180 146 L220 110 L260 146 L388 146" fill="none" stroke="#141414" stroke-width="8" stroke-linejoin="round" stroke-linecap="round"/>
-  <text x="220" y="242" text-anchor="middle" font-family="Anton, Impact, 'Arial Narrow Bold', sans-serif" font-size="96" letter-spacing="4" fill="#141414">BEYOND</text>
-  <text x="220" y="276" text-anchor="middle" font-family="'Helvetica Neue', Arial, 'Liberation Sans', sans-serif" font-size="17" letter-spacing="6" fill="#141414">THE GLOBAL KITCHEN</text>
-</g></svg>

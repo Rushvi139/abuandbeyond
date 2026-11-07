@@ -1,7 +1,7 @@
 # CLAUDE.md — Abu & Beyond
 
 Online ordering + Kitchen ERP for Abu & Beyond, a delivery-only global kitchen
-in Mount Abu. Next.js 15 + Supabase + Razorpay + WhatsApp Cloud API.
+in Mount Abu. Next.js 15 + our own Postgres (Docker) + Razorpay + WhatsApp Cloud API.
 
 ## Read first, every session
 
@@ -17,15 +17,16 @@ in Mount Abu. Next.js 15 + Supabase + Razorpay + WhatsApp Cloud API.
 - `npm run dev` — local dev server
 - `npm run build` — must pass before a unit is done
 - `npm run lint`, `npm test` (Vitest)
-- `npx supabase db push` — apply migrations to the linked project
-- `npm run db:types` — regenerate `src/lib/db/types.ts`
-- `npm run seed` — import `supabase/seed/*.csv`
+- `npm run db:migrate` — apply `db/migrations/*.sql` (needs DATABASE_URL)
+- `npm run db:seed` — load the live menu from `db/seed/*.csv`
+- On the server: `docker compose run --rm migrate` does both
 
 ## Hard rules
 
 - Only the Razorpay webhook (signature verified) marks an order paid.
 - Order status changes only via `src/lib/orders/transition.ts`.
 - Stock changes only via `stock_movements` inserts.
+- Every staff screen and mutation checks the session role in code (no DB-level RLS).
 - Money in integer paise; prices stored before 5% GST.
 - Test-mode keys only; never commit secrets; never message or charge a real
   customer without the owner's go-ahead.

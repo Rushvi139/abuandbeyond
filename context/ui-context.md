@@ -103,6 +103,29 @@ Photoshoot spec: 1:1 square, at least 1200 × 1200 px, the brand's "drop"
 style (food falling into the box, straight-on camera, one hard light, plain
 brand-colour backdrop, no props, no faces). Serve as WebP via Next/Image.
 
+## Logo and sticker files
+
+Logos are the brand kit PNGs in `public/brand/` (`patch-primary.png`,
+`patch-primary-tilted.png`, `patch-mono-white.png`, `ampersand-seal-acid.png`,
+`wordmark-ink.png`, favicons). Never SVG with live text: the Anton lettering
+would fall back to the phone's fonts.
+
+Stickers from the brand sticker sheet live in `public/brand/stickers/`
+(transparent PNGs): `leopard` (Cat spotted), `paw`, dish stickers `pizza`,
+`pasta`, `rolls`, `rice-bowls`, `hummus`, `burgers`, bears `bear-roll`,
+`bear-noodles`, `bear-pizza`, `bear-explorer`, `bhai-bhai`. Dish stickers are
+the menu tile until a dish has a photo. Tailwind colour token for the page
+background is `bg-paper` (not `base`, which clashes with `text-base`).
+
+## Motion
+
+- First visit: the leopard sticker climbs down from the top of the screen and
+  sits on the patch logo, paw prints appear, then the welcome card slides up
+  (`components/store/welcome.tsx`; shown once per device, skippable).
+- Order confirmed: `HappyBear` (bear eating a roll, sitting) does a happy
+  bob-and-sway dance with floating notes.
+- All motion is off under `prefers-reduced-motion`.
+
 ## Icons
 
 Lucide React for UI (stroke icons, `h-4 w-4` inline, `h-5 w-5` buttons).

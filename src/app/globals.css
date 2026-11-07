@@ -29,7 +29,7 @@
 }
 
 @theme inline {
-  --color-base: var(--bg-base);
+  --color-paper: var(--bg-base);
   --color-surface: var(--bg-surface);
   --color-night: var(--bg-night);
   --color-ink: var(--text-primary);
@@ -52,4 +52,45 @@ body {
   background: var(--bg-base);
   color: var(--text-primary);
   font-family: "Inter Variable", Arial, sans-serif;
+}
+
+/* Welcome entrance: leopard climbs down and sits on the patch */
+@keyframes ab-leopard-drop {
+  0%   { transform: translateY(-110vh) rotate(-6deg); }
+  70%  { transform: translateY(6px) rotate(2deg); }
+  85%  { transform: translateY(-3px) rotate(0deg); }
+  100% { transform: translateY(0) rotate(0deg); }
+}
+@keyframes ab-paw-in {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.ab-leopard { animation: ab-leopard-drop 1.9s cubic-bezier(0.22, 0.9, 0.3, 1) both; }
+.ab-paws > * { opacity: 0; animation: ab-paw-in 0.4s ease-out forwards; }
+.ab-paws > *:nth-child(1) { animation-delay: 0.5s; }
+.ab-paws > *:nth-child(2) { animation-delay: 0.9s; }
+.ab-paws > *:nth-child(3) { animation-delay: 1.3s; }
+@media (prefers-reduced-motion: reduce) {
+  .ab-leopard, .ab-paws > * { animation: none; opacity: 1; }
+}
+
+/* Order confirmed: the bear's happy dance */
+@keyframes ab-bear-dance {
+  0%   { transform: translateY(0) rotate(0deg); }
+  25%  { transform: translateY(-6px) rotate(-4deg); }
+  50%  { transform: translateY(0) rotate(0deg); }
+  75%  { transform: translateY(-6px) rotate(4deg); }
+  100% { transform: translateY(0) rotate(0deg); }
+}
+@keyframes ab-note-float {
+  0%   { opacity: 0; transform: translateY(6px) scale(0.8); }
+  30%  { opacity: 1; }
+  100% { opacity: 0; transform: translateY(-22px) scale(1.1); }
+}
+.ab-bear { transform-origin: 50% 90%; animation: ab-bear-dance 1.6s ease-in-out infinite; }
+.ab-bear-note { animation: ab-note-float 1.6s ease-out infinite; }
+.ab-bear-note-2 { animation-delay: 0.8s; }
+@media (prefers-reduced-motion: reduce) {
+  .ab-bear { animation: none; }
+  .ab-bear-note { animation: none; opacity: 0.8; }
 }

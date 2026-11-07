@@ -6,7 +6,7 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "Abu & Beyond — Beyond the usual",
   description: "A global kitchen in the Aravalli hills. Order from Mount Abu.",
-  icons: { icon: "/brand/favicon.svg" },
+  icons: { icon: "/brand/favicon-192.png" },
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

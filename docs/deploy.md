@@ -1,8 +1,7 @@
 # Deploying on our Hostinger server
 
-The app runs as its own Docker container, separate from the other apps on
-the server. The database, realtime and staff login stay on Supabase Cloud
-(Mumbai region), so backups and the live Kitchen Display need no server work.
+Everything runs in our own containers, separate from the other apps on the
+server: the app, its PostgreSQL database and a nightly backup job.
 
 | Item | Value |
 | --- | --- |
@@ -10,7 +9,8 @@ the server. The database, realtime and staff login stay on Supabase Cloud
 | Domain | `abuandbeyond.in` (`www.abuandbeyond.in` redirects to it) |
 | Code | `github.com/Rushvi139/abuandbeyond` |
 | Folder on server | `/opt/abuandbeyond` |
-| Container | `abuandbeyond-app`, on `127.0.0.1:3100` (change with `APP_PORT`) |
+| Containers | `abuandbeyond-app` (127.0.0.1:3100), `abuandbeyond-db` (127.0.0.1:5433), `abuandbeyond-backup` |
+| Backups | `/opt/abuandbeyond/backups/*.sql.gz`, one a day, kept 14 days |
 
 ## 1. DNS (done in Hostinger DNS)
 
@@ -45,8 +45,9 @@ If 3100 is taken, pick another free port and set `APP_PORT` in `.env`
 sudo mkdir -p /opt/abuandbeyond && sudo chown $USER /opt/abuandbeyond
 git clone https://github.com/Rushvi139/abuandbeyond.git /opt/abuandbeyond
 cd /opt/abuandbeyond
-cp .env.example .env && nano .env      # fill in keys; NEXT_PUBLIC_SITE_URL=https://abuandbeyond.in
-docker compose up -d --build           # starts only abuandbeyond-app
+cp .env.example .env && nano .env      # NEXT_PUBLIC_SITE_URL, POSTGRES_PASSWORD, SESSION_SECRET (see file)
+docker compose up -d --build           # app + db + backup
+docker compose run --rm migrate        # create tables and load the menu
 curl -I http://127.0.0.1:3100          # should answer HTTP 200
 ```
 
@@ -121,20 +122,24 @@ HTTPS for `DOMAIN` (set `DOMAIN=abuandbeyond.in` in `.env`).
 1. Open `https://abuandbeyond.in`.
 2. Razorpay webhook → `https://abuandbeyond.in/api/razorpay/webhook`
 3. WhatsApp webhook → `https://abuandbeyond.in/api/whatsapp/webhook` (verify token = `WHATSAPP_VERIFY_TOKEN`)
-4. Apply database migrations from your laptop: `npx supabase link`, then `npx supabase db push`
+4. Create the first staff login (owner): `docker compose exec app node scripts/create-staff.js` (comes with unit 8)
 
 ## Updates
 
 ```bash
-cd /opt/abuandbeyond && git pull && docker compose up -d --build
+cd /opt/abuandbeyond && git pull && docker compose up -d --build && docker compose run --rm migrate
 ```
 
-This rebuilds only `abuandbeyond-app`; your other apps keep running.
+This rebuilds only our containers; your other apps keep running. `migrate`
+is safe to run every time: it applies only new migrations and re-syncs the
+menu seed.
 
 ## Good habits
 
 - Keep `.env` only on the server; never commit it.
-- Turn on Supabase daily backups (Project settings → Database).
+- Backups land in `/opt/abuandbeyond/backups/`; copy them off the server weekly
+  (`scp` to your laptop or a cloud drive). Restore: `gunzip -c <file> | docker compose exec -T db psql -U abu abuandbeyond`.
+- Database access from your laptop: `ssh -L 5433:127.0.0.1:5433 root@93.127.166.70`, then connect to `localhost:5433`.
 - Add an uptime check on `https://abuandbeyond.in` so you hear about downtime first.
 - Watch memory: the app needs about 300–500 MB at runtime; the build step
   briefly needs ~1.5 GB. If the server is tight, build on GitHub Actions and

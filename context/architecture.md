@@ -6,14 +6,14 @@
 | ---------- | --------------------------------------- | ---- |
 | Framework  | Next.js 15 (App Router) + TypeScript    | One codebase: storefront, `/kitchen`, `/rider`, `/admin`, API route handlers |
 | UI         | Tailwind CSS v4 + shadcn/ui             | Styling with brand tokens; accessible primitives |
-| Database   | Supabase Postgres                       | All business data; SQL migrations in `supabase/migrations` |
-| Realtime   | Supabase Realtime                       | Live order board, Kitchen Display, status page |
-| Auth       | Supabase Auth (email OTP / password)    | Staff only: owner, manager, kitchen, rider. Customers never log in |
+| Database   | PostgreSQL 16 in our own container (`abuandbeyond-db`), `postgres` npm driver | All business data; SQL migrations in `db/migrations`, nightly dumps in `backups/` |
+| Realtime   | Postgres LISTEN/NOTIFY (`orders` channel) → Server-Sent Events route | Live order board, Kitchen Display, status page |
+| Auth       | Own: `staff_users` + bcrypt + httpOnly session cookie (`sessions` table) | Staff only: owner, manager, kitchen, rider. Customers never log in |
 | Payments   | Razorpay (Orders API + Checkout + webhooks) | Online payment, refunds |
 | Messaging  | WhatsApp Cloud API (Meta), behind `lib/whatsapp` | Template notifications, inbound auto-reply |
 | Validation | Zod                                     | Every request body, webhook payload and form |
-| Automation | n8n (optional, external)                | Daily reports, low-stock alerts to WhatsApp; reads via Supabase |
-| Hosting    | Own server (Hostinger VPS, shared with other apps, abuandbeyond.in): own Docker container `abuandbeyond-app` on 127.0.0.1:3100 behind the server's existing reverse proxy; Supabase Cloud, Mumbai `ap-south-1` | Production. See `docs/deploy.md` |
+| Automation | n8n (already on the same server)        | Daily reports, low-stock alerts to WhatsApp; reads via the app's API |
+| Hosting    | Own server (Hostinger VPS, shared with other apps, abuandbeyond.in): Compose project `abuandbeyond` (app + db + backup containers) behind the server's Traefik | Production. See `docs/deploy.md` |
 
 ## System Boundaries
 
@@ -24,24 +24,24 @@
 - `src/app/admin` — back office: order management (live board, manual orders, refunds), customers (CRM), properties (hotels / villas sending orders), menu, stock, vendors, purchasing, expenses, finance, reports. Role: manager, owner (finance: owner only).
 - `src/app/api/razorpay` — create order, webhook. Only place that marks orders paid.
 - `src/app/api/whatsapp` — Meta webhook (verify + inbound messages).
-- `src/lib/db` — Supabase clients (browser, server, service-role) and typed queries.
+- `src/lib/db` — the Postgres pool (`db()`), server-only; typed query modules live beside their feature (`src/lib/menu/queries.ts`).
+- `src/lib/auth` — staff login, session cookie, `requireRole()`.
 - `src/lib/orders` — order state machine; the only code allowed to change `orders.status`.
 - `src/lib/stock` — stock movements and recipe deduction.
 - `src/lib/payments` — Razorpay wrapper (create order, verify signature, refund).
 - `src/lib/whatsapp` — WhatsApp sender + template registry. Swappable for a BSP.
 - `src/lib/pricing` — GST, totals, food-cost and margin maths.
-- `supabase/migrations` — schema, RLS policies, functions. `supabase/seed` — CSV seed data.
+- `db/migrations` — schema and functions (plain SQL, applied in order by `scripts/migrate.ts`). `db/seed` — CSV seed data loaded by `scripts/seed.ts`.
 
 ## Storage Model
 
-- **Postgres (Supabase)**: menu, add-ons, customers, orders, order items,
+- **Postgres**: menu, add-ons, customers, orders, order items,
   status history, payments, ingredients, recipes, stock movements, vendors,
   purchase orders, bills, vendor payments, expenses, staff profiles,
   WhatsApp message log.
-- **Supabase Storage**: menu item photos (`menu-images` bucket), vendor bill
-  scans (`bills` bucket, private), customer review uploads (`wall-uploads`
-  bucket, private until approved; approved files are served via signed or
-  public copies).
+- **Files** on the `uploads` Docker volume (`UPLOAD_DIR`): menu photos (`menu/`), vendor bill
+  scans (`bills/`, staff only), customer review uploads (`wall/`, served only
+  once approved, through an app route that checks status).
 - Money is stored as integer paise (`bigint`). Quantities as `numeric(12,3)`
   in the ingredient's base unit (g, ml, pc).
 - Stock on hand is derived from `stock_movements` (sum by ingredient), cached
@@ -51,12 +51,15 @@
 
 - Customers are anonymous. An order is looked up by its public `order_code`
   plus phone; no customer accounts.
-- Staff sign in with Supabase Auth. Each staff user has a `profiles.role`:
+- Staff sign in with phone/email + password (`staff_users`, bcrypt). A
+  session row + httpOnly cookie identify them; `staff_users.role` is one of
   `owner`, `manager`, `kitchen`, `rider`.
-- Row Level Security is on for every table. Anonymous users can only read
-  active menu data and call the checkout API. Staff access follows role.
-- Webhooks and server actions that must bypass RLS use the service-role client
-  inside `src/lib/db/admin.ts` only, on the server only.
+- There is no database-level row security: every server action and route
+  handler calls `requireRole([...])` before touching staff data. Public routes
+  (menu, checkout, order status by code + phone, review by code) expose only
+  what the customer needs.
+- The database is reachable only from inside the Compose network and from
+  `127.0.0.1` on the server; never from the internet.
 
 ## External POS (Petpooja)
 
@@ -82,6 +85,6 @@ What Petpooja's API allows must be confirmed with Petpooja first.
 6. WhatsApp sending never blocks the order flow; failures are logged to
    `whatsapp_messages` and retried, the order continues.
 7. Money is integer paise everywhere; GST 5% is applied once, at order total.
-8. The service-role key never reaches the browser.
+8. `DATABASE_URL` and `SESSION_SECRET` never reach the browser; the DB pool is server-only.
 9. Customer-uploaded media is never shown publicly until a staff member
    approves it; only orders with status `delivered` can create a review.

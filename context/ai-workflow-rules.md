@@ -34,7 +34,7 @@ split it.
   before implementing.
 - If a requirement is missing, add it as an open question in
   `progress-tracker.md` before continuing.
-- Prices, recipes and margins come from `supabase/seed/`; do not make up menu
+- Prices, recipes and margins come from `db/seed/`; do not make up menu
   data.
 
 ## Protected Files
@@ -42,8 +42,7 @@ split it.
 Do not modify the following unless explicitly instructed:
 
 - `src/components/ui/*` — generated shadcn/ui components
-- `src/lib/db/types.ts` — generated Supabase types
-- Applied files in `supabase/migrations/` (add a new migration instead)
+- Applied files in `db/migrations/` (add a new migration instead)
 - `public/brand/*` — locked logo and brand assets (never redraw the logo)
 - `brand/brand-brief.md`
 

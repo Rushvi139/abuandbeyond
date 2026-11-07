@@ -14,8 +14,8 @@
 
 - `strict: true` throughout. No `any`; use explicit types or `unknown` +
   narrowing.
-- Generate DB types with `npm run db:types` (Supabase CLI) into
-  `src/lib/db/types.ts`; never hand-edit it.
+- Query with the `postgres` tagged template (`db()\`select …\``) and declare
+  the row type on each query; map rows to the feature's types in the same file.
 - Validate all external input with Zod at the boundary: request bodies,
   search params, form data, Razorpay and WhatsApp webhook payloads.
 - Money is `number` of paise (integer). Use `formatINR(paise)` from
@@ -53,8 +53,9 @@
 ## Data and Storage
 
 - All business data in Postgres; schema changes only through new files in
-  `supabase/migrations/` (never edit an applied migration).
-- Images and bill scans in Supabase Storage; store only the path in Postgres.
+  `db/migrations/` (never edit an applied migration; `0001_schema.sql` is
+  applied on the server).
+- Images and bill scans on the uploads volume; store only the relative path in Postgres.
 - Order status changes only through `src/lib/orders/transition.ts`.
 - Stock changes only by inserting `stock_movements`.
 - Snapshot names and prices into `order_items` at order time.
@@ -65,6 +66,7 @@
   signature).
 - Test the order state machine for every allowed and forbidden transition.
 - Use Razorpay test mode keys and a WhatsApp test number in development.
+- Local DB for tests: any Postgres 16; set `DATABASE_URL`, run `db:migrate` + `db:seed`.
 
 ## File Organization
 
@@ -76,6 +78,6 @@
 - `src/lib/` — business logic and integrations (db, orders, payments,
   whatsapp, stock, pricing)
 - `src/hooks/` — client hooks (realtime, cart)
-- `supabase/migrations/` — SQL migrations; `supabase/seed/` — CSV seed data
+- `db/migrations/` — SQL migrations; `db/seed/` — CSV seed data
 - `scripts/` — one-off scripts (seed import)
 - `context/` — the spec files Claude Code works from

@@ -1,0 +1,351 @@
+"use client";
+
+import Image from "next/image";
+import Link from "next/link";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { lineKey, useCart, type CartLine } from "@/hooks/use-cart";
+import { formatINR } from "@/lib/pricing";
+import { CUISINE_LABEL, type Category, type MenuItem } from "@/lib/menu/types";
+import { VegMark } from "./veg-mark";
+
+// Sticker artwork from the brand sticker sheet, by category slug (or item slug), else a coloured cuisine tile.
+const STICKER: Record<string, string> = {
+  pizza: "/brand/stickers/pizza.png",
+  pasta: "/brand/stickers/pasta.png",
+  "laffa-rolls": "/brand/stickers/rolls.png",
+  bowls: "/brand/stickers/rice-bowls.png",
+  burgers: "/brand/stickers/burgers.png",
+  "falafel-hummus-platter-with-fresh-pita": "/brand/stickers/hummus.png",
+};
+
+const TILE: Record<MenuItem["cuisine"], string> = {
+  italy: "bg-clay text-ink",
+  mexico: "bg-acid text-ink",
+  china: "bg-ink text-acid",
+  lebanon: "bg-hill text-reversed",
+  abu: "bg-kraft text-ink",
+};
+
+export function MenuScreen({ categories, closingLabel }: { categories: Category[]; closingLabel: string | null }) {
+  const cart = useCart();
+  const [vegOnly, setVegOnly] = useState(false);
+  const [active, setActive] = useState(categories[0]?.slug ?? "");
+  const [sheetItem, setSheetItem] = useState<MenuItem | null>(null);
+  const sectionRefs = useRef<Record<string, HTMLElement | null>>({});
+
+  const visible = useMemo(
+    () =>
+      categories
+        .map((c) => ({ ...c, items: vegOnly ? c.items.filter((i) => i.isVeg) : c.items }))
+        .filter((c) => c.items.length > 0),
+    [categories, vegOnly],
+  );
+  const dishCount = visible.reduce((n, c) => n + c.items.length, 0);
+
+  // highlight the category tab for the section in view
+  useEffect(() => {
+    const els = Object.values(sectionRefs.current).filter(Boolean) as HTMLElement[];
+    if (!els.length) return;
+    const io = new IntersectionObserver(
+      (entries) => {
+        const hit = entries.filter((e) => e.isIntersecting).sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top)[0];
+        if (hit) setActive(hit.target.id);
+      },
+      { rootMargin: "-140px 0px -60% 0px" },
+    );
+    els.forEach((el) => io.observe(el));
+    return () => io.disconnect();
+  }, [visible]);
+
+  function jump(slug: string) {
+    setActive(slug);
+    sectionRefs.current[slug]?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  function quickAdd(item: MenuItem) {
+    if (item.optionGroups.length || item.addons.length) return setSheetItem(item);
+    cart.add({
+      key: lineKey(item.id, [], []),
+      itemId: item.id,
+      name: item.name,
+      isVeg: item.isVeg,
+      unitPaise: item.pricePaise,
+      options: [],
+      addons: [],
+    });
+  }
+
+  function decrement(item: MenuItem) {
+    // remove one from the most recently added line of this item
+    const line = [...cart.lines].reverse().find((l) => l.itemId === item.id);
+    if (line) cart.setQty(line.key, line.qty - 1);
+  }
+
+  return (
+    <div className="mx-auto min-h-dvh max-w-md bg-paper pb-28">
+      <header className="px-5 pt-4">
+        <div className="flex items-center justify-between">
+          <Image src="/brand/patch-primary-tilted.png" alt="Abu & Beyond" width={104} height={76} priority className="-ml-2" />
+          <div className="flex flex-col items-end gap-0.5 text-right">
+            <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-hill">Delivering in Mount Abu</span>
+            {closingLabel && <span className="text-[13px] text-muted">{closingLabel}</span>}
+          </div>
+        </div>
+        <h1 className="mt-2 font-display text-[44px] uppercase leading-[0.98] tracking-tight">
+          Beyond
+          <br />
+          <span className="text-clay">the usual.</span>
+        </h1>
+        <div className="mt-4 flex items-center justify-between">
+          <span className="text-[13px] text-muted">
+            {dishCount} dishes · prices + 5% GST
+          </span>
+          <button
+            type="button"
+            onClick={() => setVegOnly((v) => !v)}
+            aria-pressed={vegOnly}
+            className={`flex h-9 items-center gap-2 rounded-full border-[1.5px] px-3 text-[13px] font-semibold transition-colors ${vegOnly ? "border-veg bg-veg text-reversed" : "border-ink bg-transparent text-ink"}`}
+          >
+            <VegMark veg className={vegOnly ? "[&>*]:border-reversed [&>*>*]:bg-reversed" : ""} />
+            Veg only
+          </button>
+        </div>
+      </header>
+
+      <nav className="sticky top-0 z-20 mt-3 border-b border-line bg-paper/95 backdrop-blur" aria-label="Categories">
+        <div className="flex gap-2 overflow-x-auto px-5 py-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          {visible.map((c) => (
+            <button
+              key={c.slug}
+              type="button"
+              onClick={() => jump(c.slug)}
+              className={`h-9 flex-none rounded-full px-4 text-sm transition-colors ${active === c.slug ? "bg-ink font-semibold text-reversed" : "bg-surface font-medium text-ink"}`}
+            >
+              {c.name}
+            </button>
+          ))}
+        </div>
+      </nav>
+
+      <main className="px-5">
+        {visible.map((c) => (
+          <section
+            key={c.slug}
+            id={c.slug}
+            ref={(el) => {
+              sectionRefs.current[c.slug] = el;
+            }}
+            className="scroll-mt-16 pt-5"
+          >
+            <h2 className="mb-1 font-display text-[22px] uppercase tracking-wide">{c.name}</h2>
+            {c.items.map((item) => (
+              <ItemRow key={item.id} item={item} sticker={STICKER[item.slug] ?? STICKER[c.slug] ?? null} qty={cart.qtyOfItem(item.id)} onAdd={() => quickAdd(item)} onMinus={() => decrement(item)} onCustomise={() => setSheetItem(item)} />
+            ))}
+          </section>
+        ))}
+        {dishCount === 0 && <p className="py-16 text-center text-muted">Nothing here right now.</p>}
+      </main>
+
+      {cart.ready && cart.count > 0 && (
+        <div className="fixed inset-x-0 bottom-0 z-30 mx-auto max-w-md px-3 pb-4">
+          <div className="flex h-16 items-center justify-between rounded-[18px] bg-ink pl-[18px] pr-2 text-reversed">
+            <div className="flex flex-col gap-0.5">
+              <span className="text-xs text-kraft">
+                {cart.count} item{cart.count > 1 ? "s" : ""}
+              </span>
+              <span className="text-[17px] font-bold">
+                {formatINR(cart.subtotalPaise)} <span className="text-xs font-normal text-kraft">+ GST</span>
+              </span>
+            </div>
+            <Link href="/checkout" className="flex h-12 items-center gap-2 rounded-[14px] bg-clay px-5 text-[15px] font-bold text-ink">
+              Checkout
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M5 12h14M13 6l6 6-6 6" />
+              </svg>
+            </Link>
+          </div>
+        </div>
+      )}
+
+      {sheetItem && <ItemSheet item={sheetItem} sticker={STICKER[sheetItem.slug] ?? STICKER[categories.find((c) => c.items.some((i) => i.id === sheetItem.id))?.slug ?? ""] ?? null} onClose={() => setSheetItem(null)} onAdd={(line, qty) => { cart.add(line, qty); setSheetItem(null); }} />}
+    </div>
+  );
+}
+
+function Tile({ item, sticker, size }: { item: MenuItem; sticker: string | null; size: "sm" | "lg" }) {
+  const box = size === "sm" ? "h-[72px] w-[72px] rounded-[14px]" : "h-[88px] w-[88px] rounded-2xl";
+  if (item.imagePath) {
+    // eslint-disable-next-line @next/next/no-img-element
+    return <img src={item.imagePath} alt="" className={`${box} flex-none object-cover`} />;
+  }
+  if (sticker) {
+    return (
+      <div className={`${box} flex flex-none items-center justify-center bg-surface`}>
+        <Image src={sticker} alt="" width={size === "sm" ? 66 : 82} height={size === "sm" ? 66 : 82} />
+      </div>
+    );
+  }
+  return (
+    <div className={`${box} flex flex-none items-center justify-center text-center ${TILE[item.cuisine]}`}>
+      <span className={`whitespace-pre-line font-display leading-[1.05] tracking-wide ${size === "sm" ? "text-[13px]" : "text-[15px]"}`}>{CUISINE_LABEL[item.cuisine].replace(" & ", " &\n")}</span>
+    </div>
+  );
+}
+
+function ItemRow({ item, sticker, qty, onAdd, onMinus, onCustomise }: { item: MenuItem; sticker: string | null; qty: number; onAdd: () => void; onMinus: () => void; onCustomise: () => void }) {
+  const hasChoices = item.optionGroups.length > 0;
+  return (
+    <div className={`flex items-center gap-3.5 border-b border-line py-2.5 ${item.available ? "" : "opacity-50"}`}>
+      <button type="button" onClick={onCustomise} aria-label={`${item.name} details`} className="flex-none">
+        <Tile item={item} sticker={sticker} size="sm" />
+      </button>
+      <div className="flex min-w-0 flex-1 flex-col gap-1">
+        <div className="flex items-center gap-1.5">
+          <VegMark veg={item.isVeg} />
+          <span className="truncate text-[15px] font-semibold">{item.name}</span>
+        </div>
+        {(item.description || hasChoices) && (
+          <span className="truncate text-xs text-muted">{item.description ?? `Choose: ${item.optionGroups[0].choices.map((c) => c.name).join(" or ")}`}</span>
+        )}
+        <span className="text-[15px] font-bold">{formatINR(item.pricePaise)}</span>
+      </div>
+      {!item.available ? (
+        <span className="flex-none text-xs font-semibold uppercase tracking-wide text-muted">Sold out</span>
+      ) : qty > 0 ? (
+        <div className="flex h-10 flex-none items-center rounded-full bg-ink text-reversed">
+          <button type="button" onClick={onMinus} aria-label={`Remove one ${item.name}`} className="h-10 w-9 text-lg">−</button>
+          <span className="min-w-3 text-center text-sm font-bold">{qty}</span>
+          <button type="button" onClick={onAdd} aria-label={`Add one ${item.name}`} className="h-10 w-9 text-lg">+</button>
+        </div>
+      ) : (
+        <button type="button" onClick={onAdd} className="h-10 flex-none rounded-full border-[1.5px] border-ink bg-surface px-[18px] text-[13px] font-bold tracking-wider">
+          ADD
+        </button>
+      )}
+    </div>
+  );
+}
+
+function ItemSheet({ item, sticker, onClose, onAdd }: { item: MenuItem; sticker: string | null; onClose: () => void; onAdd: (line: Omit<CartLine, "qty">, qty: number) => void }) {
+  const [choice, setChoice] = useState<Record<string, string>>(() =>
+    Object.fromEntries(item.optionGroups.map((g) => [g.id, g.required && g.choices[0] ? g.choices[0].id : ""])),
+  );
+  const [addonIds, setAddonIds] = useState<string[]>([]);
+  const [note, setNote] = useState("");
+  const [qty, setQty] = useState(1);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    document.addEventListener("keydown", onKey);
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = "";
+    };
+  }, [onClose]);
+
+  const options = item.optionGroups.flatMap((g) => {
+    const c = g.choices.find((x) => x.id === choice[g.id]);
+    return c ? [{ group: g.name, name: c.name, deltaPaise: c.priceDeltaPaise, optionId: c.id }] : [];
+  });
+  const addons = item.addons.filter((a) => addonIds.includes(a.id)).map((a) => ({ name: a.name, pricePaise: a.pricePaise, addonId: a.id }));
+  const unitPaise = item.pricePaise + options.reduce((n, o) => n + o.deltaPaise, 0) + addons.reduce((n, a) => n + a.pricePaise, 0);
+  const missing = item.optionGroups.some((g) => g.required && !choice[g.id]);
+
+  function submit() {
+    if (missing) return;
+    const cleanNote = note.trim() || undefined;
+    onAdd(
+      {
+        key: lineKey(item.id, options.map((o) => o.optionId), addons.map((a) => a.addonId), cleanNote),
+        itemId: item.id,
+        name: item.name,
+        isVeg: item.isVeg,
+        unitPaise,
+        options,
+        addons,
+        note: cleanNote,
+      },
+      qty,
+    );
+  }
+
+  return (
+    <div className="fixed inset-0 z-40 mx-auto max-w-md" role="dialog" aria-modal="true" aria-labelledby="sheet-title">
+      <button type="button" aria-label="Close" onClick={onClose} className="absolute inset-0 bg-night/55" />
+      <div className="absolute inset-x-0 bottom-0 max-h-[92dvh] overflow-y-auto rounded-t-3xl bg-surface px-5 pb-5 pt-3">
+        <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-line" />
+        <div className="flex items-center gap-3.5">
+          <Tile item={item} sticker={sticker} size="lg" />
+          <div className="flex flex-col gap-1.5">
+            <span className="flex items-center gap-1.5 text-xs text-muted">
+              <VegMark veg={item.isVeg} /> {item.isVeg ? "Veg" : "Non-veg"}
+            </span>
+            <span id="sheet-title" className="text-lg font-bold">{item.name}</span>
+            <span className="text-base font-bold">{formatINR(item.pricePaise)}</span>
+          </div>
+        </div>
+
+        {item.optionGroups.map((g) => (
+          <fieldset key={g.id} className="mt-5">
+            <legend className="mb-2.5 flex items-center gap-2 text-[15px] font-bold">
+              {g.name}
+              {g.required && <span className="rounded-full bg-acid px-2 py-0.5 text-[11px] font-bold tracking-wider">REQUIRED</span>}
+            </legend>
+            <div className="flex flex-col gap-2.5">
+              {g.choices.map((c) => {
+                const on = choice[g.id] === c.id;
+                return (
+                  <label key={c.id} className={`flex h-14 cursor-pointer items-center justify-between rounded-[14px] border px-4 ${on ? "border-2 border-clay" : "border-[1.5px] border-line"}`}>
+                    <span className="text-[15px] font-semibold">
+                      {c.name}
+                      {c.priceDeltaPaise > 0 && <span className="ml-2 text-sm font-normal text-muted">+{formatINR(c.priceDeltaPaise)}</span>}
+                    </span>
+                    <input type="radio" name={g.id} checked={on} onChange={() => setChoice((p) => ({ ...p, [g.id]: c.id }))} className="h-[22px] w-[22px] accent-clay" />
+                  </label>
+                );
+              })}
+            </div>
+          </fieldset>
+        ))}
+
+        {item.addons.length > 0 && (
+          <fieldset className="mt-5">
+            <legend className="mb-2.5 text-[15px] font-bold">Add-ons</legend>
+            <div className="flex flex-col gap-2.5">
+              {item.addons.map((a) => {
+                const on = addonIds.includes(a.id);
+                return (
+                  <label key={a.id} className={`flex h-14 cursor-pointer items-center justify-between rounded-[14px] border px-4 ${on ? "border-2 border-clay" : "border-[1.5px] border-line"}`}>
+                    <span className="flex items-center gap-2 text-[15px] font-semibold">
+                      <VegMark veg={a.isVeg} /> {a.name} <span className="text-sm font-normal text-muted">+{formatINR(a.pricePaise)}</span>
+                    </span>
+                    <input type="checkbox" checked={on} onChange={() => setAddonIds((p) => (on ? p.filter((x) => x !== a.id) : [...p, a.id]))} className="h-[22px] w-[22px] accent-clay" />
+                  </label>
+                );
+              })}
+            </div>
+          </fieldset>
+        )}
+
+        <div className="mt-5 flex flex-col gap-2">
+          <label htmlFor="note" className="text-[15px] font-bold">
+            Note for the kitchen <span className="font-normal text-muted">(optional)</span>
+          </label>
+          <input id="note" value={note} onChange={(e) => setNote(e.target.value)} maxLength={120} placeholder="Less spicy, no onion…" className="h-12 rounded-xl border-[1.5px] border-line bg-paper px-3.5 text-[15px]" />
+        </div>
+
+        <div className="mt-5 flex items-center gap-3">
+          <div className="flex h-14 items-center rounded-2xl border-[1.5px] border-ink">
+            <button type="button" onClick={() => setQty((q) => Math.max(1, q - 1))} aria-label="One less" className="h-14 w-12 text-[22px]">−</button>
+            <span className="min-w-4 text-center text-base font-bold">{qty}</span>
+            <button type="button" onClick={() => setQty((q) => Math.min(20, q + 1))} aria-label="One more" className="h-14 w-12 text-[22px]">+</button>
+          </div>
+          <button type="button" onClick={submit} disabled={missing} className="h-14 flex-1 rounded-2xl bg-clay text-base font-bold text-ink disabled:opacity-50">
+            Add to order · {formatINR(unitPaise * qty)}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
