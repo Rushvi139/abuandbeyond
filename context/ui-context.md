@@ -111,7 +111,8 @@ Logos are the brand kit PNGs in `public/brand/` (`patch-primary.png`,
 would fall back to the phone's fonts.
 
 Stickers from the brand sticker sheet live in `public/brand/stickers/`
-(transparent PNGs): `leopard` (Cat spotted), `paw`, dish stickers `pizza`,
+(transparent PNGs): `leopard` (Cat spotted, the lying sticker), the leopard character poses
+`leo-walk`, `leo-pounce`, `leo-prowl`, `leo-sit`, `paw`, dish stickers `pizza`,
 `pasta`, `rolls`, `rice-bowls`, `hummus`, `burgers`, bears `bear-roll`,
 `bear-noodles`, `bear-pizza`, `bear-explorer`, `bhai-bhai`. Dish stickers are
 the menu tile until a dish has a photo. Tailwind colour token for the page
@@ -119,9 +120,13 @@ background is `bg-paper` (not `base`, which clashes with `text-base`).
 
 ## Motion
 
-- First visit: the leopard sticker climbs down from the top of the screen and
-  sits on the patch logo, paw prints appear, then the welcome card slides up
-  (`components/store/welcome.tsx`; shown once per device, skippable).
+- First visit (after the reference reel): the leopard character walks down
+  from the top of the screen, pounces onto the patch logo, prowls across it
+  and sits on top; paw prints appear on the way; then the welcome card slides
+  up (`components/store/welcome.tsx`, timeline in its header comment; shown
+  once per device, skippable). Poses: `stickers/leo-walk.png`, `leo-pounce`,
+  `leo-prowl`, `leo-sit` — one illustrated leopard character in the sticker
+  style, generated from a single character sheet so the poses match.
 - Order confirmed: `HappyBear` (bear eating a roll, sitting) does a happy
   bob-and-sway dance with floating notes.
 - All motion is off under `prefers-reduced-motion`.

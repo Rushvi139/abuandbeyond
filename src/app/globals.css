@@ -54,24 +54,59 @@ body {
   font-family: "Inter Variable", Arial, sans-serif;
 }
 
-/* Welcome entrance: leopard climbs down and sits on the patch */
-@keyframes ab-leopard-drop {
-  0%   { transform: translateY(-110vh) rotate(-6deg); }
-  70%  { transform: translateY(6px) rotate(2deg); }
-  85%  { transform: translateY(-3px) rotate(0deg); }
-  100% { transform: translateY(0) rotate(0deg); }
+/* Welcome entrance: the leopard walks down, pounces onto the logo, prowls across it, sits.
+   Stage is 300x420; the patch logo is 260x177 at the bottom (top edge at y=243). */
+.ab-leo { opacity: 0; will-change: transform, opacity; filter: drop-shadow(0 6px 10px rgba(20,20,20,0.18)); }
+
+/* 1. walk: comes down the right side from above the screen */
+@keyframes ab-leo-walk {
+  0%   { transform: translate(190px, -520px) rotate(-8deg); }
+  60%  { transform: translate(176px, -150px) rotate(-4deg); }
+  100% { transform: translate(170px, 40px) rotate(0deg); }
 }
+[data-phase="walk"] .ab-leo-walk { opacity: 1; animation: ab-leo-walk 1.5s cubic-bezier(0.3, 0, 0.3, 1) both; }
+
+/* 2. pounce: leaps left and down onto the top of the patch */
+@keyframes ab-leo-pounce {
+  0%   { transform: translate(160px, 60px) rotate(-10deg) scale(0.95); opacity: 1; }
+  55%  { transform: translate(90px, 40px) rotate(-18deg) scale(1.02); }
+  100% { transform: translate(60px, 110px) rotate(-4deg) scale(1); opacity: 1; }
+}
+[data-phase="pounce"] .ab-leo-pounce { opacity: 1; animation: ab-leo-pounce 0.6s cubic-bezier(0.2, 0.6, 0.3, 1) both; }
+
+/* 3. prowl: walks along the top edge of the patch, right to left, with a step bob */
+@keyframes ab-leo-prowl {
+  0%   { transform: translate(120px, 124px); }
+  25%  { transform: translate(100px, 120px); }
+  50%  { transform: translate(80px, 124px); }
+  75%  { transform: translate(60px, 120px); }
+  100% { transform: translate(46px, 124px); }
+}
+[data-phase="prowl"] .ab-leo-prowl { opacity: 1; animation: ab-leo-prowl 1.2s ease-in-out both; }
+
+/* 4. sit: settles on top of the patch, slight bounce */
+@keyframes ab-leo-sit {
+  0%   { transform: translate(72px, 86px) scale(1.04); opacity: 0; }
+  40%  { opacity: 1; }
+  70%  { transform: translate(72px, 80px) scale(1); }
+  100% { transform: translate(72px, 84px) scale(1); opacity: 1; }
+}
+[data-phase="sit"] .ab-leo-sit, [data-phase="card"] .ab-leo-sit, [data-phase="leaving"] .ab-leo-sit {
+  opacity: 1; animation: ab-leo-sit 0.5s ease-out both;
+}
+
 @keyframes ab-paw-in {
   from { opacity: 0; transform: translateY(-8px); }
   to   { opacity: 1; transform: translateY(0); }
 }
-.ab-leopard { animation: ab-leopard-drop 1.9s cubic-bezier(0.22, 0.9, 0.3, 1) both; }
 .ab-paws > * { opacity: 0; animation: ab-paw-in 0.4s ease-out forwards; }
-.ab-paws > *:nth-child(1) { animation-delay: 0.5s; }
-.ab-paws > *:nth-child(2) { animation-delay: 0.9s; }
-.ab-paws > *:nth-child(3) { animation-delay: 1.3s; }
+.ab-paws > *:nth-child(1) { animation-delay: 0.3s; }
+.ab-paws > *:nth-child(2) { animation-delay: 0.7s; }
+.ab-paws > *:nth-child(3) { animation-delay: 1.1s; }
 @media (prefers-reduced-motion: reduce) {
-  .ab-leopard, .ab-paws > * { animation: none; opacity: 1; }
+  .ab-leo, .ab-paws > * { animation: none !important; }
+  .ab-paws > * { opacity: 1; }
+  .ab-leo-sit { opacity: 1; transform: translate(72px, 84px); }
 }
 
 /* Order confirmed: the bear's happy dance */

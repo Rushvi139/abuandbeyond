@@ -22,8 +22,8 @@ Update this file after every meaningful implementation change.
   sticker tiles, options sheet, add-ons, kitchen note, qty, sticky cart bar),
   cart in localStorage (`hooks/use-cart.ts`), `/checkout` placeholder
   showing the bag + GST. Brand PNG logos, sticker-sheet cutouts in
-  `public/brand/stickers/`. First-visit leopard entrance + welcome card
-  (`components/store/welcome.tsx`); `HappyBear` ready for the confirmed
+  `public/brand/stickers/`. First-visit leopard character entrance (walk → pounce → prowl → sit,
+  per the reference reel) + welcome card (`components/store/welcome.tsx`); `HappyBear` ready for the confirmed
   screen. Verified in a phone-size browser.
 
 - Repo set up: Next.js 15 + TypeScript + Tailwind scaffold, context files,
