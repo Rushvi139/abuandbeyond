@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { BillForm, ExpenseForm, PayBill } from "@/components/admin/accounts-forms";
 import { requireRole } from "@/lib/auth";
 import { db } from "@/lib/db";
@@ -52,7 +53,12 @@ export default async function AccountsPage({ searchParams }: { searchParams: Pro
           <h1 className="font-display text-[32px] uppercase">Accounts</h1>
           <p className="text-sm text-muted">Daily ledger from live orders, vendor bills and expenses. Sales are before GST.</p>
         </div>
-        <form className="flex gap-2"><input type="month" name="month" defaultValue={m} className="h-10 rounded-xl border border-line bg-surface px-3 text-sm" /><button className="h-10 rounded-xl bg-ink px-4 text-sm font-semibold text-reversed">Show</button></form>
+        <div className="flex flex-wrap gap-2">
+          <form className="flex gap-2"><input type="month" name="month" defaultValue={m} className="h-10 rounded-xl border border-line bg-surface px-3 text-sm" /><button className="h-10 rounded-xl bg-ink px-4 text-sm font-semibold text-reversed">Show</button></form>
+          {["ledger", "orders", "bills", "expenses"].map((r) => (
+            <Link key={r} href={`/admin/export/${r}?month=${m}`} className="h-10 rounded-xl border border-ink px-3 text-sm font-semibold capitalize leading-10">{r} CSV</Link>
+          ))}
+        </div>
       </div>
 
       <div className="grid grid-cols-2 gap-3 md:grid-cols-5">

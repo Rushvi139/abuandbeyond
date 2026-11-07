@@ -13,6 +13,12 @@ Update this file after every meaningful implementation change.
 
 ## Completed
 
+- 7 Nov (late 3): CSV exports — `/admin/export/<report>` (route handler,
+  role-checked): `stock` (full ingredient list with on-hand, reorder level,
+  rate, stock value), `stock-ledger` (movements for a month), and owner-only
+  `ledger`, `bills`, `expenses`, `orders` (`?month=YYYY-MM`). Buttons on the
+  Inventory, Accounts and Orders pages. Money in rupees (2 dp), dates
+  `YYYY-MM-DD`, times IST, UTF-8 BOM so Excel opens them cleanly.
 - 7 Nov (late 2): back office extended — `/admin/menu` add/edit/remove
   dishes with photo upload, choices and add-ons; `/admin/stock` inventory
   (on hand from the movement ledger, purchase/wastage/count/opening,

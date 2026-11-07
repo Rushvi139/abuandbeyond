@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { OrderCard } from "@/components/admin/order-card";
 import { StaffLive } from "@/components/admin/live";
 import { requireRole } from "@/lib/auth";
@@ -46,6 +47,7 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
           <form className="flex gap-2">
             <input name="q" defaultValue={q} placeholder="Phone, name or order no." className="h-10 w-64 rounded-xl border border-line bg-surface px-3 text-sm" />
             <button className="h-10 rounded-xl bg-ink px-4 text-sm font-semibold text-reversed">Search</button>
+            <Link href="/admin/export/orders" className="h-10 rounded-xl border border-ink px-3 text-sm font-semibold leading-10">Export CSV</Link>
           </form>
         </div>
         <div className="mt-3 overflow-x-auto rounded-2xl bg-surface">

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { IngredientForm, MovementForm } from "@/components/admin/stock-forms";
 import { requireRole } from "@/lib/auth";
 import { db } from "@/lib/db";
@@ -40,6 +41,8 @@ export default async function StockPage({ searchParams }: { searchParams: Promis
           <input name="q" defaultValue={q} placeholder="Ingredient or group" className="h-10 w-52 rounded-xl border border-line bg-surface px-3 text-sm" />
           <label className="flex h-10 items-center gap-1.5 rounded-xl border border-line bg-surface px-3 text-sm"><input type="checkbox" name="low" value="1" defaultChecked={Boolean(low)} className="accent-clay" /> Low only</label>
           <button className="h-10 rounded-xl bg-ink px-4 text-sm font-semibold text-reversed">Filter</button>
+          <Link href="/admin/export/stock" className="h-10 rounded-xl border border-ink px-4 text-sm font-semibold leading-10">Export stock CSV</Link>
+          <Link href="/admin/export/stock-ledger" className="h-10 rounded-xl border border-ink px-4 text-sm font-semibold leading-10">Export ledger CSV</Link>
         </form>
       </div>
 
