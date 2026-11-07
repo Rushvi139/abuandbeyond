@@ -148,6 +148,10 @@ paid | accepted | preparing → cancelled (owner only; triggers refund)
 - Finance: expenses by category, daily and monthly revenue, food + packaging
   cost % vs 33% ceiling, P&L, CSV export
 - Daily summary screen
+- Menu admin: add/edit/remove dishes (photo, choices, add-ons), sold-out toggle, prices
+- Inventory: ingredient ledger (purchase, wastage, count, opening), reorder levels, low-stock flags
+- Accounts (owner): daily ledger, vendor bills with attachments, payments and dues, expenses by category
+- Kitchen "AI batching": groups identical dishes across live tickets so the cook fires them together
 
 ## Scope
 

@@ -1,6 +1,7 @@
 import Image from "next/image";
 import { OrderCard } from "@/components/admin/order-card";
 import { StaffLive } from "@/components/admin/live";
+import { Batching } from "@/components/admin/batching";
 import { requireRole } from "@/lib/auth";
 import { getLiveOrders } from "@/lib/orders/queries";
 
@@ -30,6 +31,7 @@ export default async function KitchenPage({ searchParams }: { searchParams: Prom
           ))}
         </nav>
       </header>
+      <Batching orders={all} />
       {orders.length === 0 ? (
         <p className="py-20 text-center font-display text-[28px] uppercase text-kraft">Nothing on the pass. Leopards sleep.</p>
       ) : (

@@ -1,3 +1,4 @@
+import { MenuItemForm, type EditableItem } from "@/components/admin/menu-item-form";
 import { MenuRow } from "@/components/admin/menu-row";
 import { requireRole } from "@/lib/auth";
 import { saveSocialLinks } from "@/lib/crm/actions";
@@ -5,13 +6,16 @@ import { db } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 
-type Item = { id: string; name: string; category: string; isVeg: boolean; pricePaise: number; available: boolean; priceStatus: string; foodCostPaise: number | null };
+type Item = EditableItem & { available: boolean; priceStatus: string; foodCostPaise: number | null };
 
 export default async function MenuAdmin() {
   const staff = await requireRole(["owner", "manager"], "/admin/menu");
   const sql = db();
   const items = await sql<Item[]>`
-    select m.id, m.name, c.name as category, m.is_veg as "isVeg", m.price_paise as "pricePaise", m.available, m.price_status as "priceStatus",
+    select m.id, m.name, m.description, c.name as category, m.station_id as station, m.cuisine, m.is_veg as "isVeg",
+      m.price_paise as "pricePaise", m.packaging_cost_paise as "packagingPaise", m.available, m.price_status as "priceStatus", m.image_path as "imagePath",
+      coalesce((select g.name || ': ' || string_agg(o.name, ' | ' order by o.sort_order) from option_groups g join options o on o.option_group_id = g.id where g.menu_item_id = m.id group by g.name limit 1), '') as options,
+      coalesce((select string_agg(a.name, ', ') from menu_item_addons ma join addons a on a.id = ma.addon_id where ma.menu_item_id = m.id), '') as addons,
       (select round(sum(r.quantity * i.rate_paise_per_unit) * 1.15) from recipe_lines r join ingredients i on i.id = r.ingredient_id where r.menu_item_id = m.id) + m.packaging_cost_paise as "foodCostPaise"
     from menu_items m join categories c on c.id = m.category_id where m.active order by c.sort_order, m.sort_order`;
   const [social] = await sql<{ value: { instagram: string | null; google_review: string | null; whatsapp: string | null } }[]>`select value from settings where key = 'social_links'`;
@@ -21,13 +25,21 @@ export default async function MenuAdmin() {
     <div className="flex flex-col gap-5">
       <div>
         <h1 className="font-display text-[32px] uppercase">Menu</h1>
-        <p className="text-sm text-muted">Switch a dish off when it sells out; it comes back on when you switch it on. Prices are before 5% GST.</p>
+        <p className="text-sm text-muted">Switch a dish off when it sells out. Prices are before 5% GST. New dishes show on the site immediately.</p>
       </div>
+      <section>
+        <h2 className="mb-2 text-xs font-bold uppercase tracking-wide text-muted">Add a dish</h2>
+        <MenuItemForm categories={groups} />
+      </section>
       {groups.map((g) => (
         <section key={g}>
           <h2 className="mb-2 font-display text-[18px] uppercase">{g}</h2>
           <div className="overflow-hidden rounded-2xl bg-surface">
-            {items.filter((i) => i.category === g).map((i) => <MenuRow key={i.id} item={i} canPrice={["owner", "manager"].includes(staff.role)} />)}
+            {items.filter((i) => i.category === g).map((i) => (
+              <div key={i.id} className="border-b border-line last:border-0">
+                <MenuRow item={i} canPrice={["owner", "manager"].includes(staff.role)} edit={<MenuItemForm item={i} categories={groups} />} />
+              </div>
+            ))}
           </div>
         </section>
       ))}

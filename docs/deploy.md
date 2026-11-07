@@ -134,6 +134,12 @@ HTTPS for `DOMAIN` (set `DOMAIN=abuandbeyond.in` in `.env`).
 5. Razorpay test keys in `.env` (`NEXT_PUBLIC_RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`, `RAZORPAY_WEBHOOK_SECRET`), then
    `docker compose up -d --build` again (the key id is baked in at build time).
 
+## Uploads
+
+Menu photos and bill attachments live on the `uploads` Docker volume
+(`/data/uploads` inside the app container). Back it up with the database:
+`docker run --rm -v abuandbeyond_uploads:/u -v $PWD/backups:/b alpine tar czf /b/uploads-$(date +%F).tgz -C /u .`
+
 ## Updates
 
 ```bash

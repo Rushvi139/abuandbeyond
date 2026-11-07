@@ -13,6 +13,20 @@ Update this file after every meaningful implementation change.
 
 ## Completed
 
+- 7 Nov (late 2): back office extended — `/admin/menu` add/edit/remove
+  dishes with photo upload, choices and add-ons; `/admin/stock` inventory
+  (on hand from the movement ledger, purchase/wastage/count/opening,
+  add/edit ingredients, low-stock flag once a reorder level is set);
+  `/admin/accounts` (owner only: daily ledger from sales/bills/expenses,
+  month picker, vendor bills with attachment + payments + dues, expenses);
+  kitchen "AI batching" toggle (`components/admin/batching.tsx`: groups the
+  same dish across live tickets, rules-based). Uploads served from
+  `/files/<folder>/…` (`UPLOAD_DIR`; menu public, bills/wall staff only).
+  Migrations 0002 (vendor name unique), 0003 (low-stock rule).
+- Leopard: procedural rigged silhouette (`components/store/leopard.tsx`)
+  is the interim entrance; a photoreal/illustrated continuous animation
+  needs a video asset (see Open Questions).
+
 - 7 Nov (late): Phase 1 units 5–8 and Phase 2 units 9–11 + 13e–13g:
   - `/checkout` real form + `/api/checkout` (Zod, server-priced from DB,
     required options enforced, customer upsert, property attribution via
@@ -111,6 +125,14 @@ Phase 5 — Full WhatsApp ordering (deferred)
     follow-up buttons, physical-goods fields on `order_details`.
 
 ## Open Questions
+
+- Leopard entrance (user wants the YE Garba reel feel: character comes
+  down from the top, settles on the logo with a leg hanging, realistic
+  illustrated look, continuous motion). Needs an animation asset: an AI
+  video on a flat green background (Canva paid plan / Higgsfield credits /
+  the tool that made the user's 9-frame GIF), keyed out and played as a
+  transparent overlay positioned on the logo; or a 2D puppet rig by an
+  animator. Current silhouette rig is a placeholder.
 
 - Razorpay: register the webhook at `https://abuandbeyond.in/api/razorpay/webhook`
   with events payment.captured, order.paid, payment.failed; paste the
