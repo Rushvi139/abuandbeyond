@@ -84,18 +84,27 @@ abuandbeyond.in {
 If that Caddy runs in Docker, `127.0.0.1` means its own container: put both on
 one Docker network and use `reverse_proxy abuandbeyond-app:3000` instead.
 
-### 4C. Traefik
+### 4C. Traefik (our server: `root-traefik-1`)
 
-Join the app to Traefik's network and add labels to the `app` service:
+The repo ships `docker-compose.traefik.yml`. Confirm Traefik's names first:
 
-```yaml
-    labels:
-      - traefik.enable=true
-      - traefik.http.routers.abuandbeyond.rule=Host(`abuandbeyond.in`) || Host(`www.abuandbeyond.in`)
-      - traefik.http.routers.abuandbeyond.entrypoints=websecure
-      - traefik.http.routers.abuandbeyond.tls.certresolver=<your resolver>
-      - traefik.http.services.abuandbeyond.loadbalancer.server.port=3000
+```bash
+docker inspect root-traefik-1 -f '{{range $k,$v := .NetworkSettings.Networks}}{{$k}} {{end}}'
+docker inspect root-traefik-1 -f '{{join .Config.Cmd "\n"}}' | grep -E 'entrypoints\.|certificatesresolvers\.' | head
+docker inspect advino-app -f '{{json .Config.Labels}}'
 ```
+
+Put the matching values in `.env`:
+
+```
+COMPOSE_FILE=docker-compose.yml:docker-compose.traefik.yml
+TRAEFIK_NETWORK=root_default
+TRAEFIK_ENTRYPOINT=websecure
+TRAEFIK_CERTRESOLVER=mytlschallenge
+```
+
+Then `docker compose up -d --build`. Traefik picks up the labels, gets the
+certificate for `abuandbeyond.in`, and redirects `www` to it.
 
 ### 4D. Control panel
 

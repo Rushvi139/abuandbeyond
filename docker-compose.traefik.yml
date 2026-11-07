@@ -1,0 +1,39 @@
+# Traefik add-on for the shared Hostinger server (Traefik container: root-traefik-1).
+# Enable it by putting this line in .env:
+#   COMPOSE_FILE=docker-compose.yml:docker-compose.traefik.yml
+# then `docker compose up -d --build` uses both files.
+#
+# Traefik then serves https://abuandbeyond.in (certificate from Let's Encrypt)
+# and redirects www.abuandbeyond.in to it. Network, entrypoint and resolver
+# names come from .env so they match the server's Traefik setup.
+
+services:
+  app:
+    networks:
+      - default
+      - traefik
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=${TRAEFIK_NETWORK:-root_default}
+      - traefik.http.services.abuandbeyond.loadbalancer.server.port=3000
+      # main site
+      - traefik.http.routers.abuandbeyond.rule=Host(`abuandbeyond.in`)
+      - traefik.http.routers.abuandbeyond.entrypoints=${TRAEFIK_ENTRYPOINT:-websecure}
+      - traefik.http.routers.abuandbeyond.tls=true
+      - traefik.http.routers.abuandbeyond.tls.certresolver=${TRAEFIK_CERTRESOLVER:-mytlschallenge}
+      - traefik.http.routers.abuandbeyond.service=abuandbeyond
+      # www -> apex
+      - traefik.http.routers.abuandbeyond-www.rule=Host(`www.abuandbeyond.in`)
+      - traefik.http.routers.abuandbeyond-www.entrypoints=${TRAEFIK_ENTRYPOINT:-websecure}
+      - traefik.http.routers.abuandbeyond-www.tls=true
+      - traefik.http.routers.abuandbeyond-www.tls.certresolver=${TRAEFIK_CERTRESOLVER:-mytlschallenge}
+      - traefik.http.routers.abuandbeyond-www.middlewares=abuandbeyond-www-redirect
+      - traefik.http.routers.abuandbeyond-www.service=abuandbeyond
+      - traefik.http.middlewares.abuandbeyond-www-redirect.redirectregex.regex=^https?://www\.abuandbeyond\.in/(.*)
+      - traefik.http.middlewares.abuandbeyond-www-redirect.redirectregex.replacement=https://abuandbeyond.in/$${1}
+      - traefik.http.middlewares.abuandbeyond-www-redirect.redirectregex.permanent=true
+
+networks:
+  traefik:
+    external: true
+    name: ${TRAEFIK_NETWORK:-root_default}
