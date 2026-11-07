@@ -127,7 +127,7 @@ Phase 5 — Full WhatsApp ordering (deferred)
 ## Session Notes
 
 - Supabase region: Mumbai (`ap-south-1`).
-- Server: Hostinger VPS 93.127.166.70; domain abuandbeyond.com; repo
+- Server: Hostinger VPS 93.127.166.70; domain abuandbeyond.in; repo
   github.com/Rushvi139/abuandbeyond. Deploy steps in `docs/deploy.md`.
 - Screens approved for build are on the "Abu & Beyond — Order App Screens"
   canvas: ordering = 3 screens (/, /checkout, /o/[code]); item options are

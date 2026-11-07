@@ -1,7 +1,17 @@
-# Run on your server:  docker compose up -d --build
-# Needs .env (copy from .env.example) and DNS for your domain pointing at this server.
+# Abu & Beyond — runs as its own Compose project, next to your other apps.
+#
+# Shared server (default):  docker compose up -d --build
+#   Starts only the app container, listening on 127.0.0.1:${APP_PORT:-3100}.
+#   Your existing reverse proxy (Nginx, Caddy, Traefik, panel) sends
+#   abuandbeyond.in to that port. See docs/deploy.md.
+#
+# Empty server (nothing on ports 80/443):  docker compose --profile caddy up -d --build
+#   Also starts a Caddy container that handles HTTPS itself.
+name: abuandbeyond
+
 services:
   app:
+    container_name: abuandbeyond-app
     build:
       context: .
       args:
@@ -11,10 +21,12 @@ services:
         NEXT_PUBLIC_RAZORPAY_KEY_ID: ${NEXT_PUBLIC_RAZORPAY_KEY_ID}
     env_file: .env
     restart: unless-stopped
-    expose:
-      - "3000"
+    ports:
+      - "127.0.0.1:${APP_PORT:-3100}:3000"   # only reachable from this server, via the proxy
 
   caddy:
+    profiles: ["caddy"]
+    container_name: abuandbeyond-caddy
     image: caddy:2-alpine
     restart: unless-stopped
     depends_on: [app]

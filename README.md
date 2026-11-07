@@ -12,9 +12,9 @@ finances — for Abu & Beyond, Mount Abu.
 | ERP | `/admin` | Owner, manager |
 
 Stack: Next.js 15 · TypeScript · Tailwind · shadcn/ui · Supabase (Postgres,
-Realtime, Auth, Mumbai region) · Razorpay · WhatsApp Cloud API · Docker on our own server.
+Realtime, Auth, Mumbai region) · Razorpay · WhatsApp Cloud API · Docker on our own server (own container, behind the existing reverse proxy).
 
-Live at `https://abuandbeyond.com` (Hostinger VPS, Docker). Code: `github.com/Rushvi139/abuandbeyond`.
+Live at `https://abuandbeyond.in` (Hostinger VPS, Docker). Code: `github.com/Rushvi139/abuandbeyond`.
 
 ## Repo map
 
