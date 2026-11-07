@@ -47,7 +47,15 @@ Phase 2 — Kitchen and WhatsApp
 10. Kitchen Display `/kitchen` (realtime, stations, accept, ready, chime)
 11. Rider view `/rider`
 12. WhatsApp sender + templates + status notifications
-13. WhatsApp inbound webhook auto-reply
+13. WhatsApp inbound webhook auto-reply (menu link, track, reorder last order)
+13x. Reorder in WhatsApp: delivered message's "Order again" sends a
+     Razorpay `order_details` payment request in the chat; paid → same pipeline
+
+Phase 2c — Back office CRM
+13e. Migration `20261107020000_crm.sql` (done as file, apply)
+13f. Customers list + customer detail (history, spend, tags, notes)
+13g. Properties + per-property QR codes + orders by property
+13h. Manual order entry → WhatsApp payment link
 
 Phase 2b — Reviews and wall
 13a. Migration `reviews` + `review_media` + `wall-uploads` bucket (done as file, apply)
@@ -65,10 +73,18 @@ Phase 4 — Finance
 18. Expenses
 19. Daily summary + monthly P&L + cost % vs 33% ceiling + CSV export
 
-Phase 5 — WhatsApp ordering
-20. Catalogue in chat + Razorpay payment link into the same pipeline
+Phase 5 — Full WhatsApp ordering (deferred)
+20. Catalogue + cart inside WhatsApp. Start only if, after 4–6 weeks,
+    more than ~25% of orders begin in the WhatsApp chat rather than the QR.
+    Needs: Meta catalogue sync, bowl/fries choices as separate SKUs or
+    follow-up buttons, physical-goods fields on `order_details`.
 
 ## Open Questions
+
+- Server details: provider, region, domain name for the site.
+- Does Petpooja offer an API for pushing online orders in? Ask them before
+  we plan any sync.
+- Photoshoot after site lock: 31 dishes, 1:1, drop style (see ui-context).
 
 - Social links: Instagram handle, Google Business review link, WhatsApp
   business number for the `/wall` buttons.
@@ -94,8 +110,12 @@ Phase 5 — WhatsApp ordering
 
 ## Architecture Decisions
 
-- Next.js + Supabase + Razorpay + WhatsApp Cloud API, hosted on Vercel —
-  one codebase, realtime KDS without extra servers, low cost at launch.
+- Next.js + Supabase + Razorpay + WhatsApp Cloud API — one codebase,
+  realtime KDS without extra servers, low cost at launch.
+- Self-hosted on our own server (Docker + Caddy); Supabase stays on its
+  cloud (Mumbai) for managed backups, realtime and auth (7 Nov 2026).
+- Own back office is the system of record at launch; Petpooja deferred
+  (setup-heavy, meant for scale) and would connect later via an adapter.
 - Money stored as integer paise; prices stored before 5% GST (standalone
   restaurant rate, no input credit) — matches the margin strategy.
 - Orders become live only via the Razorpay webhook — avoids ghost orders

@@ -94,6 +94,15 @@ WhatsApp messages, Reviews wall, Review + share. Match it.
   header colour by age (normal / 10 min amber / 20 min Clay red).
 - Admin: left sidebar nav, top bar, content area with tables and filters.
 
+## Food photos
+
+Each menu item has an optional photo (`menu_items.image_path`). With a photo
+the card shows it (1:1 on the list, 4:3 hero in the options sheet); without
+one it falls back to the coloured cuisine-sticker tile in the designs.
+Photoshoot spec: 1:1 square, at least 1200 × 1200 px, the brand's "drop"
+style (food falling into the box, straight-on camera, one hard light, plain
+brand-colour backdrop, no props, no faces). Serve as WebP via Next/Image.
+
 ## Icons
 
 Lucide React for UI (stroke icons, `h-4 w-4` inline, `h-5 w-5` buttons).

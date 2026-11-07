@@ -12,7 +12,7 @@ finances — for Abu & Beyond, Mount Abu.
 | ERP | `/admin` | Owner, manager |
 
 Stack: Next.js 15 · TypeScript · Tailwind · shadcn/ui · Supabase (Postgres,
-Realtime, Auth, Mumbai region) · Razorpay · WhatsApp Cloud API · Vercel.
+Realtime, Auth, Mumbai region) · Razorpay · WhatsApp Cloud API · Docker on our own server.
 
 ## Repo map
 
@@ -47,10 +47,9 @@ npm run dev                  # http://localhost:3000
 ## Accounts needed
 
 Supabase (Mumbai region) · Razorpay (KYC, test keys, webhook secret) · Meta
-Business + WhatsApp Cloud API number + approved templates · Vercel · a domain.
+Business + WhatsApp Cloud API number + approved templates · a server · a domain.
 
 ## Deploy
 
-Import the GitHub repo in Vercel, add the same environment variables
-(live keys only at go-live), and set the Razorpay webhook URL to
-`https://<domain>/api/razorpay/webhook`.
+On your own server with Docker: `docker compose up -d --build`. Full steps,
+webhooks and backups in [`docs/deploy.md`](docs/deploy.md).

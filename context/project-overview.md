@@ -97,7 +97,10 @@ paid | accepted | preparing → cancelled (owner only; triggers refund)
 - Template messages: order confirmed, preparing, out for delivery, delivered,
   reorder nudge
 - Inbound auto-reply with menu link and order tracking link
-- Phase 5: catalogue ordering inside WhatsApp with a Razorpay payment link
+- "Reorder" button in the delivered message: sends a Razorpay payment
+  request for the same order inside the chat (Phase 2)
+- Inbound "Hi" auto-reply: menu link, track order, reorder last order
+- Later (only if demand): catalogue + cart ordering inside WhatsApp
 
 ### Kitchen Display (KDS)
 
@@ -126,9 +129,17 @@ paid | accepted | preparing → cancelled (owner only; triggers refund)
   and reels, latest reviews, and buttons to Instagram, Google review page and
   WhatsApp chat
 
-### Owner / ERP
+### Owner / back office (our own CRM + ERP; replaces Petpooja at launch)
 
 - Order board: live orders by status, search, cancel + refund, assign rider
+- Manual orders: staff enter a phone or WhatsApp order, the system sends the
+  customer a Razorpay payment link in WhatsApp; it joins the same pipeline
+- Customers (CRM): every customer by phone with name, order count, total
+  spend, first and last order, favourite dishes, tags (tourist, local,
+  repeat), notes, WhatsApp opt-in; order history per customer
+- Properties: hotels, villas and homestays that orders come from; orders and
+  revenue per property; per-property QR codes (`/?src=<property>`) to see
+  which hotels send guests
 - Menu admin: items, prices (pre-GST), availability, add-ons
 - Stock: ingredients, units, reorder levels, recipes per dish, auto-deduct on
   delivery, wastage and manual adjustments, low-stock alerts
@@ -153,6 +164,9 @@ paid | accepted | preparing → cancelled (owner only; triggers refund)
 - Dine-in, table ordering
 - Cash on delivery
 - Zomato / Swiggy integration (if listed, priced 20–25% higher, managed outside)
+- Petpooja integration (later, through an adapter, if the business moves to it)
+- Full ordering inside the WhatsApp chat (catalogue + cart): deferred until
+  data shows demand; see progress-tracker
 - Loyalty points, coupons beyond a simple intro-offer code
 - Native mobile apps (the web app is installable as a PWA later)
 - Multi-outlet support

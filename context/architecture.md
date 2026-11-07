@@ -13,7 +13,7 @@
 | Messaging  | WhatsApp Cloud API (Meta), behind `lib/whatsapp` | Template notifications, inbound auto-reply |
 | Validation | Zod                                     | Every request body, webhook payload and form |
 | Automation | n8n (optional, external)                | Daily reports, low-stock alerts to WhatsApp; reads via Supabase |
-| Hosting    | Vercel (app) + Supabase Cloud (Mumbai region `ap-south-1`) | Production |
+| Hosting    | Own server: Docker (Next.js standalone) behind Caddy (auto HTTPS); Supabase Cloud, Mumbai `ap-south-1` | Production. See `docs/deploy.md` |
 
 ## System Boundaries
 
@@ -21,7 +21,7 @@
 - `src/app/(store)/wall`, `src/app/(store)/o/[code]/review` — public reviews wall and review form.
 - `src/app/kitchen` — Kitchen Display. Role: kitchen, manager, owner.
 - `src/app/rider` — rider view. Role: rider, manager, owner.
-- `src/app/admin` — ERP: orders, menu, stock, vendors, purchasing, finance, reports. Role: manager, owner (finance: owner only).
+- `src/app/admin` — back office: order management (live board, manual orders, refunds), customers (CRM), properties (hotels / villas sending orders), menu, stock, vendors, purchasing, expenses, finance, reports. Role: manager, owner (finance: owner only).
 - `src/app/api/razorpay` — create order, webhook. Only place that marks orders paid.
 - `src/app/api/whatsapp` — Meta webhook (verify + inbound messages).
 - `src/lib/db` — Supabase clients (browser, server, service-role) and typed queries.
@@ -57,6 +57,14 @@
   active menu data and call the checkout API. Staff access follows role.
 - Webhooks and server actions that must bypass RLS use the service-role client
   inside `src/lib/db/admin.ts` only, on the server only.
+
+## External POS (Petpooja)
+
+This backend is the source of truth for orders, stock and finance. Petpooja
+is not connected at launch. If Petpooja is adopted later for scale, connect
+it through an adapter in `src/lib/integrations/petpooja` that pushes orders
+out (and pulls menu or stock only if agreed); no other module may call it.
+What Petpooja's API allows must be confirmed with Petpooja first.
 
 ## Invariants
 
