@@ -1,9 +1,9 @@
--- Abu & Beyond — initial schema
+-- Abu & Beyond — schema for our own Postgres 16 (self-hosted, no Supabase).
 -- Money: integer paise (bigint). Quantities: numeric(12,3) in the ingredient's base unit.
--- RLS is enabled on every table. Policies below give anonymous users read access to the
--- active menu only; staff access follows profiles.role.
+-- Access control lives in the app (src/lib/auth): staff roles are checked on every
+-- server action and API route. Live updates use LISTEN/NOTIFY (channel `orders`).
 
-create extension if not exists "pgcrypto";
+create extension if not exists pgcrypto;
 
 -- ---------------------------------------------------------------- enums
 create type staff_role as enum ('owner', 'manager', 'kitchen', 'rider');
@@ -17,30 +17,36 @@ create type stock_movement_kind as enum ('purchase', 'consumption', 'wastage', '
 create type unit_kind as enum ('g', 'ml', 'pc');
 create type po_status as enum ('draft', 'sent', 'partially_received', 'received', 'cancelled');
 create type payment_status as enum ('created', 'captured', 'failed', 'refunded', 'partially_refunded');
+create type price_status as enum ('costed', 'matched', 'new');
+create type moderation_status as enum ('pending', 'approved', 'rejected');
+create type media_kind as enum ('image', 'video');
 
--- ---------------------------------------------------------------- staff
-create table profiles (
-  id uuid primary key references auth.users (id) on delete cascade,
+-- ---------------------------------------------------------------- staff + sessions
+create table staff_users (
+  id uuid primary key default gen_random_uuid(),
   full_name text not null,
-  phone text,
+  phone text unique,
+  email text unique,
+  password_hash text not null,              -- bcrypt
   role staff_role not null default 'kitchen',
   active boolean not null default true,
-  created_at timestamptz not null default now()
+  last_login_at timestamptz,
+  created_at timestamptz not null default now(),
+  check (phone is not null or email is not null)
 );
 
-create or replace function public.staff_role() returns staff_role
-language sql stable security definer set search_path = public as $$
-  select role from profiles where id = auth.uid() and active
-$$;
-
-create or replace function public.has_role(roles staff_role[]) returns boolean
-language sql stable security definer set search_path = public as $$
-  select coalesce(public.staff_role() = any (roles), false)
-$$;
+create table sessions (
+  id text primary key,                      -- sha256 of the cookie token, never the token itself
+  staff_id uuid not null references staff_users (id) on delete cascade,
+  expires_at timestamptz not null,
+  user_agent text,
+  created_at timestamptz not null default now()
+);
+create index sessions_staff_idx on sessions (staff_id);
 
 -- ---------------------------------------------------------------- menu
 create table stations (
-  id text primary key,                 -- pizza_oven, wok_momos, grill_rolls, fryer, cold_drinks
+  id text primary key,
   name text not null,
   sort_order int not null default 0
 );
@@ -55,13 +61,14 @@ create table pack_kits (
 create table categories (
   id uuid primary key default gen_random_uuid(),
   name text not null unique,
+  slug text not null unique,
   sort_order int not null default 0,
   active boolean not null default true
 );
 
 create table menu_items (
   id uuid primary key default gen_random_uuid(),
-  sku text not null unique,            -- AB001…
+  sku text not null unique,
   slug text not null unique,
   name text not null,
   description text,
@@ -71,17 +78,38 @@ create table menu_items (
   is_veg boolean not null,
   price_paise bigint not null check (price_paise > 0),   -- before GST
   packaging_cost_paise bigint not null default 0,
-  image_path text,
-  available boolean not null default true,              -- sold out today = false
-  active boolean not null default true,                 -- on the menu at all
+  pack_kit_id text references pack_kits (id),
+  price_status price_status not null default 'costed',
+  costing_ref text,                                       -- dish name in the indent workbook
+  image_path text,                                        -- relative to UPLOAD_DIR or /public
+  available boolean not null default true,                -- sold out today = false
+  active boolean not null default true,
   sort_order int not null default 0,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
 
+create table option_groups (
+  id uuid primary key default gen_random_uuid(),
+  menu_item_id uuid not null references menu_items (id) on delete cascade,
+  name text not null,
+  required boolean not null default true,
+  max_choices int not null default 1,
+  sort_order int not null default 0
+);
+
+create table options (
+  id uuid primary key default gen_random_uuid(),
+  option_group_id uuid not null references option_groups (id) on delete cascade,
+  name text not null,
+  price_delta_paise bigint not null default 0,
+  active boolean not null default true,
+  sort_order int not null default 0
+);
+
 create table addons (
   id uuid primary key default gen_random_uuid(),
-  name text not null,
+  name text not null unique,
   price_paise bigint not null check (price_paise >= 0),
   is_veg boolean not null default true,
   active boolean not null default true
@@ -93,23 +121,44 @@ create table menu_item_addons (
   primary key (menu_item_id, addon_id)
 );
 
--- ---------------------------------------------------------------- customers + orders
+-- ---------------------------------------------------------------- CRM: customers + properties
 create table customers (
   id uuid primary key default gen_random_uuid(),
-  phone text not null unique,           -- E.164, +91…
+  phone text not null unique,              -- E.164, +91…
   name text,
   whatsapp_opt_in boolean not null default true,
+  tags text[] not null default '{}',
+  notes text,
   created_at timestamptz not null default now()
 );
 
+create table properties (
+  id uuid primary key default gen_random_uuid(),
+  slug text not null unique,               -- QR links: /?src=<slug>
+  name text not null,
+  kind stay_type not null default 'hotel',
+  contact_person text,
+  phone text,
+  address text,
+  lat double precision,
+  lng double precision,
+  notes text,
+  active boolean not null default true,
+  created_at timestamptz not null default now()
+);
+
+-- ---------------------------------------------------------------- orders
 create sequence order_number_seq start 1001;
 
 create table orders (
   id uuid primary key default gen_random_uuid(),
   order_number int not null unique default nextval('order_number_seq'),
-  order_code text not null unique default encode(gen_random_bytes(5), 'hex'), -- public lookup
+  order_code text not null unique default encode(gen_random_bytes(5), 'hex'),
   customer_id uuid not null references customers (id),
   status order_status not null default 'pending_payment',
+  source text not null default 'web',      -- web | whatsapp | manual | reorder
+  source_ref text,                         -- ?src= from the QR
+  property_id uuid references properties (id),
   stay_type stay_type not null,
   property_name text,
   room_or_landmark text,
@@ -119,14 +168,15 @@ create table orders (
   notes text,
   subtotal_paise bigint not null,
   discount_paise bigint not null default 0,
-  gst_paise bigint not null,            -- 5% on (subtotal - discount)
+  gst_paise bigint not null,
   delivery_fee_paise bigint not null default 0,
   total_paise bigint not null,
   promo_code text,
   prep_minutes int,
-  rider_id uuid references profiles (id),
+  rider_id uuid references staff_users (id),
+  created_by uuid references staff_users (id),
   razorpay_order_id text unique,
-  source text not null default 'web',   -- web | whatsapp
+  payment_link_url text,
   paid_at timestamptz,
   delivered_at timestamptz,
   cancelled_reason text,
@@ -134,6 +184,7 @@ create table orders (
   updated_at timestamptz not null default now()
 );
 create index orders_status_idx on orders (status, created_at desc);
+create index orders_customer_idx on orders (customer_id, created_at desc);
 
 create table order_items (
   id uuid primary key default gen_random_uuid(),
@@ -145,7 +196,17 @@ create table order_items (
   is_veg boolean not null,
   unit_price_paise bigint not null,
   quantity int not null check (quantity > 0),
-  line_total_paise bigint not null
+  line_total_paise bigint not null,
+  note text
+);
+
+create table order_item_options (
+  id uuid primary key default gen_random_uuid(),
+  order_item_id uuid not null references order_items (id) on delete cascade,
+  option_id uuid not null references options (id),
+  group_name_snapshot text not null,
+  name_snapshot text not null,
+  price_delta_paise bigint not null default 0
 );
 
 create table order_item_addons (
@@ -161,7 +222,7 @@ create table order_status_events (
   order_id uuid not null references orders (id) on delete cascade,
   from_status order_status,
   to_status order_status not null,
-  actor_id uuid references profiles (id),   -- null = system / webhook
+  actor_id uuid references staff_users (id),
   note text,
   created_at timestamptz not null default now()
 );
@@ -179,8 +240,8 @@ create table payments (
   created_at timestamptz not null default now()
 );
 
-create table webhook_events (            -- idempotency for Razorpay + WhatsApp
-  id text primary key,                   -- provider event / message id
+create table webhook_events (
+  id text primary key,
   provider text not null,
   received_at timestamptz not null default now()
 );
@@ -191,7 +252,7 @@ create table ingredients (
   name text not null unique,
   procurement_group text,
   unit unit_kind not null default 'g',
-  rate_paise_per_unit numeric(14,4) not null default 0,  -- latest purchase rate per base unit
+  rate_paise_per_unit numeric(14,4) not null default 0,
   reorder_level numeric(12,3) not null default 0,
   active boolean not null default true
 );
@@ -200,34 +261,10 @@ create table recipe_lines (
   id uuid primary key default gen_random_uuid(),
   menu_item_id uuid not null references menu_items (id) on delete cascade,
   ingredient_id uuid not null references ingredients (id),
-  quantity numeric(12,3) not null check (quantity > 0),  -- per portion, base unit
+  quantity numeric(12,3) not null check (quantity > 0),
   unique (menu_item_id, ingredient_id)
 );
 
-create table stock_movements (
-  id bigint generated always as identity primary key,
-  ingredient_id uuid not null references ingredients (id),
-  kind stock_movement_kind not null,
-  quantity numeric(12,3) not null,       -- + in, - out
-  unit_cost_paise numeric(14,4),
-  order_id uuid references orders (id),
-  purchase_order_id uuid,
-  note text,
-  actor_id uuid references profiles (id),
-  created_at timestamptz not null default now()
-);
-create index stock_movements_ingredient_idx on stock_movements (ingredient_id, created_at);
-
-create view stock_on_hand with (security_invoker = true) as
-  select i.id as ingredient_id, i.name, i.unit, i.reorder_level,
-         coalesce(sum(m.quantity), 0) as on_hand,
-         coalesce(sum(m.quantity), 0) <= i.reorder_level as is_low
-  from ingredients i
-  left join stock_movements m on m.ingredient_id = i.id
-  where i.active
-  group by i.id;
-
--- ---------------------------------------------------------------- vendors + purchasing
 create table vendors (
   id uuid primary key default gen_random_uuid(),
   name text not null,
@@ -249,11 +286,9 @@ create table purchase_orders (
   status po_status not null default 'draft',
   expected_on date,
   notes text,
-  created_by uuid references profiles (id),
+  created_by uuid references staff_users (id),
   created_at timestamptz not null default now()
 );
-alter table stock_movements
-  add constraint stock_movements_po_fk foreign key (purchase_order_id) references purchase_orders (id);
 
 create table purchase_order_lines (
   id uuid primary key default gen_random_uuid(),
@@ -264,6 +299,21 @@ create table purchase_order_lines (
   rate_paise_per_unit numeric(14,4)
 );
 
+create table stock_movements (
+  id bigint generated always as identity primary key,
+  ingredient_id uuid not null references ingredients (id),
+  kind stock_movement_kind not null,
+  quantity numeric(12,3) not null,         -- + in, - out
+  unit_cost_paise numeric(14,4),
+  order_id uuid references orders (id),
+  purchase_order_id uuid references purchase_orders (id),
+  note text,
+  actor_id uuid references staff_users (id),
+  created_at timestamptz not null default now()
+);
+create index stock_movements_ingredient_idx on stock_movements (ingredient_id, created_at);
+
+-- ---------------------------------------------------------------- finance
 create table vendor_bills (
   id uuid primary key default gen_random_uuid(),
   vendor_id uuid not null references vendors (id),
@@ -283,17 +333,16 @@ create table vendor_payments (
   vendor_bill_id uuid references vendor_bills (id),
   paid_on date not null,
   amount_paise bigint not null,
-  mode text,                              -- UPI, bank, cash
-  reference text,                         -- UTR
+  mode text,
+  reference text,
   notes text,
   created_at timestamptz not null default now()
 );
 
--- ---------------------------------------------------------------- finance
 create table expense_categories (
-  id text primary key,                    -- rent, salaries, utilities, delivery, marketing, consumables, setup, misc
+  id text primary key,
   name text not null,
-  ceiling_pct numeric(5,2)                -- % of net sales from the margin strategy
+  ceiling_pct numeric(5,2)
 );
 
 create table expenses (
@@ -306,19 +355,38 @@ create table expenses (
   mode text,
   reference text,
   is_one_time boolean not null default false,
-  created_by uuid references profiles (id),
+  created_by uuid references staff_users (id),
   created_at timestamptz not null default now()
 );
 
-create view daily_sales with (security_invoker = true) as
-  select (paid_at at time zone 'Asia/Kolkata')::date as day,
-         count(*) as orders,
-         sum(subtotal_paise - discount_paise) as net_sales_paise,
-         sum(gst_paise) as gst_paise,
-         sum(total_paise) as gross_paise
-  from orders
-  where status not in ('pending_payment', 'payment_failed', 'cancelled')
-  group by 1;
+-- ---------------------------------------------------------------- reviews + wall
+create table reviews (
+  id uuid primary key default gen_random_uuid(),
+  order_id uuid not null unique references orders (id),
+  customer_id uuid not null references customers (id),
+  rating int not null check (rating between 1 and 5),
+  tags text[] not null default '{}',
+  body text,
+  instagram_handle text,
+  consent_to_feature boolean not null default false,
+  hidden boolean not null default false,
+  hidden_reason text,
+  created_at timestamptz not null default now()
+);
+
+create table review_media (
+  id uuid primary key default gen_random_uuid(),
+  review_id uuid not null references reviews (id) on delete cascade,
+  kind media_kind not null,
+  storage_path text not null,              -- relative to UPLOAD_DIR (private until approved)
+  duration_seconds int check (duration_seconds is null or duration_seconds <= 60),
+  bytes bigint check (bytes <= 52428800),
+  status moderation_status not null default 'pending',
+  moderated_by uuid references staff_users (id),
+  moderated_at timestamptz,
+  featured boolean not null default false,
+  created_at timestamptz not null default now()
+);
 
 -- ---------------------------------------------------------------- platform
 create table whatsapp_messages (
@@ -329,7 +397,7 @@ create table whatsapp_messages (
   template text,
   body text,
   provider_message_id text,
-  status text not null default 'queued',  -- queued, sent, delivered, read, failed
+  status text not null default 'queued',
   error text,
   attempts int not null default 0,
   created_at timestamptz not null default now()
@@ -340,73 +408,82 @@ create table settings (
   value jsonb not null
 );
 
--- ---------------------------------------------------------------- updated_at
+-- ---------------------------------------------------------------- triggers
 create or replace function touch_updated_at() returns trigger language plpgsql as $$
 begin new.updated_at = now(); return new; end $$;
 create trigger menu_items_touch before update on menu_items for each row execute function touch_updated_at();
 create trigger orders_touch before update on orders for each row execute function touch_updated_at();
 
--- ---------------------------------------------------------------- RLS
-do $$
-declare t text;
+-- live boards (KDS, order board, status page) LISTEN on channel 'orders'
+create or replace function notify_order_change() returns trigger language plpgsql as $$
 begin
-  foreach t in array array[
-    'profiles','stations','pack_kits','categories','menu_items','addons','menu_item_addons',
-    'customers','orders','order_items','order_item_addons','order_status_events','payments',
-    'webhook_events','ingredients','recipe_lines','stock_movements','vendors','purchase_orders',
-    'purchase_order_lines','vendor_bills','vendor_payments','expense_categories','expenses',
-    'whatsapp_messages','settings']
-  loop
-    execute format('alter table %I enable row level security', t);
-  end loop;
+  perform pg_notify('orders', json_build_object('id', new.id, 'status', new.status, 'code', new.order_code)::text);
+  return new;
 end $$;
+create trigger orders_notify after insert or update of status on orders for each row execute function notify_order_change();
 
--- public menu (anonymous read)
-create policy "menu public read" on categories for select using (active);
-create policy "menu items public read" on menu_items for select using (active);
-create policy "addons public read" on addons for select using (active);
-create policy "item addons public read" on menu_item_addons for select using (true);
-create policy "stations public read" on stations for select using (true);
+create or replace function check_review_order() returns trigger language plpgsql as $$
+begin
+  if not exists (select 1 from orders where id = new.order_id and status = 'delivered') then
+    raise exception 'only delivered orders can be reviewed';
+  end if;
+  return new;
+end $$;
+create trigger reviews_delivered_only before insert on reviews for each row execute function check_review_order();
 
--- staff
-create policy "own profile" on profiles for select using (id = auth.uid() or has_role('{owner,manager}'));
-create policy "owner manages profiles" on profiles for all using (has_role('{owner}')) with check (has_role('{owner}'));
+create or replace function check_review_media_limit() returns trigger language plpgsql as $$
+declare n_img int; n_vid int;
+begin
+  select count(*) filter (where kind = 'image'), count(*) filter (where kind = 'video')
+    into n_img, n_vid from review_media where review_id = new.review_id;
+  if (new.kind = 'image' and (n_img >= 4 or n_vid > 0)) or (new.kind = 'video' and (n_vid >= 1 or n_img > 0)) then
+    raise exception 'a review can have up to 4 photos or 1 video';
+  end if;
+  return new;
+end $$;
+create trigger review_media_limit before insert on review_media for each row execute function check_review_media_limit();
 
-create policy "staff manage menu" on menu_items for all using (has_role('{owner,manager}')) with check (has_role('{owner,manager}'));
-create policy "staff manage categories" on categories for all using (has_role('{owner,manager}')) with check (has_role('{owner,manager}'));
-create policy "staff manage addons" on addons for all using (has_role('{owner,manager}')) with check (has_role('{owner,manager}'));
-create policy "kitchen toggles availability" on menu_items for update using (has_role('{kitchen}')) with check (has_role('{kitchen}'));
+-- ---------------------------------------------------------------- views
+create view stock_on_hand as
+  select i.id as ingredient_id, i.name, i.unit, i.reorder_level,
+         coalesce(sum(m.quantity), 0) as on_hand,
+         coalesce(sum(m.quantity), 0) <= i.reorder_level as is_low
+  from ingredients i
+  left join stock_movements m on m.ingredient_id = i.id
+  where i.active
+  group by i.id;
 
--- orders: all staff read; status changes go through server code (service role)
-create policy "staff read orders" on orders for select using (has_role('{owner,manager,kitchen,rider}'));
-create policy "staff read order items" on order_items for select using (has_role('{owner,manager,kitchen,rider}'));
-create policy "staff read order addons" on order_item_addons for select using (has_role('{owner,manager,kitchen,rider}'));
-create policy "staff read status events" on order_status_events for select using (has_role('{owner,manager,kitchen,rider}'));
-create policy "staff read customers" on customers for select using (has_role('{owner,manager,rider}'));
-create policy "managers read payments" on payments for select using (has_role('{owner,manager}'));
+create view daily_sales as
+  select (paid_at at time zone 'Asia/Kolkata')::date as day,
+         count(*) as orders,
+         sum(subtotal_paise - discount_paise) as net_sales_paise,
+         sum(gst_paise) as gst_paise,
+         sum(total_paise) as gross_paise
+  from orders
+  where status not in ('pending_payment', 'payment_failed', 'cancelled')
+  group by 1;
 
--- stock + purchasing
-create policy "staff read stock" on ingredients for select using (has_role('{owner,manager,kitchen}'));
-create policy "managers manage ingredients" on ingredients for all using (has_role('{owner,manager}')) with check (has_role('{owner,manager}'));
-create policy "staff read recipes" on recipe_lines for select using (has_role('{owner,manager,kitchen}'));
-create policy "managers manage recipes" on recipe_lines for all using (has_role('{owner,manager}')) with check (has_role('{owner,manager}'));
-create policy "staff read movements" on stock_movements for select using (has_role('{owner,manager,kitchen}'));
-create policy "staff add wastage" on stock_movements for insert with check (has_role('{owner,manager,kitchen}') and kind in ('wastage','adjustment'));
-create policy "managers vendors" on vendors for all using (has_role('{owner,manager}')) with check (has_role('{owner,manager}'));
-create policy "managers pos" on purchase_orders for all using (has_role('{owner,manager}')) with check (has_role('{owner,manager}'));
-create policy "managers po lines" on purchase_order_lines for all using (has_role('{owner,manager}')) with check (has_role('{owner,manager}'));
-create policy "managers pack kits" on pack_kits for all using (has_role('{owner,manager}')) with check (has_role('{owner,manager}'));
+create view customer_stats as
+  select c.id as customer_id, c.phone, c.name, c.tags,
+         count(o.id) filter (where o.status = 'delivered') as delivered_orders,
+         coalesce(sum(o.total_paise) filter (where o.status = 'delivered'), 0) as lifetime_paise,
+         min(o.paid_at) as first_paid_at,
+         max(o.paid_at) as last_paid_at
+  from customers c
+  left join orders o on o.customer_id = c.id
+  group by c.id;
 
--- finance: owner only
-create policy "owner bills" on vendor_bills for all using (has_role('{owner}')) with check (has_role('{owner}'));
-create policy "owner vendor payments" on vendor_payments for all using (has_role('{owner}')) with check (has_role('{owner}'));
-create policy "owner expense cats" on expense_categories for all using (has_role('{owner}')) with check (has_role('{owner}'));
-create policy "owner expenses" on expenses for all using (has_role('{owner}')) with check (has_role('{owner}'));
-create policy "owner settings" on settings for all using (has_role('{owner}')) with check (has_role('{owner}'));
-create policy "managers read whatsapp log" on whatsapp_messages for select using (has_role('{owner,manager}'));
+create view property_stats as
+  select p.id as property_id, p.name, p.slug,
+         count(o.id) filter (where o.status = 'delivered') as delivered_orders,
+         coalesce(sum(o.subtotal_paise - o.discount_paise) filter (where o.status = 'delivered'), 0) as net_sales_paise
+  from properties p
+  left join orders o on o.property_id = p.id
+  group by p.id;
 
--- realtime for live boards
-alter publication supabase_realtime add table orders, order_items, menu_items;
+create view wall_summary as
+  select round(avg(rating)::numeric, 1) as avg_rating, count(*) as review_count
+  from reviews where not hidden;
 
 -- ---------------------------------------------------------------- reference data
 insert into stations (id, name, sort_order) values
@@ -434,4 +511,5 @@ insert into settings (key, value) values
   ('target_gross_margin_pct', '68'),
   ('direct_cost_ceiling_pct', '33'),
   ('cod_enabled', 'false'),
-  ('delivery_fee_paise', '0');
+  ('delivery_fee_paise', '0'),
+  ('social_links', '{"instagram": null, "google_review": null, "whatsapp": null}');

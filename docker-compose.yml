@@ -1,13 +1,13 @@
-# Abu & Beyond — runs as its own Compose project, next to your other apps.
+# Abu & Beyond — its own Compose project next to your other apps.
 #
-# Shared server (default):  docker compose up -d --build
-#   Starts only the app container, listening on 127.0.0.1:${APP_PORT:-3100}.
-#   Your existing reverse proxy (Nginx, Caddy, Traefik, panel) sends
-#   abuandbeyond.in to that port. See docs/deploy.md.
+#   docker compose up -d --build          app + database + nightly backups
+#   docker compose run --rm migrate       apply DB migrations and load the menu (first deploy, after updates)
 #
-# Empty server (nothing on ports 80/443):  docker compose --profile caddy up -d --build
-#   Also starts a Caddy container that handles HTTPS itself.
+# Shared server: add COMPOSE_FILE=docker-compose.yml:docker-compose.traefik.yml to .env
+# Empty server:  docker compose --profile caddy up -d --build   (bundled HTTPS)
 name: abuandbeyond
+
+x-db-url: &db-url postgres://${POSTGRES_USER:-abu}:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}@db:5432/${POSTGRES_DB:-abuandbeyond}
 
 services:
   app:
@@ -16,13 +16,77 @@ services:
       context: .
       args:
         NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL}
-        NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL}
-        NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY}
         NEXT_PUBLIC_RAZORPAY_KEY_ID: ${NEXT_PUBLIC_RAZORPAY_KEY_ID}
     env_file: .env
+    environment:
+      DATABASE_URL: *db-url
+      UPLOAD_DIR: /data/uploads
+    volumes:
+      - uploads:/data/uploads
+    depends_on:
+      db:
+        condition: service_healthy
     restart: unless-stopped
     ports:
-      - "127.0.0.1:${APP_PORT:-3100}:3000"   # only reachable from this server, via the proxy
+      - "127.0.0.1:${APP_PORT:-3100}:3000"
+
+  db:
+    container_name: abuandbeyond-db
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-abuandbeyond}
+      POSTGRES_USER: ${POSTGRES_USER:-abu}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      TZ: Asia/Kolkata
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "127.0.0.1:${DB_PORT:-5433}:5432"   # only from the server itself (psql, backups, SSH tunnel)
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-abu} -d ${POSTGRES_DB:-abuandbeyond}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  backup:
+    container_name: abuandbeyond-backup
+    image: postgres:16-alpine
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      PGHOST: db
+      PGUSER: ${POSTGRES_USER:-abu}
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+      PGDATABASE: ${POSTGRES_DB:-abuandbeyond}
+      KEEP_DAYS: ${BACKUP_KEEP_DAYS:-14}
+      TZ: Asia/Kolkata
+    volumes:
+      - ./backups:/backups
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        while true; do
+          f=/backups/abuandbeyond-$$(date +%Y-%m-%d_%H%M).sql.gz
+          pg_dump --no-owner | gzip > "$$f" && echo "backup ok $$f"
+          find /backups -name 'abuandbeyond-*.sql.gz' -mtime +$$KEEP_DAYS -delete
+          sleep 86400
+        done
+
+  migrate:
+    profiles: ["tools"]
+    build:
+      context: .
+      target: tools
+    env_file: .env
+    environment:
+      DATABASE_URL: *db-url
+    depends_on:
+      db:
+        condition: service_healthy
+    command: ["sh", "-c", "npm run db:migrate && npm run db:seed"]
 
   caddy:
     profiles: ["caddy"]
@@ -41,5 +105,7 @@ services:
       - caddy_config:/config
 
 volumes:
+  pgdata:
+  uploads:
   caddy_data:
   caddy_config:
