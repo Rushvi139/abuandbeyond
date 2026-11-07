@@ -10,7 +10,13 @@ declare global {
 function create(): Sql {
   const url = process.env.DATABASE_URL;
   if (!url) throw new Error("DATABASE_URL is not set");
-  return postgres(url, { max: 10, idle_timeout: 30, prepare: true });
+  return postgres(url, {
+    max: 10,
+    idle_timeout: 30,
+    prepare: true,
+    // bigint (money in paise, counts) → JS number. Safe: paise values are far below 2^53.
+    types: { bigint: { to: 20, from: [20], serialize: (x: number | bigint | string) => String(x), parse: (x: string) => Number(x) } },
+  });
 }
 
 export function db(): Sql {

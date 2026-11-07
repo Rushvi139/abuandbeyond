@@ -122,7 +122,17 @@ HTTPS for `DOMAIN` (set `DOMAIN=abuandbeyond.in` in `.env`).
 1. Open `https://abuandbeyond.in`.
 2. Razorpay webhook → `https://abuandbeyond.in/api/razorpay/webhook`
 3. WhatsApp webhook → `https://abuandbeyond.in/api/whatsapp/webhook` (verify token = `WHATSAPP_VERIFY_TOKEN`)
-4. Create the first staff login (owner): `docker compose exec app node scripts/create-staff.js` (comes with unit 8)
+4. Create the first staff login (owner), then one per cook / rider:
+
+   ```bash
+   docker compose run --rm migrate npm run staff -- --name "Rushvi" --phone 98xxxxxxxx --role owner --password 'a-long-password'
+   docker compose run --rm migrate npm run staff -- --name "Cook 1" --phone 98xxxxxxxx --role kitchen --password '...'
+   docker compose run --rm migrate npm run staff -- --name "Rider 1" --phone 98xxxxxxxx --role rider --password '...'
+   ```
+
+   Staff sign in at `https://abuandbeyond.in/login` (owner/manager → `/admin`, kitchen → `/kitchen`, rider → `/rider`).
+5. Razorpay test keys in `.env` (`NEXT_PUBLIC_RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`, `RAZORPAY_WEBHOOK_SECRET`), then
+   `docker compose up -d --build` again (the key id is baked in at build time).
 
 ## Updates
 

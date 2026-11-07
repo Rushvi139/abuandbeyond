@@ -76,13 +76,6 @@ export function Welcome() {
       <div className={`relative h-[420px] w-[300px] transition-transform duration-500 ${showCard ? "-translate-y-20 scale-[0.88]" : ""}`} data-phase={phase}>
         <Image src="/brand/patch-primary.png" alt="Abu & Beyond" width={260} height={177} priority className="absolute bottom-0 left-5" />
 
-        {/* paw prints left along the path */}
-        <div className="ab-paws pointer-events-none absolute right-0 top-0 flex flex-col items-end gap-5" aria-hidden="true">
-          <Paw className="mr-6 rotate-12" />
-          <Paw className="mr-2 -rotate-6" />
-          <Paw className="mr-8 rotate-3" />
-        </div>
-
         {/* one <img> per pose; CSS on [data-phase] shows and places the right one */}
         <Image src="/brand/stickers/leo-walk.png" alt="" width={108} height={174} priority className="ab-leo ab-leo-walk absolute" />
         <Image src="/brand/stickers/leo-pounce.png" alt="" width={150} height={166} priority className="ab-leo ab-leo-pounce absolute" />
@@ -110,8 +103,4 @@ export function Welcome() {
       </div>
     </div>
   );
-}
-
-function Paw({ className = "" }: { className?: string }) {
-  return <Image src="/brand/stickers/paw.png" alt="" width={20} height={29} className={`opacity-60 ${className}`} />;
 }

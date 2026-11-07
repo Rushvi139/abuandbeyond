@@ -4,14 +4,37 @@ Update this file after every meaningful implementation change.
 
 ## Current Phase
 
-- Phase 1 — Order and pay (in progress: units 1–4 done)
+- Phase 1 done (needs Razorpay keys on the server to take real test payments); Phase 2 kitchen/rider/CRM done; WhatsApp (units 12–13) next
 
 ## Current Goal
 
-- Unit 5: checkout form + `/api/checkout` (server-priced totals, customer +
-  order `pending_payment`, Razorpay order).
+- Unit 12: WhatsApp sender + templates + status notifications (then 13:
+  inbound auto-reply + reorder).
 
 ## Completed
+
+- 7 Nov (late): Phase 1 units 5–8 and Phase 2 units 9–11 + 13e–13g:
+  - `/checkout` real form + `/api/checkout` (Zod, server-priced from DB,
+    required options enforced, customer upsert, property attribution via
+    `?src=`), Razorpay order + Checkout.js, `/api/razorpay/verify`
+    (checkout-handler HMAC) and `/api/razorpay/webhook` (HMAC, idempotent
+    via `webhook_events`, `payment.captured` / `order.paid` / `payment.failed`).
+  - `src/lib/orders/transition.ts` state machine (+ tests), stock deduction
+    on delivered; `src/lib/orders/actions.ts` server actions (accept with
+    prep time, status steps by role, assign rider, cancel + Razorpay refund).
+  - `/o/[code]` live status page (SSE via Postgres LISTEN/NOTIFY →
+    `/api/events/order/[code]`), with `HappyBear`.
+  - Staff auth (`src/lib/auth`: bcrypt, sessions table, httpOnly cookie,
+    `requireRole`/`assertRole`), `/login`, `scripts/create-staff.ts`
+    (`npm run staff`).
+  - `/admin` live order board + today stats + history search; `/kitchen`
+    dark KDS with station filter + chime; `/rider` view.
+  - CRM: `/admin/customers` (search, sort by spend/orders), customer detail
+    (stats, favourites, tags, notes, WhatsApp opt-in, order history);
+    `/admin/properties` (add/edit, per-property QR generated locally,
+    orders + revenue per property); `/admin/menu` (sold-out toggle, price
+    edit, gross margin incl. packaging, social links form).
+  - DB driver parses bigint as number (money bug fixed).
 
 - 7 Nov: Supabase dropped. Own Postgres 16 container (`abuandbeyond-db`) +
   nightly `pg_dump` container; `db/migrations/0001_schema.sql` (whole
@@ -45,29 +68,23 @@ Phase 1 — Order and pay
 2. ~~Brand tokens + fonts + layout~~ done
 3. ~~Storefront menu page~~ done
 4. ~~Cart + add-ons~~ done
-5. Checkout form + `/api/checkout` (server-priced totals, creates customer +
-   order `pending_payment` + Razorpay order)
-6. Razorpay Checkout on client + `/api/razorpay/webhook` (signature,
-   idempotency, mark `paid`)
-7. Order status page (`/o/[code]`, live via SSE) with `HappyBear` dancing
-   under the "Order #… is in." header
-8. Staff login (`src/lib/auth`: bcrypt, session cookie, `requireRole`) +
-   admin order board (live via SSE)
+5. ~~Checkout + /api/checkout~~ done
+6. ~~Razorpay Checkout + verify + webhook~~ done (untested against real
+   Razorpay until keys are set; webhook URL must be registered)
+7. ~~Order status page~~ done
+8. ~~Staff login + admin order board~~ done
 
 Phase 2 — Kitchen and WhatsApp
-9. Order state machine `src/lib/orders/transition.ts` + tests
-10. Kitchen Display `/kitchen` (realtime, stations, accept, ready, chime)
-11. Rider view `/rider`
+9. ~~State machine + tests~~ done
+10. ~~Kitchen Display~~ done
+11. ~~Rider view~~ done
 12. WhatsApp sender + templates + status notifications
 13. WhatsApp inbound webhook auto-reply (menu link, track, reorder last order)
 13x. Reorder in WhatsApp: delivered message's "Order again" sends a
      Razorpay `order_details` payment request in the chat; paid → same pipeline
 
 Phase 2c — Back office CRM
-13e. CRM tables (`properties`, customer tags/notes, order attribution) are in
-     `0001_schema.sql` already
-13f. Customers list + customer detail (history, spend, tags, notes)
-13g. Properties + per-property QR codes + orders by property
+13e–g. ~~CRM tables, customers, properties~~ done
 13h. Manual order entry → WhatsApp payment link
 
 Phase 2b — Reviews and wall
@@ -94,6 +111,12 @@ Phase 5 — Full WhatsApp ordering (deferred)
     follow-up buttons, physical-goods fields on `order_details`.
 
 ## Open Questions
+
+- Razorpay: register the webhook at `https://abuandbeyond.in/api/razorpay/webhook`
+  with events payment.captured, order.paid, payment.failed; paste the
+  webhook secret into `.env`.
+- Opening hours / closing label; delivery fee is `settings.delivery_fee_paise`
+  (0 now).
 
 - Does Petpooja offer an API for pushing online orders in? Ask them before
   we plan any sync.
