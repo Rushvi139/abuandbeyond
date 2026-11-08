@@ -110,7 +110,12 @@ export default async function AccountsPage({ searchParams }: { searchParams: Pro
 
       <div className="grid gap-4 lg:grid-cols-5">
         <section className="lg:col-span-3">
-          <h2 className="mb-2 font-display text-[18px] uppercase">Vendors</h2>
+          <div className="mb-2 flex items-baseline gap-3">
+            <h2 className="font-display text-[18px] uppercase">Vendors</h2>
+            <Link href="/admin/accounts/vendors" className="text-xs font-semibold text-hill underline-offset-2 hover:underline">
+              open the bill register →
+            </Link>
+          </div>
           <div className="overflow-x-auto rounded-2xl bg-surface">
             <table className="w-full min-w-[560px] text-sm">
               <thead className="text-left text-xs uppercase tracking-wide text-muted">
@@ -185,7 +190,10 @@ export default async function AccountsPage({ searchParams }: { searchParams: Pro
 
       <div className="grid gap-4 lg:grid-cols-2">
         <section>
-          <h2 className="mb-2 font-display text-[18px] uppercase">Vendor bills</h2>
+          <div className="mb-2 flex items-baseline gap-3">
+            <h2 className="font-display text-[18px] uppercase">Vendor bills</h2>
+            <Link href="/admin/accounts/vendors" className="text-xs font-semibold text-hill underline-offset-2 hover:underline">all bills, filter &amp; edit →</Link>
+          </div>
           <BillForm vendors={vendors.map((v) => v.name)} />
           <div className="mt-3 flex flex-col gap-2">
             {bills.map((b) => {
@@ -222,7 +230,10 @@ export default async function AccountsPage({ searchParams }: { searchParams: Pro
           </div>
         </section>
         <section>
-          <h2 className="mb-2 font-display text-[18px] uppercase">Expenses</h2>
+          <div className="mb-2 flex items-baseline gap-3">
+            <h2 className="font-display text-[18px] uppercase">Expenses</h2>
+            <Link href="/admin/accounts/expenses" className="text-xs font-semibold text-hill underline-offset-2 hover:underline">week by week, filter &amp; edit →</Link>
+          </div>
           <ExpenseForm categories={categories} vendors={vendors.map((v) => v.name)} />
           <div className="mt-3 overflow-hidden rounded-2xl bg-surface text-sm">
             {expenses.map((e) => (

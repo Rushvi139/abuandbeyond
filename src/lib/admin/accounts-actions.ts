@@ -2,13 +2,12 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { assertRole } from "@/lib/auth";
+import { BOOKKEEPERS, assertRole } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { saveUpload } from "@/lib/files";
 
 // Recording a bill or an expense is data entry, not reading the books: riders who
 // also do the market run can file them, but only the owner sees the ledger.
-const BOOKKEEPERS = ["owner", "manager", "rider"] as const;
 const paise = (inr: number) => Math.round(inr * 100);
 
 type Q = { <T extends readonly object[]>(s: TemplateStringsArray, ...v: unknown[]): Promise<T> };
@@ -20,7 +19,7 @@ async function vendorId(tx: Q, name: string) {
 }
 
 export async function addExpense(formData: FormData) {
-  const staff = await assertRole([...BOOKKEEPERS]);
+  const staff = await assertRole(BOOKKEEPERS);
   const d = z.object({
     category: z.string().min(1), spentOn: z.string().date(), description: z.string().trim().min(2).max(200),
     amountInr: z.coerce.number().min(0.01), mode: z.string().trim().max(20).optional().or(z.literal("")),
@@ -37,7 +36,7 @@ export async function addExpense(formData: FormData) {
 }
 
 export async function addVendorBill(formData: FormData) {
-  const staff = await assertRole([...BOOKKEEPERS]);
+  const staff = await assertRole(BOOKKEEPERS);
   const d = z.object({
     vendor: z.string().trim().min(2).max(80), billNumber: z.string().trim().max(60).optional().or(z.literal("")),
     billDate: z.string().date(), amountInr: z.coerce.number().min(0.01), gstInr: z.coerce.number().min(0).default(0), dueOn: z.string().optional().or(z.literal("")),
@@ -65,7 +64,7 @@ export async function addVendorBill(formData: FormData) {
  * more than is due" is exactly what the person needs to read.
  */
 export async function addVendorPayment(formData: FormData): Promise<{ error?: string }> {
-  await assertRole([...BOOKKEEPERS]);
+  await assertRole(BOOKKEEPERS);
   const parsed = z.object({
     billId: z.string().uuid(), paidOn: z.string().date(), amountInr: z.coerce.number().min(0.01),
     mode: z.string().trim().max(20).optional().or(z.literal("")), reference: z.string().trim().max(60).optional().or(z.literal("")),

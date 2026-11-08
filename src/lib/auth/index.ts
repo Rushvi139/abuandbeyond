@@ -75,3 +75,6 @@ export async function assertRole(roles: StaffRole[]): Promise<Staff> {
 
 export const ALL_STAFF: StaffRole[] = ["owner", "manager", "kitchen", "rider"];
 export const MANAGERS: StaffRole[] = ["owner", "manager"];
+/** Who may enter money: the owners plus the rider, who books vendor bills
+ *  and cash spends on the way back from the market. */
+export const BOOKKEEPERS: StaffRole[] = ["owner", "manager", "rider"];
