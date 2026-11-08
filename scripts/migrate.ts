@@ -12,6 +12,7 @@ const dir = join(process.cwd(), "db", "migrations");
 async function main() {
   await sql`create table if not exists schema_migrations (name text primary key, applied_at timestamptz not null default now())`;
   const done = new Set((await sql<{ name: string }[]>`select name from schema_migrations`).map((r) => r.name));
+  let applied = 0;
   const files = readdirSync(dir).filter((f) => f.endsWith(".sql")).sort();
   for (const file of files) {
     if (done.has(file)) continue;
@@ -20,9 +21,10 @@ async function main() {
       await tx.unsafe(body);
       await tx`insert into schema_migrations (name) values (${file})`;
     });
+    applied += 1;
     console.log(`applied ${file}`);
   }
-  console.log("migrations up to date");
+  console.log(`migrations up to date (${files.length} on disk, ${done.size + applied} applied)`);
 }
 
 main()

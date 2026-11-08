@@ -13,6 +13,13 @@ Update this file after every meaningful implementation change.
 
 ## Completed
 
+- 8 Nov (deploy trap, fixed): the `migrate` service sits in a Docker profile, and
+  `compose up --build` does not rebuild profiled services — so `run --rm migrate`
+  kept using an image built on day one that contained only `0001_schema.sql`,
+  reporting "migrations up to date" while applying nothing. The server ran nine
+  migrations behind the code. `db/` and `scripts/` are now bind-mounted into the
+  migrate container at run time, and the script prints how many files it found
+  against how many are applied, so a mismatch is visible.
 - 8 Nov (recipe book): `/admin/recipes` — every dish with its photos, method
   (one step per line), chef's notes, prep time and yield, on top of the
   ingredient lines that already drive costing and stock. Quantities are edited

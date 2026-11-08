@@ -83,6 +83,13 @@ services:
     env_file: .env
     environment:
       DATABASE_URL: *db-url
+    # The migrations and seed are read from the checkout at run time, not baked
+    # into the image. `compose up --build` skips profiled services, so a stale
+    # tools image would otherwise keep reporting "migrations up to date" while
+    # silently running an old set of files.
+    volumes:
+      - ./db:/app/db:ro
+      - ./scripts:/app/scripts:ro
     depends_on:
       db:
         condition: service_healthy

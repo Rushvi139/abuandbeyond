@@ -156,6 +156,16 @@ This rebuilds only our containers; your other apps keep running. `migrate`
 is safe to run every time: it applies only new migrations and re-syncs the
 menu seed.
 
+`migrate` reads `db/` and `scripts/` from the checkout at run time, so it is
+always current even though `compose up --build` skips profiled services.
+It prints how many migration files it found and how many are applied — if
+those two numbers differ from what is in `db/migrations/`, the pull did not
+land. To check the database directly:
+
+```bash
+docker compose exec db psql -U abu -d abuandbeyond -c "select count(*) from schema_migrations"
+```
+
 ## Good habits
 
 - Keep `.env` only on the server; never commit it.
