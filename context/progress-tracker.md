@@ -13,6 +13,14 @@ Update this file after every meaningful implementation change.
 
 ## Completed
 
+- 8 Nov (entrance + policies): The entrance now plays on a real arrival or
+  refresh only — tapping back to the menu from Help or Account no longer
+  replays it. Logo and leopard sit in one scene that starts pulled back and
+  zooms in as the leopard walks, so they can never drift apart; the film swaps
+  to the still 300ms before the card slides, which was the stutter.
+  The card carries Help, Terms, Privacy and Refunds links, and
+  `/terms`, `/privacy` and `/refunds` now exist — Cashfree requires Contact,
+  Terms and Refunds pages before they will whitelist the domain.
 - 8 Nov (payments): **Razorpay replaced with Cashfree.** Server creates the order
   and hands the browser only a short-lived `payment_session_id`; Cashfree.js v3
   opens the modal; the order is marked paid only by the signature-verified

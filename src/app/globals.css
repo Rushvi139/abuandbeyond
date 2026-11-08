@@ -75,7 +75,13 @@ body {
   .ab-bear-note { animation: none; opacity: 0.8; }
 }
 
-/* Homepage entrance: the leopard walks in from off-screen, then breathes where it lands */
+/* Homepage entrance: the scene starts a little back and pulls in as the leopard arrives */
+@keyframes leo-scene-in {
+  from { transform: scale(0.76); }
+  to   { transform: scale(1); }
+}
+
+/* the leopard walks in from off-screen, then breathes where it lands */
 @keyframes leo-walk-in {
   from { transform: translateX(var(--leo-from, -220px)); }
   to   { transform: translateX(0); }

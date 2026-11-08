@@ -71,6 +71,23 @@ export default async function SupportPage() {
         </p>
       </section>
 
+      <section className="mt-7 px-5">
+        <h2 className="mb-2 font-display text-[20px] uppercase tracking-wide">Contact us</h2>
+        <div className="rounded-2xl bg-surface p-4 text-[15px] leading-relaxed">
+          <p className="font-semibold">Abu &amp; Beyond</p>
+          <p className="text-muted">Delivery-only kitchen · Mount Abu, Sirohi, Rajasthan, India</p>
+          {waDigits && <p className="mt-2">Phone / WhatsApp: <a href={tel ?? "#"} className="font-semibold text-hill">+{waDigits}</a></p>}
+          <p className="mt-1 text-muted">Serving 11am to 11pm, every day</p>
+        </div>
+        <div className="mt-3 flex flex-wrap gap-x-3 gap-y-1 text-[13px] text-muted">
+          <Link href="/terms" className="underline-offset-2 hover:underline">Terms</Link>
+          <span aria-hidden="true">·</span>
+          <Link href="/privacy" className="underline-offset-2 hover:underline">Privacy</Link>
+          <span aria-hidden="true">·</span>
+          <Link href="/refunds" className="underline-offset-2 hover:underline">Refunds &amp; cancellations</Link>
+        </div>
+      </section>
+
       <StoreNav active="support" />
     </div>
   );
