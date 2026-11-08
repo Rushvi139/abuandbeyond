@@ -2,9 +2,7 @@
 
 import Image from "next/image";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
-import { Leopard } from "./leopard";
-
-const SEEN_KEY = "ab_welcomed_v3";
+import { LeopardIntro, SETTLED_MS } from "./leopard-intro";
 
 // Copy lives here so it can be tuned without touching the animation.
 const COPY = {
@@ -16,33 +14,28 @@ const COPY = {
 };
 
 /**
- * First-visit entrance: a leopard walks in from the right along the top edge of the logo,
- * slows, and sits down on it; then the welcome card slides up. Shown once per device; skippable.
+ * Entrance: the leopard walks in, climbs the logo patch and settles on it with its
+ * legs hanging over the edge; then the welcome card slides up. Plays on every visit
+ * (the owner wants returning guests to see it too) and is always skippable.
  */
 export function Welcome() {
-  const [phase, setPhase] = useState<"hidden" | "walk" | "card" | "leaving">("hidden");
+  const [phase, setPhase] = useState<"intro" | "card" | "leaving" | "hidden">("intro");
   const [reduced, setReduced] = useState(false);
-  const [geom, setGeom] = useState<{ x: number; groundY: number; scale: number; width: number } | null>(null);
+  const [rects, setRects] = useState<{ logo: DOMRect; stage: DOMRect } | null>(null);
   const logoRef = useRef<HTMLImageElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    let seen = false;
-    try {
-      seen = localStorage.getItem(SEEN_KEY) === "1";
-    } catch {}
-    if (seen) return;
-    setReduced(window.matchMedia("(prefers-reduced-motion: reduce)").matches);
-    setPhase("walk");
+    const r = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    setReduced(r);
+    const t = setTimeout(() => setPhase((p) => (p === "intro" ? "card" : p)), r ? 400 : SETTLED_MS);
+    return () => clearTimeout(t);
   }, []);
 
-  // measure where the logo sits so the leopard can walk on its top edge
   const measure = useCallback(() => {
     const logo = logoRef.current, stage = stageRef.current;
     if (!logo || !stage) return;
-    const s = stage.getBoundingClientRect(), l = logo.getBoundingClientRect();
-    const scale = Math.max(0.55, Math.min(1.1, l.width / 300));
-    setGeom({ x: l.left - s.left + l.width * 0.56, groundY: l.top - s.top + 3, scale, width: s.width });
+    setRects({ logo: logo.getBoundingClientRect(), stage: stage.getBoundingClientRect() });
   }, []);
   useLayoutEffect(() => {
     if (phase === "hidden") return;
@@ -51,12 +44,7 @@ export function Welcome() {
     return () => window.removeEventListener("resize", measure);
   }, [phase, measure]);
 
-  const onSeated = useCallback(() => setTimeout(() => setPhase((p) => (p === "walk" ? "card" : p)), 500), []);
-
   function close() {
-    try {
-      localStorage.setItem(SEEN_KEY, "1");
-    } catch {}
     setPhase("leaving");
     setTimeout(() => setPhase("hidden"), 450);
   }
@@ -70,23 +58,19 @@ export function Welcome() {
         Skip
       </button>
 
-      {/* stage: full screen; the logo sits a little below centre and the leopard walks on its top edge */}
+      {/* stage: full screen; the logo sits a little below centre and the leopard lands on it */}
       <div ref={stageRef} className={`absolute inset-0 transition-transform duration-700 ease-out ${showCard ? "-translate-y-[22vh] md:-translate-y-[12vh]" : ""}`}>
         <Image
           ref={logoRef}
           src="/brand/patch-primary.png"
-          alt="Abu & Beyond"
+          alt="Abu &amp; Beyond"
           width={300}
           height={204}
           priority
           onLoad={measure}
           className="absolute left-1/2 top-[52%] w-[min(300px,72vw)] -translate-x-1/2"
         />
-        {geom && (
-          <svg className="pointer-events-none absolute inset-0 h-full w-full overflow-visible" aria-hidden="true">
-            <Leopard target={geom} width={geom.width} onSeated={onSeated} reducedMotion={reduced} />
-          </svg>
-        )}
+        <LeopardIntro logo={rects?.logo ?? null} stage={rects?.stage ?? null} reducedMotion={reduced} />
       </div>
 
       <div className={`absolute inset-x-4 bottom-6 z-10 mx-auto max-w-md rounded-3xl bg-surface p-6 shadow-[0_-8px_40px_rgba(20,20,20,0.12)] transition-all duration-500 ${showCard ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-12 opacity-0"}`}>

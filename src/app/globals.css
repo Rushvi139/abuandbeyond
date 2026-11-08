@@ -74,3 +74,16 @@ body {
   .ab-bear { animation: none; }
   .ab-bear-note { animation: none; opacity: 0.8; }
 }
+
+/* Homepage entrance: the leopard walks in from off-screen, then breathes where it lands */
+@keyframes leo-walk-in {
+  from { transform: translateX(var(--leo-from, -220px)); }
+  to   { transform: translateX(0); }
+}
+@keyframes leo-breathe {
+  0%, 100% { transform: translateY(0) scaleY(1); }
+  50%      { transform: translateY(-1px) scaleY(1.004); }
+}
+@media (prefers-reduced-motion: reduce) {
+  [style*="leo-walk-in"] { animation: none !important; }
+}
