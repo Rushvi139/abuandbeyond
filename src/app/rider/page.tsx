@@ -26,7 +26,8 @@ export default async function RiderPage() {
       <header className="mb-4 flex items-center gap-3">
         <Image src="/brand/patch-primary.png" alt="Abu & Beyond" width={66} height={47} />
         <h1 className="font-display text-[28px] uppercase">Deliveries</h1>
-        <a href="/rider/bills" className="ml-auto h-10 rounded-xl border-[1.5px] border-ink px-3 text-sm font-semibold leading-10">Bills</a>
+        <a href="/rider/stays" className="ml-auto h-10 rounded-xl border-[1.5px] border-ink px-3 text-sm font-semibold leading-10">Find</a>
+        <a href="/rider/bills" className="h-10 rounded-xl border-[1.5px] border-ink px-3 text-sm font-semibold leading-10">Bills</a>
       </header>
       <div className="flex flex-col gap-3">
         {ready.length > 1 && <RunMap kitchen={kitchen} stops={ready} />}
