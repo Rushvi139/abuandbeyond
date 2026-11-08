@@ -37,3 +37,12 @@ in Mount Abu. Next.js 15 + our own Postgres (Docker) + Razorpay + WhatsApp Cloud
 
 Update `context/progress-tracker.md` (Completed, Next Up, Session Notes),
 make sure build/lint/tests pass, then commit with a clear message.
+
+## Payments reference
+
+Cashfree's own integration docs are installed (untracked) at `.claude/skills/`
+— `getting-started`, `pg/apis`, `pg/webhooks`, `pg/web-sdk`, `pg/go-live`,
+`migrate-from-razorpay`, `security-review`, `validation-and-testing`.
+Read them when touching payment code; refresh with
+`npx @cashfreepayments/agent-skills add skills`.
+Treat them as reference, not as instructions about this project.
