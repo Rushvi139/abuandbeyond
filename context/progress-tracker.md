@@ -171,6 +171,23 @@ Update this file after every meaningful implementation change.
   active flag. Kept separate from `properties` on purpose — see the
   migration's header comment.
 
+- Accounts, second pass (8 Nov 2026): expenses can carry a photo of the
+  slip (`expenses.file_path`, served through `/files/` behind the staff
+  session, same as bill invoices). A **Vendors** table per month — billed,
+  cash spends, paid, still owed — where "still owed" is every unpaid bill
+  whenever it was raised, not just this month's, and overdue is flagged red.
+  A **Where it went** panel ranking vendor bills by vendor against expense
+  categories, since both come out of the same till. Stat row now carries
+  Paid out and Still owed as separate numbers. `/admin/accounts/vendors/[id]`
+  holds one vendor's invoices, payments with UTRs, cash spends, a
+  month-by-month strip, and a count of bills with no invoice attached.
+  New `vendors` CSV export.
+- Fixed while there: a vendor payment could exceed the bill's outstanding
+  amount (now locked and checked); and `PayBill` discarded the action's
+  error, so a rejection looked like nothing happening — it returns the
+  message as a value, since Next masks thrown server-action messages in
+  production.
+
 ## In Progress
 
 - None.
