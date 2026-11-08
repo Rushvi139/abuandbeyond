@@ -150,9 +150,30 @@ Update this file after every meaningful implementation change.
   Iced Tea, Shakes, with item options (bowl base, fries flavour) and
   `price_status`. All of it now lives in `db/migrations/0001_schema.sql`.
 
+- Demo orders (8 Nov 2026): `createDemoOrder()` in `src/lib/orders/demo.ts`
+  inserts a paid order against a real Mount Abu property so the whole
+  kitchen → rider → delivered flow can be walked end to end. Demos carry
+  `is_demo` and are excluded from every sales, costing and indent query,
+  and skip the stock consumption insert on delivery. `clearDemoOrders()`
+  removes them and any customer left orphaned.
+- Delivery pin (8 Nov 2026): `<LocationPin>` on checkout, optional,
+  captured with accuracy; `lat`/`lng` ride through to the rider card.
+- Rider run map (8 Nov 2026): `runUrl()` builds one Google Maps
+  directions link for the whole round — kitchen as origin, each stop a
+  waypoint, two-wheeler mode. Pinned stops route by coordinates, the rest
+  by "<property>, <landmark>, Mount Abu".
+- Stay directory (8 Nov 2026): `stays` table plus `/rider/stays` (search
+  by name, zone or landmark; distance from the kitchen; tap to call or
+  navigate) and `/admin/stays` (CSV import, zone counts, import history).
+  Loaded from `mount_abu_full_sweep.py`, which sweeps Google Places over
+  the plateau. Keyed on `place_id`, so a re-sweep updates rather than
+  duplicates, and never overwrites a hand-written note, a QR link or the
+  active flag. Kept separate from `properties` on purpose — see the
+  migration's header comment.
+
 ## In Progress
 
-- None. Next session starts unit 5.
+- None.
 
 ## Next Up
 
@@ -280,3 +301,12 @@ Phase 5 — Full WhatsApp ordering (deferred)
 - Seed sources: `Abu_and_Beyond_Indent_List 2.xlsx` (recipes, rate card,
   ingredient groups) and `Launch price list.pdf` (prices, packaging per
   category).
+- The `migrate` service is in the `tools` Docker profile, and
+  `compose up --build` skips profiled services. A stale tools image once
+  kept reporting "migrations up to date" while running a day-one file set.
+  `db/` and `scripts/` are now bind-mounted so the files are read from the
+  checkout at run time; after pulling new migrations, run
+  `docker compose --profile tools build migrate` if the image looks old.
+- `places.googleapis.com` is not on the egress allowlist, from either the
+  cloud container or the desktop bridge, so the Mount Abu sweep has to be
+  run on the owner's own machine and the CSV imported at /admin/stays.
