@@ -14,17 +14,31 @@ function arg(name: string) {
 }
 
 async function main() {
-  const name = arg("name"), phoneRaw = arg("phone"), email = arg("email")?.toLowerCase(), role = arg("role") ?? "kitchen", password = arg("password");
-  if (!name || (!phoneRaw && !email) || !password) throw new Error("need --name, --phone or --email, --password [--role owner|manager|kitchen|rider]");
+  const name = arg("name"), phoneRaw = arg("phone"), email = arg("email")?.toLowerCase(), password = arg("password");
+  const username = arg("username")?.trim().toLowerCase();
+  const role = arg("role") ?? "kitchen";
+  if (!name || (!phoneRaw && !email && !username) || !password) {
+    throw new Error("need --name, one of --username/--phone/--email, --password [--role owner|manager|kitchen|rider]");
+  }
+  if (username && !/^[a-z0-9._-]{3,30}$/.test(username)) throw new Error("username: 3-30 chars, letters/numbers/._- only");
   if (!["owner", "manager", "kitchen", "rider"].includes(role)) throw new Error("bad role");
   if (password.length < 8) throw new Error("password must be at least 8 characters");
   const phone = phoneRaw ? "+91" + phoneRaw.replace(/\D/g, "").slice(-10) : null;
   const hash = await bcrypt.hash(password, 11);
-  const [row] = await sql<{ id: string }[]>`insert into staff_users (full_name, phone, email, password_hash, role)
-    values (${name}, ${phone}, ${email ?? null}, ${hash}, ${role})
-    on conflict (phone) do update set full_name = excluded.full_name, password_hash = excluded.password_hash, role = excluded.role, active = true
-    returning id`;
-  console.log(`staff ${name} (${role}) ready: ${row.id}`);
+  // update by whichever identifier already exists, else insert
+  const [existing] = await sql<{ id: string }[]>`
+    select id from staff_users
+    where (${username ?? null}::text is not null and lower(username) = ${username ?? null})
+       or (${phone}::text is not null and phone = ${phone})
+       or (${email ?? null}::text is not null and lower(email) = ${email ?? null})
+    limit 1`;
+  const [row] = existing
+    ? await sql<{ id: string }[]>`update staff_users set full_name = ${name}, password_hash = ${hash}, role = ${role}, active = true,
+        username = coalesce(${username ?? null}, username), phone = coalesce(${phone}, phone), email = coalesce(${email ?? null}, email)
+        where id = ${existing.id} returning id`
+    : await sql<{ id: string }[]>`insert into staff_users (full_name, username, phone, email, password_hash, role)
+        values (${name}, ${username ?? null}, ${phone}, ${email ?? null}, ${hash}, ${role}) returning id`;
+  console.log(`staff ${name} (${role}) signs in as "${username ?? phone ?? email}" — ${row.id}`);
 }
 
 main()

@@ -33,7 +33,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
       <form action={signIn} className="mt-5 flex flex-col gap-3.5">
         <input type="hidden" name="next" value={sp.next ?? ""} />
         <label className="flex flex-col gap-1.5 text-[13px] font-semibold">
-          Phone or email
+          Username, phone or email
           <input name="id" required autoComplete="username" className="h-[50px] rounded-xl border-[1.5px] border-line bg-surface px-3.5 text-base font-normal" />
         </label>
         <label className="flex flex-col gap-1.5 text-[13px] font-semibold">
