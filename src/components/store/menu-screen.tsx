@@ -8,6 +8,7 @@ import { formatINR } from "@/lib/pricing";
 import { CUISINE_LABEL, type Category, type MenuItem } from "@/lib/menu/types";
 import { VegMark } from "./veg-mark";
 import { StoreNav } from "./store-nav";
+import { BannerStrip, type Banner } from "./banner-strip";
 
 // Sticker artwork from the brand sticker sheet, by category slug (or item slug), else a coloured cuisine tile.
 const STICKER: Record<string, string> = {
@@ -27,9 +28,9 @@ const TILE: Record<MenuItem["cuisine"], string> = {
   abu: "bg-kraft text-ink",
 };
 
-export function MenuScreen({ categories, closingLabel }: { categories: Category[]; closingLabel: string | null }) {
+export function MenuScreen({ categories, closingLabel, banners = [] }: { categories: Category[]; closingLabel: string | null; banners?: Banner[] }) {
   const cart = useCart();
-  const [vegOnly, setVegOnly] = useState(false);
+  const [diet, setDiet] = useState<"all" | "veg" | "nonveg">("all");
   const [active, setActive] = useState(categories[0]?.slug ?? "");
   const [sheetItem, setSheetItem] = useState<MenuItem | null>(null);
   const sectionRefs = useRef<Record<string, HTMLElement | null>>({});
@@ -37,9 +38,9 @@ export function MenuScreen({ categories, closingLabel }: { categories: Category[
   const visible = useMemo(
     () =>
       categories
-        .map((c) => ({ ...c, items: vegOnly ? c.items.filter((i) => i.isVeg) : c.items }))
+        .map((c) => ({ ...c, items: diet === "all" ? c.items : c.items.filter((i) => (diet === "veg" ? i.isVeg : !i.isVeg)) }))
         .filter((c) => c.items.length > 0),
-    [categories, vegOnly],
+    [categories, diet],
   );
   const dishCount = visible.reduce((n, c) => n + c.items.length, 0);
 
@@ -97,21 +98,34 @@ export function MenuScreen({ categories, closingLabel }: { categories: Category[
           <br />
           <span className="text-clay">the usual.</span>
         </h1>
-        <div className="mt-4 flex items-center justify-between">
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-2">
           <span className="text-[13px] text-muted">
-            {dishCount} dishes · prices + 5% GST
+            {dishCount} dish{dishCount === 1 ? "" : "es"} · prices + 5% GST
           </span>
-          <button
-            type="button"
-            onClick={() => setVegOnly((v) => !v)}
-            aria-pressed={vegOnly}
-            className={`flex h-9 items-center gap-2 rounded-full border-[1.5px] px-3 text-[13px] font-semibold transition-colors ${vegOnly ? "border-veg bg-veg text-reversed" : "border-ink bg-transparent text-ink"}`}
-          >
-            <VegMark veg className={vegOnly ? "[&>*]:border-reversed [&>*>*]:bg-reversed" : ""} />
-            Veg only
-          </button>
+          <div className="flex gap-2" role="group" aria-label="Filter by veg or non-veg">
+            <button
+              type="button"
+              onClick={() => setDiet((d) => (d === "veg" ? "all" : "veg"))}
+              aria-pressed={diet === "veg"}
+              className={`flex h-9 items-center gap-2 rounded-full border-[1.5px] px-3 text-[13px] font-semibold transition-colors ${diet === "veg" ? "border-veg bg-veg text-reversed" : "border-ink bg-transparent text-ink"}`}
+            >
+              <VegMark veg className={diet === "veg" ? "[&>*]:border-reversed [&>*>*]:bg-reversed" : ""} />
+              Veg
+            </button>
+            <button
+              type="button"
+              onClick={() => setDiet((d) => (d === "nonveg" ? "all" : "nonveg"))}
+              aria-pressed={diet === "nonveg"}
+              className={`flex h-9 items-center gap-2 rounded-full border-[1.5px] px-3 text-[13px] font-semibold transition-colors ${diet === "nonveg" ? "border-error bg-error text-reversed" : "border-ink bg-transparent text-ink"}`}
+            >
+              <VegMark veg={false} className={diet === "nonveg" ? "[&>*]:border-reversed [&>*>*]:bg-reversed" : ""} />
+              Non-veg
+            </button>
+          </div>
         </div>
       </header>
+
+      <BannerStrip banners={banners} />
 
       <nav className="sticky top-0 z-20 mt-3 border-b border-line bg-paper/95 backdrop-blur" aria-label="Categories">
         <div className="flex gap-2 overflow-x-auto px-5 py-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
@@ -144,7 +158,7 @@ export function MenuScreen({ categories, closingLabel }: { categories: Category[
             ))}
           </section>
         ))}
-        {dishCount === 0 && <p className="py-16 text-center text-muted">Nothing here right now.</p>}
+        {dishCount === 0 && <p className="py-16 text-center text-muted">{diet === "nonveg" ? "No non-veg dishes on the menu right now." : diet === "veg" ? "No veg dishes on the menu right now." : "Nothing here right now."}</p>}
       </main>
 
       {cart.ready && cart.count > 0 && (

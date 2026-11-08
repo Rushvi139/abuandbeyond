@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { StoreNav } from "@/components/store/store-nav";
+import { CateringForm } from "@/components/store/catering-form";
 import { db } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
@@ -41,6 +42,10 @@ export default async function SupportPage() {
           </a>
         )}
       </div>
+
+      <section className="mt-7 px-5">
+        <CateringForm />
+      </section>
 
       <section className="mt-7 px-5">
         <h2 className="mb-2 font-display text-[20px] uppercase tracking-wide">Questions we get</h2>

@@ -1,14 +1,15 @@
 import Image from "next/image";
 import { MenuScreen } from "@/components/store/menu-screen";
 import { Welcome } from "@/components/store/welcome";
-import { getMenu } from "@/lib/menu/queries";
+import { getBanners, getMenu } from "@/lib/menu/queries";
 
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
   let categories = null;
+  let banners: Awaited<ReturnType<typeof getBanners>> = [];
   try {
-    categories = await getMenu();
+    [categories, banners] = await Promise.all([getMenu(), getBanners().catch(() => [])]);
   } catch (e) {
     console.error("menu unavailable:", e);
   }
@@ -18,7 +19,7 @@ export default async function Home() {
   return (
     <>
       <Welcome />
-      <MenuScreen categories={categories} closingLabel={null} />
+      <MenuScreen categories={categories} closingLabel={null} banners={banners} />
     </>
   );
 }

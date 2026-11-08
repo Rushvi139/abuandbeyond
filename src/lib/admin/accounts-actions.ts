@@ -6,7 +6,9 @@ import { assertRole } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { saveUpload } from "@/lib/files";
 
-const OWNER = ["owner"] as const;
+// Recording a bill or an expense is data entry, not reading the books: riders who
+// also do the market run can file them, but only the owner sees the ledger.
+const BOOKKEEPERS = ["owner", "manager", "rider"] as const;
 const paise = (inr: number) => Math.round(inr * 100);
 
 type Q = { <T extends readonly object[]>(s: TemplateStringsArray, ...v: unknown[]): Promise<T> };
@@ -18,7 +20,7 @@ async function vendorId(tx: Q, name: string) {
 }
 
 export async function addExpense(formData: FormData) {
-  const staff = await assertRole([...OWNER, "manager"]);
+  const staff = await assertRole([...BOOKKEEPERS]);
   const d = z.object({
     category: z.string().min(1), spentOn: z.string().date(), description: z.string().trim().min(2).max(200),
     amountInr: z.coerce.number().min(0.01), mode: z.string().trim().max(20).optional().or(z.literal("")),
@@ -32,7 +34,7 @@ export async function addExpense(formData: FormData) {
 }
 
 export async function addVendorBill(formData: FormData) {
-  await assertRole([...OWNER, "manager"]);
+  const staff = await assertRole([...BOOKKEEPERS]);
   const d = z.object({
     vendor: z.string().trim().min(2).max(80), billNumber: z.string().trim().max(60).optional().or(z.literal("")),
     billDate: z.string().date(), amountInr: z.coerce.number().min(0.01), gstInr: z.coerce.number().min(0).default(0), dueOn: z.string().optional().or(z.literal("")),
@@ -43,17 +45,18 @@ export async function addVendorBill(formData: FormData) {
   const sql = db();
   await sql.begin(async (tx) => {
     const vid = await vendorId(tx as unknown as Q, d.vendor);
-    const [bill] = await tx<{ id: string }[]>`insert into vendor_bills (vendor_id, bill_number, bill_date, amount_paise, gst_paise, due_on, file_path)
-      values (${vid}, ${d.billNumber || null}, ${d.billDate}, ${paise(d.amountInr)}, ${paise(d.gstInr)}, ${d.dueOn || null}, ${filePath}) returning id`;
+    const [bill] = await tx<{ id: string }[]>`insert into vendor_bills (vendor_id, bill_number, bill_date, amount_paise, gst_paise, due_on, file_path, created_by)
+      values (${vid}, ${d.billNumber || null}, ${d.billDate}, ${paise(d.amountInr)}, ${paise(d.gstInr)}, ${d.dueOn || null}, ${filePath}, ${staff.id}) returning id`;
     if (d.paidNow) {
       await tx`insert into vendor_payments (vendor_id, vendor_bill_id, paid_on, amount_paise, mode, reference) values (${vid}, ${bill.id}, ${d.billDate}, ${paise(d.amountInr)}, ${d.mode || null}, ${d.reference || null})`;
     }
   });
   revalidatePath("/admin/accounts");
+  revalidatePath("/rider/bills");
 }
 
 export async function addVendorPayment(formData: FormData) {
-  await assertRole([...OWNER, "manager"]);
+  await assertRole([...BOOKKEEPERS]);
   const d = z.object({
     billId: z.string().uuid(), paidOn: z.string().date(), amountInr: z.coerce.number().min(0.01),
     mode: z.string().trim().max(20).optional().or(z.literal("")), reference: z.string().trim().max(60).optional().or(z.literal("")),

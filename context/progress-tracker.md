@@ -13,6 +13,13 @@ Update this file after every meaningful implementation change.
 
 ## Completed
 
+- 8 Nov (later): Veg **and** non-veg filters on the menu; swipeable **banners**
+  across the top (offers / new dishes, with optional photo and a date window,
+  managed on `/admin/menu`); **catering enquiries** from the help page into
+  `/admin/catering` with a new → quoted → confirmed → closed status; and
+  `/rider/bills`, a market-run screen where a rider files vendor bills and cash
+  expenses (with the paper photographed) without seeing sales or margins —
+  every bill now records who filed it.
 - 8 Nov: The bhalu on the order screen is now a rendered film too — sitting with
   one of our orange-wrapped rolls, eating and swaying, looping on transparency
   (WebM / WebP / still, same approach as the leopard).

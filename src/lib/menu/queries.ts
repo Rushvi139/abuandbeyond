@@ -43,3 +43,24 @@ export async function getMenu(): Promise<Category[]> {
     .map((r) => ({ id: r.id, name: r.name, slug: r.slug, items: r.items ?? [] }))
     .filter((c) => c.items.length > 0);
 }
+
+export type BannerRow = {
+  id: string;
+  title: string;
+  subtitle: string | null;
+  linkUrl: string | null;
+  imagePath: string | null;
+  tone: "clay" | "acid" | "hill" | "ink" | "kraft";
+};
+
+/** Live banners for the top of the menu: active, and inside their date window if they have one. */
+export async function getBanners(): Promise<BannerRow[]> {
+  return db()<BannerRow[]>`
+    select id, title, subtitle, link_url as "linkUrl", image_path as "imagePath", tone
+    from banners
+    where active
+      and (starts_on is null or starts_on <= (now() at time zone 'Asia/Kolkata')::date)
+      and (ends_on is null or ends_on >= (now() at time zone 'Asia/Kolkata')::date)
+    order by sort_order, created_at desc
+    limit 6`;
+}

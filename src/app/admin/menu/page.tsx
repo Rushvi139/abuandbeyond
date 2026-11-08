@@ -1,6 +1,7 @@
 import { MenuItemForm, type EditableItem } from "@/components/admin/menu-item-form";
 import { MenuRow } from "@/components/admin/menu-row";
 import { AddonForm, AddonRow, type Addon } from "@/components/admin/addon-form";
+import { BannerForm, BannerRowView, type BannerRow } from "@/components/admin/banner-form";
 import { requireRole } from "@/lib/auth";
 import { saveSocialLinks } from "@/lib/crm/actions";
 import { db } from "@/lib/db";
@@ -23,6 +24,10 @@ export default async function MenuAdmin() {
     select a.id, a.name, a.price_paise as "pricePaise", a.is_veg as "isVeg",
       (select count(*)::int from menu_item_addons ma where ma.addon_id = a.id) as "usedBy"
     from addons a where a.active order by a.name`;
+  const banners = await sql<BannerRow[]>`
+    select id, title, subtitle, link_url as "linkUrl", image_path as "imagePath", tone, sort_order as "sortOrder",
+      starts_on as "startsOn", ends_on as "endsOn"
+    from banners where active order by sort_order, created_at desc`;
   const [social] = await sql<{ value: { instagram: string | null; google_review: string | null; whatsapp: string | null } }[]>`select value from settings where key = 'social_links'`;
   const groups = [...new Set(items.map((i) => i.category))];
 
@@ -48,6 +53,20 @@ export default async function MenuAdmin() {
           </div>
         </section>
       ))}
+      <section>
+        <h2 className="mb-1 font-display text-[18px] uppercase">Banners</h2>
+        <p className="mb-2 text-sm text-muted">These run across the top of the menu. Leave the dates empty to show one until you take it down.</p>
+        <BannerForm />
+        <div className="mt-3 overflow-hidden rounded-2xl bg-surface">
+          {banners.map((b) => (
+            <div key={b.id} className="border-b border-line last:border-0">
+              <BannerRowView banner={b} />
+            </div>
+          ))}
+          {banners.length === 0 && <p className="p-4 text-center text-sm text-muted">No banners running.</p>}
+        </div>
+      </section>
+
       <section>
         <h2 className="mb-1 font-display text-[18px] uppercase">Add-ons</h2>
         <p className="mb-2 text-sm text-muted">Make an add-on here once, then type its name into a dish&apos;s add-on box to offer it on that dish.</p>
