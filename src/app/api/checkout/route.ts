@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { CheckoutSchema, createOrder } from "@/lib/orders/create";
 import { createRazorpayOrder, razorpayConfigured } from "@/lib/payments/razorpay";
+import { rememberCustomer } from "@/lib/customers/session";
 
 export const runtime = "nodejs";
 
@@ -13,6 +14,7 @@ export async function POST(req: Request) {
   }
   try {
     const order = await createOrder(parsed.data);
+    await rememberCustomer(order.customerId); // so this device finds its own order history later
     if (!razorpayConfigured()) {
       return NextResponse.json({ ok: false, error: { code: "payments_off", message: "Online payment isn't switched on yet." } }, { status: 503 });
     }

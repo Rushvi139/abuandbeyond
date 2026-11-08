@@ -7,6 +7,7 @@ import { lineKey, useCart, type CartLine } from "@/hooks/use-cart";
 import { formatINR } from "@/lib/pricing";
 import { CUISINE_LABEL, type Category, type MenuItem } from "@/lib/menu/types";
 import { VegMark } from "./veg-mark";
+import { StoreNav } from "./store-nav";
 
 // Sticker artwork from the brand sticker sheet, by category slug (or item slug), else a coloured cuisine tile.
 const STICKER: Record<string, string> = {
@@ -82,7 +83,7 @@ export function MenuScreen({ categories, closingLabel }: { categories: Category[
   }
 
   return (
-    <div className="mx-auto min-h-dvh max-w-md bg-paper pb-28">
+    <div className="mx-auto min-h-dvh max-w-md bg-paper pb-40">
       <header className="px-5 pt-4">
         <div className="flex items-center justify-between">
           <Image src="/brand/patch-primary-tilted.png" alt="Abu & Beyond" width={104} height={76} priority className="-ml-2" />
@@ -147,7 +148,7 @@ export function MenuScreen({ categories, closingLabel }: { categories: Category[
       </main>
 
       {cart.ready && cart.count > 0 && (
-        <div className="fixed inset-x-0 bottom-0 z-30 mx-auto max-w-md px-3 pb-4">
+        <div className="fixed inset-x-0 bottom-16 z-30 mx-auto max-w-md px-3 pb-3">
           <div className="flex h-16 items-center justify-between rounded-[18px] bg-ink pl-[18px] pr-2 text-reversed">
             <div className="flex flex-col gap-0.5">
               <span className="text-xs text-kraft">
@@ -166,6 +167,8 @@ export function MenuScreen({ categories, closingLabel }: { categories: Category[
           </div>
         </div>
       )}
+
+      <StoreNav active="menu" />
 
       {sheetItem && <ItemSheet item={sheetItem} sticker={STICKER[sheetItem.slug] ?? STICKER[categories.find((c) => c.items.some((i) => i.id === sheetItem.id))?.slug ?? ""] ?? null} onClose={() => setSheetItem(null)} onAdd={(line, qty) => { cart.add(line, qty); setSheetItem(null); }} />}
     </div>
@@ -275,16 +278,32 @@ function ItemSheet({ item, sticker, onClose, onAdd }: { item: MenuItem; sticker:
       <button type="button" aria-label="Close" onClick={onClose} className="absolute inset-0 bg-night/55" />
       <div className="absolute inset-x-0 bottom-0 max-h-[92dvh] overflow-y-auto rounded-t-3xl bg-surface px-5 pb-5 pt-3">
         <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-line" />
-        <div className="flex items-center gap-3.5">
-          <Tile item={item} sticker={sticker} size="lg" />
-          <div className="flex flex-col gap-1.5">
-            <span className="flex items-center gap-1.5 text-xs text-muted">
-              <VegMark veg={item.isVeg} /> {item.isVeg ? "Veg" : "Non-veg"}
-            </span>
-            <span id="sheet-title" className="text-lg font-bold">{item.name}</span>
-            <span className="text-base font-bold">{formatINR(item.pricePaise)}</span>
+        {item.imagePath ? (
+          <>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={item.imagePath} alt={item.name} className="-mx-5 -mt-3 mb-4 h-[210px] w-[calc(100%+2.5rem)] object-cover" />
+            <div className="flex flex-col gap-1.5">
+              <span className="flex items-center gap-1.5 text-xs text-muted">
+                <VegMark veg={item.isVeg} /> {item.isVeg ? "Veg" : "Non-veg"}
+              </span>
+              <span id="sheet-title" className="text-[22px] font-bold leading-tight">{item.name}</span>
+              {item.description && <p className="text-[15px] leading-relaxed text-muted">{item.description}</p>}
+              <span className="text-lg font-bold">{formatINR(item.pricePaise)}</span>
+            </div>
+          </>
+        ) : (
+          <div className="flex items-center gap-3.5">
+            <Tile item={item} sticker={sticker} size="lg" />
+            <div className="flex flex-col gap-1.5">
+              <span className="flex items-center gap-1.5 text-xs text-muted">
+                <VegMark veg={item.isVeg} /> {item.isVeg ? "Veg" : "Non-veg"}
+              </span>
+              <span id="sheet-title" className="text-lg font-bold">{item.name}</span>
+              {item.description && <p className="text-sm leading-snug text-muted">{item.description}</p>}
+              <span className="text-base font-bold">{formatINR(item.pricePaise)}</span>
+            </div>
           </div>
-        </div>
+        )}
 
         {item.optionGroups.map((g) => (
           <fieldset key={g.id} className="mt-5">

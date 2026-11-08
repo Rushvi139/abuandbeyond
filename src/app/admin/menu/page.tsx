@@ -1,5 +1,6 @@
 import { MenuItemForm, type EditableItem } from "@/components/admin/menu-item-form";
 import { MenuRow } from "@/components/admin/menu-row";
+import { AddonForm, AddonRow, type Addon } from "@/components/admin/addon-form";
 import { requireRole } from "@/lib/auth";
 import { saveSocialLinks } from "@/lib/crm/actions";
 import { db } from "@/lib/db";
@@ -18,6 +19,10 @@ export default async function MenuAdmin() {
       coalesce((select string_agg(a.name, ', ') from menu_item_addons ma join addons a on a.id = ma.addon_id where ma.menu_item_id = m.id), '') as addons,
       (select round(sum(r.quantity * i.rate_paise_per_unit) * 1.15) from recipe_lines r join ingredients i on i.id = r.ingredient_id where r.menu_item_id = m.id) + m.packaging_cost_paise as "foodCostPaise"
     from menu_items m join categories c on c.id = m.category_id where m.active order by c.sort_order, m.sort_order`;
+  const addons = await sql<Addon[]>`
+    select a.id, a.name, a.price_paise as "pricePaise", a.is_veg as "isVeg",
+      (select count(*)::int from menu_item_addons ma where ma.addon_id = a.id) as "usedBy"
+    from addons a where a.active order by a.name`;
   const [social] = await sql<{ value: { instagram: string | null; google_review: string | null; whatsapp: string | null } }[]>`select value from settings where key = 'social_links'`;
   const groups = [...new Set(items.map((i) => i.category))];
 
@@ -43,6 +48,20 @@ export default async function MenuAdmin() {
           </div>
         </section>
       ))}
+      <section>
+        <h2 className="mb-1 font-display text-[18px] uppercase">Add-ons</h2>
+        <p className="mb-2 text-sm text-muted">Make an add-on here once, then type its name into a dish&apos;s add-on box to offer it on that dish.</p>
+        <AddonForm />
+        <div className="mt-3 overflow-hidden rounded-2xl bg-surface">
+          {addons.map((a) => (
+            <div key={a.id} className="border-b border-line last:border-0">
+              <AddonRow addon={a} />
+            </div>
+          ))}
+          {addons.length === 0 && <p className="p-4 text-center text-sm text-muted">No add-ons yet.</p>}
+        </div>
+      </section>
+
       {staff.role === "owner" && (
         <section>
           <h2 className="mb-2 font-display text-[18px] uppercase">Social links (the wall)</h2>

@@ -13,6 +13,16 @@ Update this file after every meaningful implementation change.
 
 ## Completed
 
+- 8 Nov: Guest side filled out — bottom tabs (Menu / Cart / Account / Help) on
+  every guest screen; **My account** (`/account`) with name, number, lifetime
+  spend, order history and one-tap *Order again* (re-prices the old order at
+  today's menu); finding your orders on a new phone with mobile + any past order
+  number (a signed `ab_guest` cookie, set the moment you check out — to be
+  replaced by a WhatsApp one-time code); **Help** (`/support`) with WhatsApp,
+  call and the FAQs; **Shop** (`/merch`) teasing keychains, magnets, t-shirts and
+  caps with a waiting list (`merch_interest`). Dish sheets now lead with a full
+  photo when one is uploaded. Add-ons are managed on `/admin/menu` (create once,
+  attach by name to any dish).
 - 7 Nov (late 3): CSV exports — `/admin/export/<report>` (route handler,
   role-checked): `stock` (full ingredient list with on-hand, reorder level,
   rate, stock value), `stock-ledger` (movements for a month), and owner-only

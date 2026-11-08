@@ -107,6 +107,6 @@ export async function createOrder(input: CheckoutInput, opts: { source?: string;
         await tx`insert into order_item_addons (order_item_id, addon_id, name_snapshot, price_paise) values (${oi.id}, ${a.id}, ${a.name}, ${a.price_paise})`;
     }
     await tx`insert into order_status_events (order_id, from_status, to_status) values (${order.id}, null, 'pending_payment')`;
-    return { id: order.id, code: order.order_code, number: order.order_number, totalPaise: total, customerName: input.name, phone };
+    return { id: order.id, code: order.order_code, number: order.order_number, totalPaise: total, customerName: input.name, phone, customerId: customer.id };
   });
 }

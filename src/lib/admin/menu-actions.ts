@@ -80,3 +80,33 @@ export async function retireMenuItem(id: string) {
   revalidatePath("/admin/menu");
   revalidatePath("/");
 }
+
+const AddonSchema = z.object({
+  id: z.string().uuid().optional().or(z.literal("")),
+  name: z.string().trim().min(2).max(60),
+  priceInr: z.coerce.number().min(0).max(1000),
+  isVeg: z.enum(["veg", "nonveg"]).default("veg"),
+});
+
+/** Add-ons are shared across dishes; a dish picks them up by name on its own form. */
+export async function saveAddon(formData: FormData) {
+  await assertRole(MANAGERS);
+  const d = AddonSchema.parse(Object.fromEntries(formData));
+  const paise = Math.round(d.priceInr * 100);
+  const sql = db();
+  if (d.id) {
+    await sql`update addons set name = ${d.name}, price_paise = ${paise}, is_veg = ${d.isVeg === "veg"} where id = ${d.id}`;
+  } else {
+    await sql`insert into addons (name, price_paise, is_veg) values (${d.name}, ${paise}, ${d.isVeg === "veg"})
+      on conflict (name) do update set price_paise = excluded.price_paise, is_veg = excluded.is_veg, active = true`;
+  }
+  revalidatePath("/admin/menu");
+  revalidatePath("/");
+}
+
+export async function retireAddon(id: string) {
+  await assertRole(MANAGERS);
+  await db()`update addons set active = false where id = ${id}`;
+  revalidatePath("/admin/menu");
+  revalidatePath("/");
+}
