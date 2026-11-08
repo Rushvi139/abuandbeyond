@@ -188,6 +188,26 @@ Update this file after every meaningful implementation change.
   message as a value, since Next masks thrown server-action messages in
   production.
 
+- Registers (9 Nov 2026): `/admin/accounts/expenses` groups spending by
+  week (Mon–Sun, last eight weeks by default) with a bar and subtotal per
+  week, filtered by date range, category, vendor, mode and free text.
+  `/admin/accounts/vendors` is the bill register — unpaid first, soonest
+  due at the top, overdue tinted — filtered by status, vendor, dates and
+  bill number. Both edit a cell at a time with optimistic rollback, and
+  collapse to one tappable line per row on a phone.
+  - Editable columns are matched against a fixed whitelist in
+    `register-actions.ts` before any SQL, because a column name cannot be
+    a bound parameter and `field` arrives from the browser.
+    `register-actions.test.ts` is what holds that line — do not loosen it.
+  - Migration 0014 adds `updated_at`/`updated_by` to expenses and
+    vendor_bills; rows show "edited by <name>".
+  - Guards: an expense can't be blanked or zeroed; a bill can't be cut
+    below what's been paid against it; deleting is owner-only and refuses
+    a bill with payments.
+- Watch for: optional date filters must use `nullif(param, '')::date`,
+  never `param = '' or col >= param::date`. Postgres does not promise to
+  short-circuit OR, so the blank still reaches the cast and throws.
+
 ## In Progress
 
 - None.
