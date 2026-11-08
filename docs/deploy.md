@@ -120,7 +120,9 @@ HTTPS for `DOMAIN` (set `DOMAIN=abuandbeyond.in` in `.env`).
 ## 5. After it is live
 
 1. Open `https://abuandbeyond.in`.
-2. Razorpay webhook → `https://abuandbeyond.in/api/razorpay/webhook`
+2. Cashfree webhook → `https://abuandbeyond.in/api/cashfree/webhook`
+   (Dashboard → Payment Gateway → Developers → Webhooks, version `2025-01-01`),
+   and whitelist `abuandbeyond.in` under Developers → Whitelist Domain
 3. WhatsApp webhook → `https://abuandbeyond.in/api/whatsapp/webhook` (verify token = `WHATSAPP_VERIFY_TOKEN`)
 4. Create the first staff login (owner), then one per cook / rider:
 
@@ -131,8 +133,10 @@ HTTPS for `DOMAIN` (set `DOMAIN=abuandbeyond.in` in `.env`).
    ```
 
    Staff sign in at `https://abuandbeyond.in/login` (owner/manager → `/admin`, kitchen → `/kitchen`, rider → `/rider`).
-5. Razorpay test keys in `.env` (`NEXT_PUBLIC_RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`, `RAZORPAY_WEBHOOK_SECRET`), then
-   `docker compose up -d --build` again (the key id is baked in at build time).
+5. Cashfree keys in `.env` (`CASHFREE_APP_ID`, `CASHFREE_SECRET_KEY`,
+   `CASHFREE_ENV=sandbox` or `production`), then `docker compose up -d --build`.
+   The same secret signs webhooks — there is no separate webhook secret.
+   Sandbox and production use different hosts, so `CASHFREE_ENV` must change too.
 
 ## Uploads
 

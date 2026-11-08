@@ -36,7 +36,7 @@ export type OrderView = {
   paidAt: string | null;
   deliveredAt: string | null;
   createdAt: string;
-  razorpayOrderId: string | null;
+  gatewayOrderId: string | null;
   customer: { id: string; name: string | null; phone: string };
   rider: { id: string; name: string } | null;
   lines: OrderLine[];
@@ -48,7 +48,7 @@ const base = (sql = db()) => sql`
     o.property_name as "propertyName", o.room_or_landmark as "roomOrLandmark", o.notes, o.lat, o.lng,
     o.subtotal_paise as "subtotalPaise", o.gst_paise as "gstPaise", o.delivery_fee_paise as "deliveryFeePaise", o.total_paise as "totalPaise",
     o.prep_minutes as "prepMinutes", o.paid_at as "paidAt", o.delivered_at as "deliveredAt", o.created_at as "createdAt",
-    o.razorpay_order_id as "razorpayOrderId",
+    o.gateway_order_id as "gatewayOrderId",
     json_build_object('id', c.id, 'name', c.name, 'phone', c.phone) as customer,
     case when r.id is null then null else json_build_object('id', r.id, 'name', r.full_name) end as rider,
     coalesce((select json_agg(json_build_object(

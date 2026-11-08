@@ -9,7 +9,7 @@
 | Database   | PostgreSQL 16 in our own container (`abuandbeyond-db`), `postgres` npm driver | All business data; SQL migrations in `db/migrations`, nightly dumps in `backups/` |
 | Realtime   | Postgres LISTEN/NOTIFY (`orders` channel) → Server-Sent Events route | Live order board, Kitchen Display, status page |
 | Auth       | Own: `staff_users` + bcrypt + httpOnly session cookie (`sessions` table) | Staff only: owner, manager, kitchen, rider. Customers never log in |
-| Payments   | Razorpay (Orders API + Checkout + webhooks) | Online payment, refunds |
+| Payments   | Cashfree PG (Orders API + Cashfree.js v3 + webhooks) | Online payment, refunds |
 | Messaging  | WhatsApp Cloud API (Meta), behind `lib/whatsapp` | Template notifications, inbound auto-reply |
 | Validation | Zod                                     | Every request body, webhook payload and form |
 | Automation | n8n (already on the same server)        | Daily reports, low-stock alerts to WhatsApp; reads via the app's API |
@@ -22,13 +22,15 @@
 - `src/app/kitchen` — Kitchen Display. Role: kitchen, manager, owner.
 - `src/app/rider` — rider view. Role: rider, manager, owner.
 - `src/app/admin` — back office: order management (live board, manual orders, refunds), customers (CRM), properties (hotels / villas sending orders), menu, stock, vendors, purchasing, expenses, finance, reports. Role: manager, owner (finance: owner only).
-- `src/app/api/razorpay` — create order, webhook. Only place that marks orders paid.
+- `src/app/api/cashfree/webhook` + `src/app/api/payments/verify` — the only two
+  paths that mark an order paid, both of them server-side.
 - `src/app/api/whatsapp` — Meta webhook (verify + inbound messages).
 - `src/lib/db` — the Postgres pool (`db()`), server-only; typed query modules live beside their feature (`src/lib/menu/queries.ts`).
 - `src/lib/auth` — staff login, session cookie, `requireRole()`.
 - `src/lib/orders` — order state machine; the only code allowed to change `orders.status`.
 - `src/lib/stock` — stock movements and recipe deduction.
-- `src/lib/payments` — Razorpay wrapper (create order, verify signature, refund).
+- `src/lib/payments` — Cashfree wrapper (create order, fetch order, verify webhook
+  signature, refund) and `markPaid`. Rupee/paise conversion lives here and nowhere else.
 - `src/lib/whatsapp` — WhatsApp sender + template registry. Swappable for a BSP.
 - `src/lib/pricing` — GST, totals, food-cost and margin maths.
 - `db/migrations` — schema and functions (plain SQL, applied in order by `scripts/migrate.ts`). `db/seed` — CSV seed data loaded by `scripts/seed.ts`.
@@ -71,7 +73,7 @@ What Petpooja's API allows must be confirmed with Petpooja first.
 
 ## Invariants
 
-1. An order becomes `paid` only from a Razorpay webhook (or server-side
+1. An order becomes `paid` only from a Cashfree webhook (or server-side
    payment verification) with a valid signature. The client is never trusted
    to say an order is paid.
 2. Prices and totals are computed on the server from the database; client
@@ -80,7 +82,7 @@ What Petpooja's API allows must be confirmed with Petpooja first.
    enforces the state machine and writes `order_status_events`.
 4. Stock changes only by inserting `stock_movements` rows (purchase,
    consumption, wastage, adjustment). No direct balance updates.
-5. Webhook handlers are idempotent (keyed by Razorpay event / payment id or
+5. Webhook handlers are idempotent (keyed by the gateway idempotency key / payment id or
    WhatsApp message id).
 6. WhatsApp sending never blocks the order flow; failures are logged to
    `whatsapp_messages` and retried, the order continues.

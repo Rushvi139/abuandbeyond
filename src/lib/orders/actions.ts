@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { ALL_STAFF, MANAGERS, assertRole } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { refundPayment, razorpayConfigured } from "@/lib/payments/razorpay";
+import { cashfreeConfigured, refundCashfreeOrder } from "@/lib/payments/cashfree";
 import { transition } from "./transition";
 import type { OrderStatus } from "./status";
 
@@ -39,16 +39,23 @@ export async function assignRider(orderId: string, riderId: string | null) {
   refreshAll();
 }
 
-/** Cancel + refund (full) through Razorpay when a captured payment exists. */
+/** Cancel + refund (full) through Cashfree when a captured payment exists. */
 export async function cancelOrder(orderId: string, reason: string) {
   const staff = await assertRole(MANAGERS);
   const id = Id.parse(orderId);
   const sql = db();
-  const [pay] = await sql<{ razorpay_payment_id: string; amount_paise: number }[]>`select razorpay_payment_id, amount_paise from payments where order_id = ${id} and status = 'captured' limit 1`;
+  const [pay] = await sql<{ gateway_payment_id: string; gateway_order_id: string; amount_paise: number }[]>`
+    select gateway_payment_id, gateway_order_id, amount_paise from payments where order_id = ${id} and status = 'captured' limit 1`;
   await transition(id, "cancelled", { actorId: staff.id, note: reason.slice(0, 200) });
-  if (pay && razorpayConfigured()) {
-    const r = await refundPayment(pay.razorpay_payment_id, pay.amount_paise);
-    await sql`update payments set status = 'refunded', refunded_paise = ${pay.amount_paise}, raw = coalesce(raw, '{}'::jsonb) || ${JSON.stringify({ refund: r })}::jsonb where razorpay_payment_id = ${pay.razorpay_payment_id}`;
+  if (pay && cashfreeConfigured()) {
+    // Cashfree refunds are keyed by order and need an id we invent ourselves.
+    const refundId = `rf-${pay.gateway_order_id}-${Date.now().toString(36)}`.slice(0, 40);
+    const r = await refundCashfreeOrder(pay.gateway_order_id, refundId, pay.amount_paise, reason.slice(0, 100));
+    await sql`insert into refunds (order_id, refund_id, amount_paise, status, reason, raw, created_by)
+      values (${id}, ${refundId}, ${pay.amount_paise}, ${r.refund_status ?? "PENDING"}, ${reason.slice(0, 200)}, ${JSON.stringify(r)}, ${staff.id})
+      on conflict (refund_id) do nothing`;
+    await sql`update payments set status = 'refunded', refunded_paise = ${pay.amount_paise},
+      raw = coalesce(raw, '{}'::jsonb) || ${JSON.stringify({ refund: r })}::jsonb where gateway_payment_id = ${pay.gateway_payment_id}`;
   }
   refreshAll();
 }

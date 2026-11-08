@@ -13,6 +13,16 @@ Update this file after every meaningful implementation change.
 
 ## Completed
 
+- 8 Nov (payments): **Razorpay replaced with Cashfree.** Server creates the order
+  and hands the browser only a short-lived `payment_session_id`; Cashfree.js v3
+  opens the modal; the order is marked paid only by the signature-verified
+  webhook (`/api/cashfree/webhook`, base64 HMAC over timestamp + raw body) or by
+  our own server-side re-check (`/api/payments/verify`) when the guest returns.
+  Refunds are keyed by order with an id we generate, recorded in a new `refunds`
+  table. `payments.razorpay_*` columns are now `gateway_*`. 16 tests pass,
+  including money conversion and four ways a bad signature must be rejected.
+  Not yet tested against Cashfree's sandbox — their hosts are blocked from the
+  build container, so the first live test happens on the server.
 - 8 Nov (strip): Banners can now run as a **thin strip across the very top** of
   every guest page as well as the big cards — short headline, optional button
   words and link, colour, and a festive-lights or paw-print motif. Several

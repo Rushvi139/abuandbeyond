@@ -1,7 +1,7 @@
 # CLAUDE.md — Abu & Beyond
 
 Online ordering + Kitchen ERP for Abu & Beyond, a delivery-only global kitchen
-in Mount Abu. Next.js 15 + our own Postgres (Docker) + Razorpay + WhatsApp Cloud API.
+in Mount Abu. Next.js 15 + our own Postgres (Docker) + Cashfree + WhatsApp Cloud API.
 
 ## Read first, every session
 
@@ -23,11 +23,14 @@ in Mount Abu. Next.js 15 + our own Postgres (Docker) + Razorpay + WhatsApp Cloud
 
 ## Hard rules
 
-- Only the Razorpay webhook (signature verified) marks an order paid.
+- An order is marked paid only by `markPaid`, and only after the gateway has
+  confirmed it server-side: a signature-verified Cashfree webhook, or our own
+  `GET /pg/orders/{id}`. Never from anything the browser reports.
 - Order status changes only via `src/lib/orders/transition.ts`.
 - Stock changes only via `stock_movements` inserts.
 - Every staff screen and mutation checks the session role in code (no DB-level RLS).
-- Money in integer paise; prices stored before 5% GST.
+- Money in integer paise; prices stored before 5% GST. Cashfree speaks rupees —
+  convert only in `src/lib/payments/cashfree.ts`.
 - Test-mode keys only; never commit secrets; never message or charge a real
   customer without the owner's go-ahead.
 - Never redraw or recolour the logo; use `public/brand/*`.

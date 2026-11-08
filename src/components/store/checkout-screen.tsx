@@ -16,9 +16,12 @@ const STAYS: { id: Stay; label: string }[] = [
   { id: "home", label: "Home" },
 ];
 
+type CashfreeCheckoutResult = { error?: { message?: string }; redirect?: boolean; paymentDetails?: { paymentMessage?: string } };
+type CashfreeInstance = { checkout: (opts: Record<string, unknown>) => Promise<CashfreeCheckoutResult> };
+
 declare global {
   interface Window {
-    Razorpay?: new (opts: Record<string, unknown>) => { open: () => void; on: (ev: string, cb: (r: unknown) => void) => void };
+    Cashfree?: (opts: { mode: "sandbox" | "production" }) => CashfreeInstance;
   }
 }
 
@@ -64,32 +67,31 @@ export function CheckoutScreen({ deliveryFeePaise, sourceRef }: { deliveryFeePai
       });
       const json = await res.json();
       if (!json.ok) throw new Error(json.error?.message ?? "Couldn't place the order");
-      const d = json.data as { code: string; number: number; amountPaise: number; razorpayOrderId: string; keyId: string; name: string; phone: string };
-      if (!window.Razorpay) throw new Error("Payment page didn't load. Check your connection and try again.");
-      const rzp = new window.Razorpay({
-        key: d.keyId,
-        amount: d.amountPaise,
-        currency: "INR",
-        name: "Abu & Beyond",
-        description: `Order #${d.number}`,
-        order_id: d.razorpayOrderId,
-        prefill: { name: d.name, contact: d.phone },
-        theme: { color: "#FF4D14" },
-        handler: async (r: { razorpay_order_id: string; razorpay_payment_id: string; razorpay_signature: string }) => {
-          const v = await fetch("/api/razorpay/verify", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(r) });
-          const vj = await v.json();
-          if (vj.ok) {
-            cart.clear();
-            router.push(`/o/${d.code}`);
-          } else setError("Payment received but not confirmed yet. Keep this page open or check WhatsApp.");
-        },
-        modal: { ondismiss: () => setBusy(false) },
-      });
-      rzp.on("payment.failed", () => {
-        setError("Payment didn't go through. You can try again.");
+      const d = json.data as { code: string; number: number; amountPaise: number; paymentSessionId: string; mode: "sandbox" | "production" };
+      if (!window.Cashfree) throw new Error("Payment page didn't load. Check your connection and try again.");
+      const cashfree = window.Cashfree({ mode: d.mode });
+      const result = await cashfree.checkout({ paymentSessionId: d.paymentSessionId, redirectTarget: "_modal" });
+
+      // Three outcomes: an error or a dismissed modal, a failed payment, or done.
+      // Whatever it says, the money is only real once our server has checked.
+      if (result?.error) {
+        setError("Payment wasn't completed. You can try again.");
         setBusy(false);
+        return;
+      }
+      const v = await fetch("/api/payments/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: d.code }),
       });
-      rzp.open();
+      const vj = await v.json();
+      if (vj.ok && vj.data?.status === "paid") {
+        cart.clear();
+        router.push(`/o/${d.code}`);
+      } else {
+        cart.clear();
+        router.push(`/o/${d.code}`); // the order page polls and the webhook will land
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : "Something went wrong");
       setBusy(false);
@@ -101,7 +103,7 @@ export function CheckoutScreen({ deliveryFeePaise, sourceRef }: { deliveryFeePai
 
   return (
     <div className="mx-auto min-h-dvh max-w-md bg-paper px-5 pb-36 pt-4">
-      <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="afterInteractive" />
+      <Script src="https://sdk.cashfree.com/js/v3/cashfree.js" strategy="afterInteractive" />
       <div className="flex items-center gap-3">
         <Link href="/" aria-label="Back to menu" className="flex h-11 w-11 items-center justify-center rounded-[14px] bg-surface">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6" /></svg>
@@ -186,7 +188,7 @@ export function CheckoutScreen({ deliveryFeePaise, sourceRef }: { deliveryFeePai
       <div className="fixed inset-x-0 bottom-0 mx-auto max-w-md border-t border-line bg-paper px-3 pb-5 pt-3">
         <button type="button" onClick={pay} disabled={!valid || busy} className="flex h-[60px] w-full flex-col items-center justify-center rounded-[18px] bg-clay text-ink disabled:opacity-50">
           <span className="text-[17px] font-bold">{busy ? "Opening payment…" : `Pay ${formatINR(total, { decimals: true })}`}</span>
-          <span className="text-xs font-medium">UPI · Card · Wallet — secured by Razorpay</span>
+          <span className="text-xs font-medium">UPI · Card · Netbanking — secured by Cashfree</span>
         </button>
       </div>
     </div>
