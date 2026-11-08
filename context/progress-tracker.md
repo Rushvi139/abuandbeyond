@@ -13,6 +13,9 @@ Update this file after every meaningful implementation change.
 
 ## Completed
 
+- 8 Nov: The bhalu on the order screen is now a rendered film too — sitting with
+  one of our orange-wrapped rolls, eating and swaying, looping on transparency
+  (WebM / WebP / still, same approach as the leopard).
 - 8 Nov: Guest side filled out — bottom tabs (Menu / Cart / Account / Help) on
   every guest screen; **My account** (`/account`) with name, number, lifetime
   spend, order history and one-tap *Order again* (re-prices the old order at
