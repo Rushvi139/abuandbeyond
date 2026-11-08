@@ -28,7 +28,7 @@ export default async function MenuAdmin() {
     select id, title, subtitle, link_url as "linkUrl", image_path as "imagePath", tone, placement, motif,
       cta_label as "ctaLabel", sort_order as "sortOrder", starts_on as "startsOn", ends_on as "endsOn"
     from banners where active order by sort_order, created_at desc`;
-  const [social] = await sql<{ value: { instagram: string | null; google_review: string | null; whatsapp: string | null } }[]>`select value from settings where key = 'social_links'`;
+  const [social] = await sql<{ value: { instagram: string | null; google_review: string | null; whatsapp: string | null; email: string | null } }[]>`select value from settings where key = 'social_links'`;
   const groups = [...new Set(items.map((i) => i.category))];
 
   return (
@@ -83,11 +83,13 @@ export default async function MenuAdmin() {
 
       {staff.role === "owner" && (
         <section>
-          <h2 className="mb-2 font-display text-[18px] uppercase">Social links (the wall)</h2>
+          <h2 className="mb-1 font-display text-[18px] uppercase">Contact &amp; social</h2>
+          <p className="mb-2 text-sm text-muted">The WhatsApp number and email show on the Help page. Cashfree will not whitelist the site unless guests can actually reach us there.</p>
           <form action={saveSocialLinks} className="grid max-w-xl gap-2 rounded-2xl bg-surface p-4 sm:grid-cols-3">
             <input name="instagram" defaultValue={social?.value?.instagram ?? ""} placeholder="Instagram handle" className="h-10 rounded-xl border border-line bg-paper px-3 text-sm" />
             <input name="google_review" defaultValue={social?.value?.google_review ?? ""} placeholder="Google review link" className="h-10 rounded-xl border border-line bg-paper px-3 text-sm" />
-            <input name="whatsapp" defaultValue={social?.value?.whatsapp ?? ""} placeholder="WhatsApp number (+91…)" className="h-10 rounded-xl border border-line bg-paper px-3 text-sm" />
+            <input name="whatsapp" defaultValue={social?.value?.whatsapp ?? ""} placeholder="WhatsApp / phone (+91…)" className="h-10 rounded-xl border border-line bg-paper px-3 text-sm" />
+            <input name="email" type="email" defaultValue={social?.value?.email ?? ""} placeholder="Contact email" className="h-10 rounded-xl border border-line bg-paper px-3 text-sm sm:col-span-3" />
             <button className="h-10 rounded-xl bg-ink text-sm font-semibold text-reversed sm:col-span-3">Save</button>
           </form>
         </section>

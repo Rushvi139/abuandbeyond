@@ -67,9 +67,20 @@ export async function setItemPrice(itemId: string, pricePaise: number) {
 
 export async function saveSocialLinks(formData: FormData) {
   await assertRole(["owner"]);
-  const d = z.object({ instagram: z.string().trim().max(200), google_review: z.string().trim().max(300), whatsapp: z.string().trim().max(20) }).parse(Object.fromEntries(formData));
-  await db()`insert into settings (key, value) values ('social_links', ${JSON.stringify({ instagram: d.instagram || null, google_review: d.google_review || null, whatsapp: d.whatsapp || null })}::jsonb)
+  const d = z.object({
+    instagram: z.string().trim().max(200),
+    google_review: z.string().trim().max(300),
+    whatsapp: z.string().trim().max(20),
+    email: z.string().trim().max(120).optional().or(z.literal("")),
+  }).parse(Object.fromEntries(formData));
+  await db()`insert into settings (key, value) values ('social_links', ${JSON.stringify({
+    instagram: d.instagram || null,
+    google_review: d.google_review || null,
+    whatsapp: d.whatsapp || null,
+    email: d.email || null,
+  })}::jsonb)
     on conflict (key) do update set value = excluded.value`;
   revalidatePath("/admin/menu");
   revalidatePath("/wall");
+  revalidatePath("/support");
 }

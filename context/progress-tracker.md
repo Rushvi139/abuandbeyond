@@ -13,6 +13,11 @@ Update this file after every meaningful implementation change.
 
 ## Completed
 
+- 8 Nov (contact): Public number **+91 8628910887** seeded into settings, so Help
+  shows working WhatsApp and Call buttons and a real Contact Us block. A contact
+  email can be added alongside it in the back office (Menu → Contact & social).
+  Cashfree's domain whitelisting needs Contact Us, Terms and Refunds pages —
+  all three are live.
 - 8 Nov (entrance + policies): The entrance now plays on a real arrival or
   refresh only — tapping back to the menu from Help or Account no longer
   replays it. Logo and leopard sit in one scene that starts pulled back and

@@ -17,7 +17,8 @@ const FAQ = [
 ];
 
 export default async function SupportPage() {
-  const [social] = await db()<{ value: { whatsapp: string | null; instagram: string | null } }[]>`select value from settings where key = 'social_links'`;
+  const [social] = await db()<{ value: { whatsapp: string | null; instagram: string | null; email: string | null } }[]>`select value from settings where key = 'social_links'`;
+  const email = social?.value?.email ?? null;
   const waDigits = social?.value?.whatsapp?.replace(/\D/g, "") ?? "";
   const wa = waDigits ? `https://wa.me/${waDigits}` : null;
   const tel = waDigits ? `tel:+${waDigits}` : null;
@@ -76,7 +77,16 @@ export default async function SupportPage() {
         <div className="rounded-2xl bg-surface p-4 text-[15px] leading-relaxed">
           <p className="font-semibold">Abu &amp; Beyond</p>
           <p className="text-muted">Delivery-only kitchen · Mount Abu, Sirohi, Rajasthan, India</p>
-          {waDigits && <p className="mt-2">Phone / WhatsApp: <a href={tel ?? "#"} className="font-semibold text-hill">+{waDigits}</a></p>}
+          {waDigits && (
+            <p className="mt-2">
+              Phone / WhatsApp: <a href={tel ?? "#"} className="font-semibold text-hill">+{waDigits}</a>
+            </p>
+          )}
+          {email && (
+            <p className="mt-1">
+              Email: <a href={`mailto:${email}`} className="font-semibold text-hill">{email}</a>
+            </p>
+          )}
           <p className="mt-1 text-muted">Serving 11am to 11pm, every day</p>
         </div>
         <div className="mt-3 flex flex-wrap gap-x-3 gap-y-1 text-[13px] text-muted">
