@@ -13,6 +13,15 @@ Update this file after every meaningful implementation change.
 
 ## Completed
 
+- 8 Nov (new logo): brand kit of 8 Nov 2026 dropped in across the app — the
+  hand-drawn lopsided ridge with Guru Shikhar on the left, the smaller tilted
+  Jost ampersand, the wider 1.4:1 patch and the ink footer bar. Every lockup
+  refitted to the new ratio (the old one was near-square, so heights were
+  wrong), the full favicon set wired up including .ico and apple-touch, and
+  new `patch-acid-reverse`, `monogram-ab-ridge-ink` and `ampersand-glyph-clay`
+  added. Jost is deliberately **not** in the font stack: it lives only inside
+  the logo artwork, which ships as PNG. The leopard entrance was re-checked
+  against the wider patch and still lands on the top edge.
 - 8 Nov (deploy trap, fixed): the `migrate` service sits in a Docker profile, and
   `compose up --build` does not rebuild profiled services — so `run --rm migrate`
   kept using an image built on day one that contained only `0001_schema.sql`,

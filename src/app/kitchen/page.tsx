@@ -21,7 +21,7 @@ export default async function KitchenPage({ searchParams }: { searchParams: Prom
     <div className="min-h-dvh bg-night p-4 text-reversed">
       <StaffLive newCount={fresh} chime />
       <header className="mb-4 flex flex-wrap items-center gap-3">
-        <Image src="/brand/patch-mono-white.png" alt="Abu & Beyond" width={66} height={45} />
+        <Image src="/brand/patch-mono-white.png" alt="Abu & Beyond" width={66} height={47} />
         <h1 className="font-display text-[28px] uppercase">Kitchen</h1>
         <span className={`rounded-full px-3 py-1 text-sm font-bold ${fresh ? "bg-acid text-ink" : "bg-paper/15"}`}>{fresh} new</span>
         <nav className="ml-auto flex gap-1.5 overflow-x-auto">

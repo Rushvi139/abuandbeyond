@@ -30,7 +30,7 @@ export default async function Home() {
 function ComingSoon() {
   return (
     <main className="mx-auto flex min-h-dvh max-w-md flex-col items-center justify-center gap-8 px-6 text-center">
-      <Image src="/brand/patch-primary-tilted.png" alt="Abu & Beyond" width={260} height={190} priority />
+      <Image src="/brand/patch-primary-tilted.png" alt="Abu & Beyond" width={260} height={196} priority />
       <h1 className="font-display text-5xl uppercase leading-none tracking-tight">
         Beyond
         <br />

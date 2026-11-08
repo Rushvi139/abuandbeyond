@@ -26,7 +26,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
 
   return (
     <main className="mx-auto flex min-h-dvh max-w-sm flex-col justify-center px-6">
-      <Image src="/brand/patch-primary.png" alt="Abu & Beyond" width={150} height={102} priority />
+      <Image src="/brand/patch-primary.png" alt="Abu & Beyond" width={150} height={107} priority />
       <h1 className="mt-6 font-display text-[34px] uppercase leading-none">Staff login</h1>
       {sp.error && <p role="alert" className="mt-3 rounded-xl bg-error/10 px-4 py-3 text-sm font-semibold text-error">Wrong number or password.</p>}
       {sp.denied && <p role="alert" className="mt-3 rounded-xl bg-error/10 px-4 py-3 text-sm font-semibold text-error">Your login doesn&apos;t have access to that screen.</p>}

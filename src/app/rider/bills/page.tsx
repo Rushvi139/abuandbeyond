@@ -33,7 +33,7 @@ export default async function RiderBillsPage() {
   return (
     <div className="mx-auto min-h-dvh max-w-md bg-paper p-4 pb-16">
       <header className="mb-4 flex items-center gap-3">
-        <Image src="/brand/patch-primary.png" alt="Abu & Beyond" width={66} height={45} />
+        <Image src="/brand/patch-primary.png" alt="Abu & Beyond" width={66} height={47} />
         <h1 className="font-display text-[26px] uppercase leading-none">Bills &amp; expenses</h1>
       </header>
       <Link href="/rider" className="mb-4 inline-flex h-10 items-center rounded-xl border-[1.5px] border-ink px-4 text-sm font-semibold">

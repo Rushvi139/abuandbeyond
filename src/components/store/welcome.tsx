@@ -70,7 +70,7 @@ export function Welcome() {
             src="/brand/patch-primary.png"
             alt="Abu &amp; Beyond"
             width={300}
-            height={204}
+            height={214}
             priority
             onLoad={measure}
             className="block w-[min(300px,72vw)]"

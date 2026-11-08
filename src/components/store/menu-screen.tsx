@@ -87,7 +87,7 @@ export function MenuScreen({ categories, closingLabel, banners = [] }: { categor
     <div className="mx-auto min-h-dvh max-w-md bg-paper pb-40">
       <header className="px-5 pt-4">
         <div className="flex items-center justify-between">
-          <Image src="/brand/patch-primary-tilted.png" alt="Abu & Beyond" width={104} height={76} priority className="-ml-2" />
+          <Image src="/brand/patch-primary-tilted.png" alt="Abu & Beyond" width={104} height={78} priority className="-ml-2" />
           <div className="flex flex-col items-end gap-0.5 text-right">
             <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-hill">Delivering in Mount Abu</span>
             {closingLabel && <span className="text-[13px] text-muted">{closingLabel}</span>}
