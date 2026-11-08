@@ -13,6 +13,10 @@ Update this file after every meaningful implementation change.
 
 ## Completed
 
+- 8 Nov (strip): Banners can now run as a **thin strip across the very top** of
+  every guest page as well as the big cards — short headline, optional button
+  words and link, colour, and a festive-lights or paw-print motif. Several
+  strips take turns every five seconds. Both kinds live together on `/admin/menu`.
 - 8 Nov (later): Veg **and** non-veg filters on the menu; swipeable **banners**
   across the top (offers / new dishes, with optional photo and a date window,
   managed on `/admin/menu`); **catering enquiries** from the help page into

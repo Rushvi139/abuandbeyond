@@ -4,6 +4,7 @@ import { SignInByPhone, SignOut } from "@/components/store/account-forms";
 import { currentCustomer, pastOrders } from "@/lib/customers/session";
 import { formatINR } from "@/lib/pricing";
 import { StoreNav } from "@/components/store/store-nav";
+import { RibbonSlot } from "@/components/store/ribbon-slot";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "My account · Abu & Beyond" };
@@ -19,6 +20,7 @@ export default async function AccountPage() {
 
   return (
     <div className="mx-auto min-h-dvh max-w-md bg-paper pb-28">
+      <RibbonSlot />
       <header className="px-5 pt-5">
         <h1 className="font-display text-[34px] uppercase leading-none tracking-tight">My account</h1>
       </header>

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { StoreNav } from "@/components/store/store-nav";
+import { RibbonSlot } from "@/components/store/ribbon-slot";
 import { CateringForm } from "@/components/store/catering-form";
 import { db } from "@/lib/db";
 
@@ -23,6 +24,7 @@ export default async function SupportPage() {
 
   return (
     <div className="mx-auto min-h-dvh max-w-md bg-paper pb-28">
+      <RibbonSlot />
       <header className="px-5 pt-5">
         <h1 className="font-display text-[34px] uppercase leading-none tracking-tight">Help</h1>
         <p className="mt-2 text-[15px] text-muted">A real person from the kitchen answers. We&apos;re on from 11am to 11pm.</p>

@@ -12,6 +12,9 @@ const BannerSchema = z.object({
   subtitle: z.string().trim().max(120).optional().or(z.literal("")),
   linkUrl: z.string().trim().max(200).optional().or(z.literal("")),
   tone: z.enum(["clay", "acid", "hill", "ink", "kraft"]).default("clay"),
+  placement: z.enum(["card", "ribbon"]).default("card"),
+  motif: z.enum(["none", "lights", "paws"]).default("none"),
+  ctaLabel: z.string().trim().max(20).optional().or(z.literal("")),
   sortOrder: z.coerce.number().int().min(0).max(999).default(100),
   startsOn: z.string().trim().optional().or(z.literal("")),
   endsOn: z.string().trim().optional().or(z.literal("")),
@@ -28,11 +31,12 @@ export async function saveBanner(formData: FormData) {
   const ends = d.endsOn || null;
   if (d.id) {
     await sql`update banners set title = ${d.title}, subtitle = ${d.subtitle || null}, link_url = ${d.linkUrl || null},
-      tone = ${d.tone}, sort_order = ${d.sortOrder}, starts_on = ${starts}, ends_on = ${ends},
+      tone = ${d.tone}, placement = ${d.placement}, motif = ${d.motif}, cta_label = ${d.ctaLabel || null},
+      sort_order = ${d.sortOrder}, starts_on = ${starts}, ends_on = ${ends},
       image_path = coalesce(${imagePath}, image_path) where id = ${d.id}`;
   } else {
-    await sql`insert into banners (title, subtitle, link_url, tone, sort_order, starts_on, ends_on, image_path)
-      values (${d.title}, ${d.subtitle || null}, ${d.linkUrl || null}, ${d.tone}, ${d.sortOrder}, ${starts}, ${ends}, ${imagePath})`;
+    await sql`insert into banners (title, subtitle, link_url, tone, placement, motif, cta_label, sort_order, starts_on, ends_on, image_path)
+      values (${d.title}, ${d.subtitle || null}, ${d.linkUrl || null}, ${d.tone}, ${d.placement}, ${d.motif}, ${d.ctaLabel || null}, ${d.sortOrder}, ${starts}, ${ends}, ${imagePath})`;
   }
   revalidatePath("/admin/menu");
   revalidatePath("/");

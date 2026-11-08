@@ -87,3 +87,30 @@ body {
 @media (prefers-reduced-motion: reduce) {
   [style*="leo-walk-in"] { animation: none !important; }
 }
+
+/* Top ribbon motifs: bunting lights, or a faint trail of paw prints */
+.ab-ribbon-lights::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 4px;
+  background-image: radial-gradient(circle at 5px 2px, currentColor 1.6px, transparent 1.9px);
+  background-size: 16px 4px;
+  opacity: 0.45;
+}
+.ab-ribbon-paws::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.12;
+  background-image:
+    radial-gradient(ellipse 5px 6px at 10px 22px, currentColor 60%, transparent 62%),
+    radial-gradient(ellipse 2px 2.4px at 5px 15px, currentColor 60%, transparent 62%),
+    radial-gradient(ellipse 2px 2.4px at 10px 12px, currentColor 60%, transparent 62%),
+    radial-gradient(ellipse 2px 2.4px at 15px 15px, currentColor 60%, transparent 62%);
+  background-size: 74px 40px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .ab-ribbon-lights::before { opacity: 0.3; }
+}

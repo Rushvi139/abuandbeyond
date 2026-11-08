@@ -25,8 +25,8 @@ export default async function MenuAdmin() {
       (select count(*)::int from menu_item_addons ma where ma.addon_id = a.id) as "usedBy"
     from addons a where a.active order by a.name`;
   const banners = await sql<BannerRow[]>`
-    select id, title, subtitle, link_url as "linkUrl", image_path as "imagePath", tone, sort_order as "sortOrder",
-      starts_on as "startsOn", ends_on as "endsOn"
+    select id, title, subtitle, link_url as "linkUrl", image_path as "imagePath", tone, placement, motif,
+      cta_label as "ctaLabel", sort_order as "sortOrder", starts_on as "startsOn", ends_on as "endsOn"
     from banners where active order by sort_order, created_at desc`;
   const [social] = await sql<{ value: { instagram: string | null; google_review: string | null; whatsapp: string | null } }[]>`select value from settings where key = 'social_links'`;
   const groups = [...new Set(items.map((i) => i.category))];
@@ -55,7 +55,7 @@ export default async function MenuAdmin() {
       ))}
       <section>
         <h2 className="mb-1 font-display text-[18px] uppercase">Banners</h2>
-        <p className="mb-2 text-sm text-muted">These run across the top of the menu. Leave the dates empty to show one until you take it down.</p>
+        <p className="mb-2 text-sm text-muted">A <b>strip</b> runs thin across the very top of every guest page; a <b>card</b> is the big swipeable block under the menu header. Leave the dates empty to run one until you take it down.</p>
         <BannerForm />
         <div className="mt-3 overflow-hidden rounded-2xl bg-surface">
           {banners.map((b) => (

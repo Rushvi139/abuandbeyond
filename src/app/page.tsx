@@ -1,7 +1,8 @@
 import Image from "next/image";
 import { MenuScreen } from "@/components/store/menu-screen";
 import { Welcome } from "@/components/store/welcome";
-import { getBanners, getMenu } from "@/lib/menu/queries";
+import { getBanners, getMenu, splitBanners } from "@/lib/menu/queries";
+import { TopRibbon } from "@/components/store/top-ribbon";
 
 export const dynamic = "force-dynamic";
 
@@ -15,11 +16,13 @@ export default async function Home() {
   }
 
   if (!categories || categories.length === 0) return <ComingSoon />;
+  const { ribbons, cards } = splitBanners(banners);
 
   return (
     <>
       <Welcome />
-      <MenuScreen categories={categories} closingLabel={null} banners={banners} />
+      <TopRibbon ribbons={ribbons} />
+      <MenuScreen categories={categories} closingLabel={null} banners={cards} />
     </>
   );
 }

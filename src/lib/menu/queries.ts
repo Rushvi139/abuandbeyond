@@ -51,16 +51,26 @@ export type BannerRow = {
   linkUrl: string | null;
   imagePath: string | null;
   tone: "clay" | "acid" | "hill" | "ink" | "kraft";
+  placement: "card" | "ribbon";
+  motif: "none" | "lights" | "paws";
+  ctaLabel: string | null;
 };
 
 /** Live banners for the top of the menu: active, and inside their date window if they have one. */
 export async function getBanners(): Promise<BannerRow[]> {
   return db()<BannerRow[]>`
-    select id, title, subtitle, link_url as "linkUrl", image_path as "imagePath", tone
+    select id, title, subtitle, link_url as "linkUrl", image_path as "imagePath", tone,
+      placement, motif, cta_label as "ctaLabel"
     from banners
     where active
       and (starts_on is null or starts_on <= (now() at time zone 'Asia/Kolkata')::date)
       and (ends_on is null or ends_on >= (now() at time zone 'Asia/Kolkata')::date)
     order by sort_order, created_at desc
-    limit 6`;
+    limit 8`;
 }
+
+/** Splits what is live into the top ribbon and the cards under the header. */
+export const splitBanners = (rows: BannerRow[]) => ({
+  ribbons: rows.filter((b) => b.placement === "ribbon"),
+  cards: rows.filter((b) => b.placement !== "ribbon"),
+});

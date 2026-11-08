@@ -1,5 +1,6 @@
 import Image from "next/image";
 import { StoreNav } from "@/components/store/store-nav";
+import { RibbonSlot } from "@/components/store/ribbon-slot";
 import { NotifyMe } from "@/components/store/notify-me";
 
 export const metadata = { title: "Shop · Abu & Beyond" };
@@ -14,6 +15,7 @@ const GOODS = [
 export default function MerchPage() {
   return (
     <div className="mx-auto min-h-dvh max-w-md bg-paper pb-28">
+      <RibbonSlot />
       <header className="px-5 pt-5">
         <span className="inline-block rounded-full bg-acid px-3 py-1 text-[11px] font-bold uppercase tracking-[0.12em]">Coming soon</span>
         <h1 className="mt-3 font-display text-[34px] uppercase leading-none tracking-tight">
