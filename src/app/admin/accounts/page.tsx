@@ -3,12 +3,13 @@ import { BillForm, ExpenseForm, PayBill } from "@/components/admin/accounts-form
 import { requireRole } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { formatINR } from "@/lib/pricing";
+import { spendByHead, vendorLedger } from "@/lib/admin/accounts-queries";
 
 export const dynamic = "force-dynamic";
 
 type Day = { day: string; orders: number; net: number; gst: number; gross: number; expenses: number; bills: number };
-type Bill = { id: string; vendor: string; billNumber: string | null; billDate: string; amount: number; gst: number; dueOn: string | null; filePath: string | null; paid: number };
-type Expense = { id: string; spentOn: string; category: string; description: string; amount: number; mode: string | null; vendor: string | null };
+type Bill = { id: string; vendorId: string; vendor: string; billNumber: string | null; billDate: string; amount: number; gst: number; dueOn: string | null; filePath: string | null; paid: number };
+type Expense = { id: string; spentOn: string; category: string; description: string; amount: number; mode: string | null; vendor: string | null; vendorId: string | null; filePath: string | null };
 
 const d = (s: string) => new Date(s).toLocaleDateString("en-IN", { day: "numeric", month: "short", timeZone: "Asia/Kolkata" });
 
@@ -16,8 +17,10 @@ export default async function AccountsPage({ searchParams }: { searchParams: Pro
   await requireRole(["owner"], "/admin/accounts");
   const { month } = await searchParams; // YYYY-MM
   const sql = db();
-  const m = month && /^\d{4}-\d{2}$/.test(month) ? month : new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" }).slice(0, 7);
+  const today = new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" });
+  const m = month && /^\d{4}-\d{2}$/.test(month) ? month : today.slice(0, 7);
   const start = `${m}-01`;
+  const monthLabel = new Date(`${start}T00:00:00Z`).toLocaleDateString("en-IN", { month: "long", year: "numeric", timeZone: "UTC" });
 
   const days = await sql<Day[]>`
     with sales as (
@@ -34,17 +37,24 @@ export default async function AccountsPage({ searchParams }: { searchParams: Pro
   const directPct = tot.net ? Math.round((tot.bills / tot.net) * 100) : null;
 
   const bills = await sql<Bill[]>`
-    select b.id, v.name as vendor, b.bill_number as "billNumber", b.bill_date as "billDate", b.amount_paise as amount, b.gst_paise as gst, b.due_on as "dueOn", b.file_path as "filePath",
+    select b.id, b.vendor_id as "vendorId", v.name as vendor, b.bill_number as "billNumber", b.bill_date as "billDate", b.amount_paise as amount, b.gst_paise as gst, b.due_on as "dueOn", b.file_path as "filePath",
       coalesce((select sum(p.amount_paise) from vendor_payments p where p.vendor_bill_id = b.id), 0)::bigint as paid
     from vendor_bills b join vendors v on v.id = b.vendor_id order by b.bill_date desc limit 60`;
-  const dues = bills.filter((b) => b.paid < b.amount);
-  const duesTotal = dues.reduce((n, b) => n + (b.amount - b.paid), 0);
   const expenses = await sql<Expense[]>`
-    select e.id, e.spent_on as "spentOn", c.name as category, e.description, e.amount_paise as amount, e.mode, v.name as vendor
+    select e.id, e.spent_on as "spentOn", c.name as category, e.description, e.amount_paise as amount, e.mode, v.name as vendor, e.vendor_id as "vendorId", e.file_path as "filePath"
     from expenses e join expense_categories c on c.id = e.category_id left join vendors v on v.id = e.vendor_id
     where e.spent_on >= ${start}::date and e.spent_on < (${start}::date + interval '1 month') order by e.spent_on desc, e.created_at desc limit 100`;
   const categories = await sql<{ id: string; name: string }[]>`select id, name from expense_categories order by name`;
   const vendors = await sql<{ name: string }[]>`select name from vendors where active order by name`;
+  const [ledger, spend] = await Promise.all([vendorLedger(start), spendByHead(start)]);
+
+  // Outstanding is every unpaid bill, whenever it was raised — an October bill
+  // we never settled is still money owed in November.
+  const duesTotal = ledger.reduce((n, v) => n + Number(v.outstanding), 0);
+  const openCount = ledger.reduce((n, v) => n + v.openBills, 0);
+  const paidMonth = ledger.reduce((n, v) => n + Number(v.paidMonth), 0);
+  const overdue = ledger.filter((v) => v.oldestDue && v.oldestDue < today);
+  const spendTotal = spend.reduce((n, s) => n + Number(s.amount), 0);
 
   return (
     <div className="flex flex-col gap-5">
@@ -55,18 +65,24 @@ export default async function AccountsPage({ searchParams }: { searchParams: Pro
         </div>
         <div className="flex flex-wrap gap-2">
           <form className="flex gap-2"><input type="month" name="month" defaultValue={m} className="h-10 rounded-xl border border-line bg-surface px-3 text-sm" /><button className="h-10 rounded-xl bg-ink px-4 text-sm font-semibold text-reversed">Show</button></form>
-          {["ledger", "orders", "bills", "expenses"].map((r) => (
+          {["ledger", "orders", "bills", "expenses", "vendors"].map((r) => (
             <Link key={r} href={`/admin/export/${r}?month=${m}`} className="h-10 rounded-xl border border-ink px-3 text-sm font-semibold capitalize leading-10">{r} CSV</Link>
           ))}
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-6">
         <Stat label="Net sales" value={formatINR(tot.net)} sub={`${tot.orders} orders`} />
         <Stat label="Vendor bills" value={formatINR(tot.bills)} sub={directPct !== null ? `${directPct}% of sales (ceiling 33%)` : ""} tone={directPct !== null && directPct > 33 ? "bad" : ""} />
         <Stat label="Expenses" value={formatINR(tot.expenses)} />
         <Stat label="Left over" value={formatINR(tot.net - tot.bills - tot.expenses)} sub="sales − bills − expenses" tone={tot.net - tot.bills - tot.expenses < 0 ? "bad" : "good"} />
-        <Stat label="Unpaid bills" value={formatINR(duesTotal)} sub={`${dues.length} pending`} tone={duesTotal ? "warn" : ""} />
+        <Stat label="Paid out" value={formatINR(paidMonth)} sub="to vendors this month" />
+        <Stat
+          label="Still owed"
+          value={formatINR(duesTotal)}
+          sub={openCount ? `${openCount} bill${openCount === 1 ? "" : "s"}${overdue.length ? ` · ${overdue.length} overdue` : ""}` : "all settled"}
+          tone={overdue.length ? "bad" : duesTotal ? "warn" : "good"}
+        />
       </div>
 
       <section>
@@ -92,27 +108,116 @@ export default async function AccountsPage({ searchParams }: { searchParams: Pro
         </div>
       </section>
 
+      <div className="grid gap-4 lg:grid-cols-5">
+        <section className="lg:col-span-3">
+          <h2 className="mb-2 font-display text-[18px] uppercase">Vendors</h2>
+          <div className="overflow-x-auto rounded-2xl bg-surface">
+            <table className="w-full min-w-[560px] text-sm">
+              <thead className="text-left text-xs uppercase tracking-wide text-muted">
+                <tr>
+                  <th className="px-4 py-3">Vendor</th>
+                  <th className="px-4 py-3 text-right">Billed</th>
+                  <th className="px-4 py-3 text-right">Cash spends</th>
+                  <th className="px-4 py-3 text-right">Paid</th>
+                  <th className="px-4 py-3 text-right">Still owed</th>
+                </tr>
+              </thead>
+              <tbody>
+                {ledger.map((v) => {
+                  const late = v.oldestDue && v.oldestDue < today;
+                  return (
+                    <tr key={v.id} className="border-t border-line">
+                      <td className="px-4 py-2.5">
+                        <Link href={`/admin/accounts/vendors/${v.id}`} className="font-semibold underline-offset-2 hover:underline">
+                          {v.name}
+                        </Link>
+                        {v.oldestDue && (
+                          <span className={`block text-[11px] ${late ? "font-semibold text-error" : "text-muted"}`}>
+                            {late ? "overdue since" : "due"} {d(v.oldestDue)}
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-4 py-2.5 text-right">{Number(v.billedMonth) ? formatINR(Number(v.billedMonth)) : <span className="text-muted">—</span>}</td>
+                      <td className="px-4 py-2.5 text-right">{Number(v.expensesMonth) ? formatINR(Number(v.expensesMonth)) : <span className="text-muted">—</span>}</td>
+                      <td className="px-4 py-2.5 text-right text-success">{Number(v.paidMonth) ? formatINR(Number(v.paidMonth)) : <span className="text-muted">—</span>}</td>
+                      <td className={`px-4 py-2.5 text-right font-semibold ${Number(v.outstanding) ? (late ? "text-error" : "") : "text-muted"}`}>
+                        {Number(v.outstanding) ? formatINR(Number(v.outstanding)) : "settled"}
+                      </td>
+                    </tr>
+                  );
+                })}
+                {ledger.length === 0 && <tr><td colSpan={5} className="px-4 py-6 text-center text-muted">No vendor activity this month.</td></tr>}
+              </tbody>
+            </table>
+          </div>
+          <p className="mt-1.5 text-[11px] text-muted">
+            Billed, cash spends and paid are for {monthLabel}. Still owed is every unpaid bill, whenever it was raised.
+          </p>
+        </section>
+
+        <section className="lg:col-span-2">
+          <h2 className="mb-2 font-display text-[18px] uppercase">Where it went</h2>
+          <div className="flex flex-col gap-2 rounded-2xl bg-surface p-4">
+            {spend.map((s) => {
+              const pct = spendTotal ? (Number(s.amount) / spendTotal) * 100 : 0;
+              return (
+                <div key={`${s.kind}-${s.label}`}>
+                  <div className="flex items-baseline gap-2 text-sm">
+                    <span className="min-w-0 flex-1 truncate">{s.label}</span>
+                    <span className="font-semibold">{formatINR(Number(s.amount))}</span>
+                    <span className="w-10 text-right text-[11px] text-muted">{pct < 1 ? "<1" : pct.toFixed(0)}%</span>
+                  </div>
+                  <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-paper">
+                    <div className={`h-full rounded-full ${s.kind === "stock" ? "bg-clay" : "bg-hill"}`} style={{ width: `${Math.max(pct, 1.5)}%` }} />
+                  </div>
+                </div>
+              );
+            })}
+            {spend.length === 0 && <p className="py-4 text-center text-sm text-muted">Nothing spent this month yet.</p>}
+            {spend.length > 0 && (
+              <p className="mt-1 border-t border-line pt-2 text-sm">
+                <span className="font-semibold">{formatINR(spendTotal)}</span> <span className="text-muted">out the door in {monthLabel}</span>
+              </p>
+            )}
+          </div>
+        </section>
+      </div>
+
       <div className="grid gap-4 lg:grid-cols-2">
         <section>
           <h2 className="mb-2 font-display text-[18px] uppercase">Vendor bills</h2>
           <BillForm vendors={vendors.map((v) => v.name)} />
           <div className="mt-3 flex flex-col gap-2">
-            {bills.map((b) => (
-              <div key={b.id} className={`rounded-2xl bg-surface p-3 text-sm ${b.paid < b.amount ? "border border-acid" : ""}`}>
+            {bills.map((b) => {
+              const late = b.paid < b.amount && (b.dueOn ?? b.billDate) < today;
+              return (
+              <div key={b.id} className={`rounded-2xl bg-surface p-3 text-sm ${b.paid < b.amount ? (late ? "border border-error" : "border border-acid") : ""}`}>
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="font-semibold">{b.vendor}</span>
+                  <Link href={`/admin/accounts/vendors/${b.vendorId}`} className="font-semibold underline-offset-2 hover:underline">{b.vendor}</Link>
                   {b.billNumber && <span className="text-muted">#{b.billNumber}</span>}
                   <span className="text-muted">{d(b.billDate)}</span>
-                  {b.filePath && <a href={`/files/${b.filePath}`} target="_blank" rel="noreferrer" className="text-xs font-semibold text-hill underline-offset-2 hover:underline">attachment</a>}
+                  {b.filePath ? (
+                    <a href={`/files/${b.filePath}`} target="_blank" rel="noreferrer" className="text-xs font-semibold text-hill underline-offset-2 hover:underline">invoice</a>
+                  ) : (
+                    <span className="text-xs text-muted">no invoice</span>
+                  )}
                   <span className="ml-auto font-bold">{formatINR(b.amount)}</span>
                 </div>
                 <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted">
                   {b.gst > 0 && <span>incl. GST {formatINR(b.gst)}</span>}
-                  {b.paid >= b.amount ? <span className="font-semibold text-success">Paid</span> : <span className="font-semibold text-error">Due {formatINR(b.amount - b.paid)}{b.dueOn ? ` by ${d(b.dueOn)}` : ""}</span>}
+                  {b.paid >= b.amount ? (
+                    <span className="font-semibold text-success">Paid</span>
+                  ) : (
+                    <span className={`font-semibold ${late ? "text-error" : ""}`}>
+                      {late ? "Overdue" : "Due"} {formatINR(b.amount - b.paid)}{b.dueOn ? ` by ${d(b.dueOn)}` : ""}
+                      {b.paid > 0 && ` · ${formatINR(b.paid)} paid so far`}
+                    </span>
+                  )}
                   {b.paid < b.amount && <PayBill billId={b.id} dueInr={(b.amount - b.paid) / 100} />}
                 </div>
               </div>
-            ))}
+              );
+            })}
             {bills.length === 0 && <p className="rounded-2xl bg-surface p-4 text-center text-sm text-muted">No vendor bills yet.</p>}
           </div>
         </section>
@@ -123,7 +228,22 @@ export default async function AccountsPage({ searchParams }: { searchParams: Pro
             {expenses.map((e) => (
               <div key={e.id} className="flex items-center gap-3 border-b border-line px-4 py-2.5 last:border-0">
                 <span className="w-14 flex-none text-muted">{d(e.spentOn)}</span>
-                <span className="flex-1"><span className="font-semibold">{e.description}</span> <span className="text-xs text-muted">· {e.category}{e.vendor ? ` · ${e.vendor}` : ""}{e.mode ? ` · ${e.mode}` : ""}</span></span>
+                <span className="min-w-0 flex-1">
+                  <span className="font-semibold">{e.description}</span>{" "}
+                  <span className="text-xs text-muted">
+                    · {e.category}
+                    {e.vendor && e.vendorId && (
+                      <>
+                        {" · "}
+                        <Link href={`/admin/accounts/vendors/${e.vendorId}`} className="underline-offset-2 hover:underline">{e.vendor}</Link>
+                      </>
+                    )}
+                    {e.mode ? ` · ${e.mode}` : ""}
+                  </span>
+                </span>
+                {e.filePath && (
+                  <a href={`/files/${e.filePath}`} target="_blank" rel="noreferrer" className="flex-none text-xs font-semibold text-hill underline-offset-2 hover:underline">slip</a>
+                )}
                 <span className="font-bold">{formatINR(e.amount)}</span>
               </div>
             ))}

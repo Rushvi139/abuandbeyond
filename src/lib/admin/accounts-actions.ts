@@ -26,11 +26,14 @@ export async function addExpense(formData: FormData) {
     amountInr: z.coerce.number().min(0.01), mode: z.string().trim().max(20).optional().or(z.literal("")),
     reference: z.string().trim().max(60).optional().or(z.literal("")), vendor: z.string().trim().max(80).optional().or(z.literal("")),
   }).parse(Object.fromEntries(formData));
+  const file = formData.get("attachment");
+  const filePath = file instanceof File && file.size > 0 ? await saveUpload(file, "expenses", { maxBytes: 15 * 1024 * 1024 }) : null;
   const sql = db();
   const vid = d.vendor ? await vendorId(sql as unknown as Q, d.vendor) : null;
-  await sql`insert into expenses (category_id, spent_on, description, amount_paise, vendor_id, mode, reference, created_by)
-    values (${d.category}, ${d.spentOn}, ${d.description}, ${paise(d.amountInr)}, ${vid}, ${d.mode || null}, ${d.reference || null}, ${staff.id})`;
+  await sql`insert into expenses (category_id, spent_on, description, amount_paise, vendor_id, mode, reference, file_path, created_by)
+    values (${d.category}, ${d.spentOn}, ${d.description}, ${paise(d.amountInr)}, ${vid}, ${d.mode || null}, ${d.reference || null}, ${filePath}, ${staff.id})`;
   revalidatePath("/admin/accounts");
+  if (vid) revalidatePath(`/admin/accounts/vendors/${vid}`);
 }
 
 export async function addVendorBill(formData: FormData) {
@@ -52,17 +55,42 @@ export async function addVendorBill(formData: FormData) {
     }
   });
   revalidatePath("/admin/accounts");
+  revalidatePath("/admin/accounts/vendors");
   revalidatePath("/rider/bills");
 }
 
-export async function addVendorPayment(formData: FormData) {
+/**
+ * Returns its complaint rather than throwing it: Next replaces a thrown
+ * server-action message with a generic one in production, and "that's ₹2,000
+ * more than is due" is exactly what the person needs to read.
+ */
+export async function addVendorPayment(formData: FormData): Promise<{ error?: string }> {
   await assertRole([...BOOKKEEPERS]);
-  const d = z.object({
+  const parsed = z.object({
     billId: z.string().uuid(), paidOn: z.string().date(), amountInr: z.coerce.number().min(0.01),
     mode: z.string().trim().max(20).optional().or(z.literal("")), reference: z.string().trim().max(60).optional().or(z.literal("")),
-  }).parse(Object.fromEntries(formData));
-  const sql = db();
-  const [bill] = await sql<{ vendor_id: string }[]>`select vendor_id from vendor_bills where id = ${d.billId}`;
-  await sql`insert into vendor_payments (vendor_id, vendor_bill_id, paid_on, amount_paise, mode, reference) values (${bill.vendor_id}, ${d.billId}, ${d.paidOn}, ${paise(d.amountInr)}, ${d.mode || null}, ${d.reference || null})`;
+  }).safeParse(Object.fromEntries(formData));
+  if (!parsed.success) return { error: "Check the date and the amount." };
+  const d = parsed.data;
+
+  // Locking the bill row keeps two people paying the same bill at once from
+  // both passing the overpay check and booking it twice.
+  const result = await db().begin(async (tx) => {
+    const [bill] = await tx<{ vendorId: string; amount: number; paid: number }[]>`
+      select b.vendor_id as "vendorId", b.amount_paise::bigint as amount,
+        coalesce((select sum(p.amount_paise) from vendor_payments p where p.vendor_bill_id = b.id), 0)::bigint as paid
+      from vendor_bills b where b.id = ${d.billId} for update`;
+    if (!bill) return { error: "That bill is gone." };
+    const due = Number(bill.amount) - Number(bill.paid);
+    if (due <= 0) return { error: "This bill is already settled." };
+    if (paise(d.amountInr) > due) return { error: `That's more than the ₹${(due / 100).toLocaleString("en-IN")} still due on this bill.` };
+    await tx`insert into vendor_payments (vendor_id, vendor_bill_id, paid_on, amount_paise, mode, reference)
+      values (${bill.vendorId}, ${d.billId}, ${d.paidOn}, ${paise(d.amountInr)}, ${d.mode || null}, ${d.reference || null})`;
+    return { vendorId: bill.vendorId };
+  });
+
+  if ("error" in result) return result;
   revalidatePath("/admin/accounts");
+  revalidatePath(`/admin/accounts/vendors/${result.vendorId}`);
+  return {};
 }

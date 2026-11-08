@@ -1,5 +1,6 @@
 import { currentStaff } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { vendorLedger } from "@/lib/admin/accounts-queries";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -69,10 +70,21 @@ export async function GET(req: Request, { params }: { params: Promise<{ report: 
     }));
   } else if (report === "expenses") {
     rows = ((await sql`
-      select e.spent_on::text, c.name as category, e.description, e.amount_paise, v.name as paid_to, e.mode, e.reference, u.full_name as entered_by
+      select e.spent_on::text, c.name as category, e.description, e.amount_paise, v.name as paid_to, e.mode, e.reference, u.full_name as entered_by, e.file_path
       from expenses e join expense_categories c on c.id = e.category_id left join vendors v on v.id = e.vendor_id left join staff_users u on u.id = e.created_by
       where e.spent_on >= ${start}::date and e.spent_on < (${start}::date + interval '1 month') order by e.spent_on`) as Record<string, unknown>[]).map((r) => ({
       date: r.spent_on, category: r.category, description: r.description, amount_inr: inr(r.amount_paise), paid_to: r.paid_to, mode: r.mode, reference: r.reference, entered_by: r.entered_by,
+      attachment: r.file_path ? `${process.env.NEXT_PUBLIC_SITE_URL ?? ""}/files/${r.file_path}` : "",
+    }));
+  } else if (report === "vendors") {
+    rows = (await vendorLedger(start)).map((v) => ({
+      vendor: v.name,
+      billed_inr: inr(v.billedMonth),
+      cash_spends_inr: inr(v.expensesMonth),
+      paid_inr: inr(v.paidMonth),
+      still_owed_inr: inr(v.outstanding),
+      open_bills: v.openBills,
+      oldest_due: v.oldestDue ?? "",
     }));
   } else if (report === "orders") {
     rows = ((await sql`
