@@ -13,6 +13,16 @@ Update this file after every meaningful implementation change.
 
 ## Completed
 
+- 8 Nov (recipe book): `/admin/recipes` — every dish with its photos, method
+  (one step per line), chef's notes, prep time and yield, on top of the
+  ingredient lines that already drive costing and stock. Quantities are edited
+  in place and the cost recalculates: ingredients + kitchen loading % +
+  packaging, against the price, with the margin flagged under 60%. Dishes with
+  no recipe are called out, since they cost nothing and take nothing off the
+  shelf when they sell. The book closes the loop to the indent: 30 days of real
+  orders run back through the recipes gives what was actually eaten by
+  ingredient, against what is on the shelf, ordered by value.
+- 8 Nov (logins): staff sign in with a **username** (phone and email still work).
 - 8 Nov (contact): Public number **+91 8628910887** seeded into settings, so Help
   shows working WhatsApp and Call buttons and a real Contact Us block. A contact
   email can be added alongside it in the back office (Menu → Contact & social).

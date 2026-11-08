@@ -9,6 +9,7 @@ const ITEMS: { href: string; label: string; owner?: boolean }[] = [
   { href: "/admin/properties", label: "Properties" },
   { href: "/admin/catering", label: "Catering" },
   { href: "/admin/menu", label: "Menu" },
+  { href: "/admin/recipes", label: "Recipes" },
   { href: "/admin/stock", label: "Inventory" },
   { href: "/admin/accounts", label: "Accounts", owner: true },
   { href: "/kitchen", label: "Kitchen" },
