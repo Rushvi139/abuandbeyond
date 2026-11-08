@@ -81,7 +81,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ report: 
         (select string_agg(oi.quantity || 'x ' || oi.name_snapshot, '; ') from order_items oi where oi.order_id = o.id) as items,
         (select p.gateway_payment_id from payments p where p.order_id = o.id and p.status in ('captured','refunded') limit 1) as gateway_payment_id
       from orders o join customers c on c.id = o.customer_id
-      where o.status not in ('pending_payment') and o.created_at >= ${start}::date and o.created_at < (${start}::date + interval '1 month') order by o.order_number`) as Record<string, unknown>[]).map((r) => ({
+      where o.status not in ('pending_payment') and not o.is_demo and o.created_at >= ${start}::date and o.created_at < (${start}::date + interval '1 month') order by o.order_number`) as Record<string, unknown>[]).map((r) => ({
       order_no: r.order_number, paid_at: r.paid_at, status: r.status, customer: r.customer, phone: r.phone, stay: r.stay_type, property: r.property_name, room: r.room_or_landmark,
       items: r.items, net_inr: inr(r.subtotal_paise), gst_inr: inr(r.gst_paise), delivery_inr: inr(r.delivery_fee_paise), total_inr: inr(r.total_paise), source: r.source, qr_source: r.source_ref, payment_id: r.gateway_payment_id,
     }));

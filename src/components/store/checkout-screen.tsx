@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useCart } from "@/hooks/use-cart";
 import { formatINR, gstOn } from "@/lib/pricing";
+import { LocationPin, type Pin } from "./location-pin";
 import { VegMark } from "./veg-mark";
 
 type Stay = "hotel" | "villa" | "homestay" | "home";
@@ -33,7 +34,7 @@ export function CheckoutScreen({ deliveryFeePaise, sourceRef }: { deliveryFeePai
   const [stay, setStay] = useState<Stay>("hotel");
   const [propertyName, setPropertyName] = useState("");
   const [room, setRoom] = useState("");
-  const [pin, setPin] = useState<{ lat: number; lng: number } | null>(null);
+  const [pin, setPin] = useState<Pin>(null);
   const [notes, setNotes] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -41,15 +42,6 @@ export function CheckoutScreen({ deliveryFeePaise, sourceRef }: { deliveryFeePai
   const gst = gstOn(cart.subtotalPaise);
   const total = cart.subtotalPaise + gst + deliveryFeePaise;
   const valid = name.trim().length >= 2 && /^[6-9]\d{9}$/.test(phone) && cart.lines.length > 0;
-
-  function shareLocation() {
-    if (!navigator.geolocation) return setError("Location isn't available on this phone.");
-    navigator.geolocation.getCurrentPosition(
-      (p) => setPin({ lat: p.coords.latitude, lng: p.coords.longitude }),
-      () => setError("Couldn't get your location. The room number and hotel name are enough."),
-      { enableHighAccuracy: true, timeout: 8000 },
-    );
-  }
 
   async function pay() {
     if (!valid || busy) return;
@@ -61,6 +53,7 @@ export function CheckoutScreen({ deliveryFeePaise, sourceRef }: { deliveryFeePai
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name, phone, stayType: stay, propertyName, roomOrLandmark: room, notes, sourceRef,
+          ...(pin ? { lat: pin.lat, lng: pin.lng } : {}),
           lat: pin?.lat, lng: pin?.lng,
           lines: cart.lines.map((l) => ({ itemId: l.itemId, qty: l.qty, optionIds: l.options.map((o) => o.optionId), addonIds: l.addons.map((a) => a.addonId), note: l.note ?? "" })),
         }),
@@ -165,11 +158,9 @@ export function CheckoutScreen({ deliveryFeePaise, sourceRef }: { deliveryFeePai
           <label htmlFor="room" className={label}>Room no. or landmark</label>
           <input id="room" value={room} onChange={(e) => setRoom(e.target.value)} placeholder="Room 204 / near the gate" className={input} />
         </div>
-        <button type="button" onClick={shareLocation} className={`flex h-12 items-center justify-center gap-2 rounded-xl border-[1.5px] border-dashed text-sm font-semibold ${pin ? "border-success text-success" : "border-hill text-hill"}`}>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z" /><circle cx="12" cy="9.5" r="2.5" /></svg>
-          {pin ? "Location shared" : "Share my location (helps the rider)"}
-        </button>
-        <div className="flex flex-col gap-1.5">
+        <LocationPin value={pin} onChange={setPin} />
+
+        <div>
           <label htmlFor="notes" className={label}>Delivery note <span className="font-normal text-muted">(optional)</span></label>
           <input id="notes" value={notes} onChange={(e) => setNotes(e.target.value)} maxLength={300} placeholder="Call on arrival, leave at reception…" className={input} />
         </div>

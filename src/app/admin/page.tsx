@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { OrderCard } from "@/components/admin/order-card";
+import { DemoControls } from "@/components/admin/demo-controls";
 import { StaffLive } from "@/components/admin/live";
 import { requireRole } from "@/lib/auth";
 import { db } from "@/lib/db";
@@ -12,12 +13,13 @@ export const dynamic = "force-dynamic";
 export default async function AdminHome({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
   const staff = await requireRole(["owner", "manager"], "/admin");
   const { q } = await searchParams;
-  const [live, recent, riders, today] = await Promise.all([
+  const [live, recent, riders, demo, today] = await Promise.all([
     getLiveOrders(LIVE),
     getRecentOrders(30, q),
     db()<{ id: string; name: string }[]>`select id, full_name as name from staff_users where role = 'rider' and active order by full_name`,
+    db()<{ n: number }[]>`select count(*)::int as n from orders where is_demo`,
     db()<{ orders: number; net: number; gross: number }[]>`select count(*)::int as orders, coalesce(sum(subtotal_paise - discount_paise), 0)::bigint as net, coalesce(sum(total_paise), 0)::bigint as gross
-      from orders where status not in ('pending_payment','payment_failed','cancelled') and (paid_at at time zone 'Asia/Kolkata')::date = (now() at time zone 'Asia/Kolkata')::date`,
+      from orders where status not in ('pending_payment','payment_failed','cancelled') and not is_demo and (paid_at at time zone 'Asia/Kolkata')::date = (now() at time zone 'Asia/Kolkata')::date`,
   ]);
   const t = today[0];
 
@@ -26,7 +28,8 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
       <StaffLive newCount={live.filter((o) => o.status === "paid").length} chime />
       <div className="flex flex-wrap items-end justify-between gap-3">
         <h1 className="font-display text-[32px] uppercase">Orders</h1>
-        <div className="flex gap-4 text-sm">
+        <div className="flex flex-wrap items-center gap-4 text-sm">
+          <DemoControls demoCount={demo[0]?.n ?? 0} />
           <Stat label="Today" value={String(t?.orders ?? 0)} />
           <Stat label="Net sales" value={formatINR(Number(t?.net ?? 0))} />
           <Stat label="Live" value={String(live.length)} />

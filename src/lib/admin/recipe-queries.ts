@@ -36,7 +36,7 @@ export async function recipeCards(): Promise<RecipeCard[]> {
       coalesce((select length(coalesce(rc.method, '')) > 0 from recipes rc where rc.menu_item_id = m.id), false) as "hasMethod",
       coalesce((
         select sum(oi.quantity)::int from order_items oi join orders o on o.id = oi.order_id
-        where oi.menu_item_id = m.id and o.status not in ('pending_payment','payment_failed','cancelled')
+        where oi.menu_item_id = m.id and not o.is_demo and o.status not in ('pending_payment','payment_failed','cancelled')
           and o.created_at > now() - interval '30 days'), 0) as "sold30"
     from menu_items m join categories c on c.id = m.category_id
     where m.active
@@ -80,7 +80,7 @@ export async function recipeDetail(id: string) {
       r.updated_at as "updatedAt", u.full_name as "updatedBy",
       coalesce((
         select sum(oi.quantity)::int from order_items oi join orders o on o.id = oi.order_id
-        where oi.menu_item_id = m.id and o.status not in ('pending_payment','payment_failed','cancelled')
+        where oi.menu_item_id = m.id and not o.is_demo and o.status not in ('pending_payment','payment_failed','cancelled')
           and o.created_at > now() - interval '30 days'), 0) as "sold30"
     from menu_items m
     join categories c on c.id = m.category_id
@@ -129,7 +129,7 @@ export async function indentFromSales(): Promise<IndentRow[]> {
     with sold as (
       select oi.menu_item_id, sum(oi.quantity)::int as qty
       from order_items oi join orders o on o.id = oi.order_id
-      where o.status not in ('pending_payment','payment_failed','cancelled')
+      where o.status not in ('pending_payment','payment_failed','cancelled') and not o.is_demo
         and o.created_at > now() - interval '30 days'
       group by 1
     )

@@ -19,6 +19,7 @@ export type OrderLine = {
 export type OrderView = {
   id: string;
   number: number;
+  isDemo: boolean;
   code: string;
   status: OrderStatus;
   source: string;
@@ -45,7 +46,7 @@ export type OrderView = {
 
 const base = (sql = db()) => sql`
   select o.id, o.order_number as "number", o.order_code as code, o.status, o.source, o.stay_type as "stayType",
-    o.property_name as "propertyName", o.room_or_landmark as "roomOrLandmark", o.notes, o.lat, o.lng,
+    o.property_name as "propertyName", o.room_or_landmark as "roomOrLandmark", o.notes, o.lat, o.lng, o.is_demo as "isDemo",
     o.subtotal_paise as "subtotalPaise", o.gst_paise as "gstPaise", o.delivery_fee_paise as "deliveryFeePaise", o.total_paise as "totalPaise",
     o.prep_minutes as "prepMinutes", o.paid_at as "paidAt", o.delivered_at as "deliveredAt", o.created_at as "createdAt",
     o.gateway_order_id as "gatewayOrderId",

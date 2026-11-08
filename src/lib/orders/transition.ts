@@ -23,7 +23,9 @@ export async function transition(orderId: string, to: OrderStatus, opts: { actor
     await tx`insert into order_status_events (order_id, from_status, to_status, actor_id, note)
       values (${orderId}, ${cur.status}, ${to}, ${opts.actorId ?? null}, ${opts.note ?? null})`;
 
-    if (to === "delivered") {
+    const [{ is_demo: isDemo }] = await tx<{ is_demo: boolean }[]>`select is_demo from orders where id = ${orderId}`;
+
+    if (to === "delivered" && !isDemo) {
       // consumption: each recipe line × quantity ordered, at the ingredient's current rate
       await tx`insert into stock_movements (ingredient_id, kind, quantity, unit_cost_paise, order_id, actor_id)
         select r.ingredient_id, 'consumption', -(r.quantity * oi.quantity), i.rate_paise_per_unit, ${orderId}, ${opts.actorId ?? null}

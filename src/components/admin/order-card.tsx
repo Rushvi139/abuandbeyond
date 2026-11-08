@@ -34,6 +34,9 @@ export function OrderCard({ order, riders, role, compact = false, dark = false }
         <div>
           <div className="flex items-center gap-2">
             <span className={`font-display ${compact ? "text-[26px]" : "text-[30px]"}`}>#{order.number}</span>
+            {order.isDemo && (
+              <span className="rounded-full border border-dashed border-current px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider opacity-80">Demo</span>
+            )}
             <span className={`rounded-full px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide ${STATUS_TONE[order.status]}`}>{STATUS_LABEL[order.status as OrderStatus]}</span>
           </div>
           <div className={`text-[13px] ${dark ? "text-kraft" : "text-muted"}`}>
