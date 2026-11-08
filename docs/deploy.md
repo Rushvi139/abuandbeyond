@@ -135,7 +135,9 @@ HTTPS for `DOMAIN` (set `DOMAIN=abuandbeyond.in` in `.env`).
    Staff sign in at `https://abuandbeyond.in/login` (owner/manager → `/admin`, kitchen → `/kitchen`, rider → `/rider`).
 5. Cashfree keys in `.env` (`CASHFREE_APP_ID`, `CASHFREE_SECRET_KEY`,
    `CASHFREE_ENV=sandbox` or `production`), then `docker compose up -d --build`.
-   The same secret signs webhooks — there is no separate webhook secret.
+   When you add the webhook endpoint the dashboard makes you generate a token —
+   put it in `CASHFREE_WEBHOOK_SECRET`. A webhook is accepted if it matches that
+   token or the API secret, so whichever Cashfree signs with, it works.
    Sandbox and production use different hosts, so `CASHFREE_ENV` must change too.
 
 ## Uploads

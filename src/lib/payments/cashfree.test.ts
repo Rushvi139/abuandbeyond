@@ -45,6 +45,19 @@ describe("cashfree webhook signature", () => {
     expect(verifyCashfreeWebhook(body, sign(ts, body, "someone_else"), ts)).toBe(false);
   });
 
+  it("accepts the per-endpoint webhook token as well as the API secret", () => {
+    const endpointKey = "endpoint_token";
+    const keys = ["test_secret", endpointKey];
+    expect(verifyCashfreeWebhook(body, sign(ts, body, endpointKey), ts, keys)).toBe(true);
+    expect(verifyCashfreeWebhook(body, sign(ts, body, "test_secret"), ts, keys)).toBe(true);
+    expect(verifyCashfreeWebhook(body, sign(ts, body, "neither"), ts, keys)).toBe(false);
+  });
+
+  it("rejects everything when no key is configured", () => {
+    expect(verifyCashfreeWebhook(body, sign(ts, body), ts, [])).toBe(false);
+    expect(verifyCashfreeWebhook(body, sign(ts, body), ts, [""])).toBe(false);
+  });
+
   it("rejects empty or missing pieces", () => {
     expect(verifyCashfreeWebhook(body, "", ts)).toBe(false);
     expect(verifyCashfreeWebhook(body, sign(ts, body), "")).toBe(false);

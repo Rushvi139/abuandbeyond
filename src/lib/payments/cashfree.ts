@@ -109,15 +109,31 @@ function safeEq(a: string, b: string) {
   return x.length === y.length && timingSafeEqual(x, y);
 }
 
+const sign = (key: string, timestamp: string, rawBody: string) =>
+  createHmac("sha256", key).update(timestamp + rawBody).digest("base64");
+
 /**
- * Webhook signature: base64( HMAC-SHA256( timestamp + rawBody, client secret ) ).
- * The webhook secret IS the API secret, and the body must be the untouched raw
- * string — parsing turns 170.00 into 170 and the signature stops matching.
+ * Webhook signature: base64( HMAC-SHA256( timestamp + rawBody, secret ) ).
+ *
+ * Cashfree's docs say the API secret signs webhooks, but the dashboard also
+ * issues a per-endpoint token when you add an endpoint. Rather than bet on
+ * which one a given event is signed with, we accept either — both are secrets
+ * only Cashfree and we hold, so nothing is weakened by trying both.
+ *
+ * The body must be the untouched raw string: parsing turns 170.00 into 170 and
+ * the signature stops matching.
  */
-export function verifyCashfreeWebhook(rawBody: string, signature: string, timestamp: string, key = secret()) {
-  if (!key || !signature || !timestamp) return false;
-  const expected = createHmac("sha256", key).update(timestamp + rawBody).digest("base64");
-  return safeEq(expected, signature);
+export function verifyCashfreeWebhook(
+  rawBody: string,
+  signature: string,
+  timestamp: string,
+  keys: string | string[] = [secret(), process.env.CASHFREE_WEBHOOK_SECRET ?? ""],
+) {
+  if (!signature || !timestamp) return false;
+  const candidates = (Array.isArray(keys) ? keys : [keys]).filter(Boolean);
+  if (!candidates.length) return false;
+  // check every key, without short-circuiting, so timing says nothing about which matched
+  return candidates.reduce((ok, key) => safeEq(sign(key, timestamp, rawBody), signature) || ok, false);
 }
 
 /** Rejects a webhook whose timestamp is too old to be a genuine delivery or retry. */
