@@ -24,7 +24,13 @@ export async function saveIngredient(formData: FormData) {
     await db()`insert into ingredients (name, unit, procurement_group, rate_paise_per_unit, reorder_level) values (${d.name}, ${d.unit}, ${d.group || null}, ${perUnit.toFixed(4)}, ${d.reorder})
       on conflict (name) do update set unit = excluded.unit, procurement_group = excluded.procurement_group, rate_paise_per_unit = excluded.rate_paise_per_unit, reorder_level = excluded.reorder_level, active = true`;
   }
+  // A rate change re-costs every dish that uses the ingredient, so the pages
+  // showing those costs have to be refreshed as well — otherwise the new rate
+  // is saved but the margin on /admin/recipes still shows yesterday's number,
+  // which reads exactly like the edit not having saved.
   revalidatePath("/admin/stock");
+  revalidatePath("/admin/recipes");
+  revalidatePath("/admin/menu");
 }
 
 /** purchase (+), wastage (−), opening (+) or adjustment (sets the count). Quantities in base units. */

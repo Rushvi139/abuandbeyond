@@ -15,6 +15,10 @@ export const LEGAL = {
   /** The brand customers know. */
   tradeName: "Abu & Beyond",
 
+  /** The firm's name as registered. FSSAI records it in the proprietorship
+   *  form, "ABU AND BEYOND PROP. KHAMBHU RUSHVI PRAVINSINH" — same firm. */
+  registeredName: "Abu & Beyond, The Global Kitchen",
+
   /** A sole proprietorship: the firm and the proprietor are the same legal
    *  person, which is why the registered name below is a person's name and
    *  not a company's. */
@@ -53,8 +57,11 @@ export const LEGAL = {
    * Fill these in and they appear everywhere automatically. Until then the
    * pages simply leave them out rather than printing a placeholder.
    */
-  address: null as string | null,
-  fssai: null as string | null,
+  address: "Adarsh Colony, behind Hotel Hillock, Mount Abu, Sirohi, Rajasthan 307501",
+  /** FSSAI registration (not a licence) under the FSS Act 2006, valid to
+   *  4 October 2027. Must be displayed on the site and on packaging. */
+  fssai: "22226023000822",
+  fssaiValidTo: "2027-10-04",
   gstin: null as string | null,
 } as const;
 
@@ -63,14 +70,17 @@ export const LEGAL = {
  *  Pravinsinh Khambhu, Mount Abu, Rajasthan, India."
  */
 export function operatedByLine() {
-  const where = [LEGAL.address, LEGAL.city, LEGAL.state, LEGAL.country].filter(Boolean).join(", ");
-  return `${LEGAL.tradeName} is a ${LEGAL.entityType} owned and operated by ${LEGAL.operator.name}, ${where}.`;
+  // The address already carries the town, district and state.
+  const where = LEGAL.address ?? [LEGAL.city, LEGAL.state].filter(Boolean).join(", ");
+  return `${LEGAL.registeredName} is a ${LEGAL.entityType} owned and operated by ${LEGAL.operator.name}, ${where}, ${LEGAL.country}.`;
 }
 
 /** The registration numbers we actually hold, as "LABEL NUMBER" strings. */
 export function registrations() {
   return [
-    LEGAL.fssai && `FSSAI licence ${LEGAL.fssai}`,
+    // "Registration", not "licence" — this is a registration certificate, and
+    // the two are different things under the FSS Act.
+    LEGAL.fssai && `FSSAI Reg. ${LEGAL.fssai}`,
     LEGAL.gstin && `GSTIN ${LEGAL.gstin}`,
   ].filter((s): s is string => Boolean(s));
 }

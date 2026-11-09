@@ -64,19 +64,38 @@ export async function saveMenuItem(formData: FormData) {
         }
       }
     }
-    await tx`delete from menu_item_addons where menu_item_id = ${id}`;
-    for (const n of (d.addonNames ?? "").split(",").map((s) => s.trim()).filter(Boolean)) {
-      const [a] = await tx<{ id: string }[]>`select id from addons where lower(name) = ${n.toLowerCase()}`;
-      if (a) await tx`insert into menu_item_addons (menu_item_id, addon_id) values (${id}, ${a.id}) on conflict do nothing`;
+    // Only rewrite the add-on links when the form actually carried the field.
+    // A partial save that omitted it was silently unlinking every add-on.
+    if (d.addonNames !== undefined) {
+      await tx`delete from menu_item_addons where menu_item_id = ${id}`;
+      for (const n of (d.addonNames ?? "").split(",").map((s) => s.trim()).filter(Boolean)) {
+        const [a] = await tx<{ id: string }[]>`select id from addons where lower(name) = ${n.toLowerCase()}`;
+        if (a) await tx`insert into menu_item_addons (menu_item_id, addon_id) values (${id}, ${a.id}) on conflict do nothing`;
+      }
     }
   });
   revalidatePath("/admin/menu");
   revalidatePath("/");
 }
 
+/**
+ * Takes a dish off the live menu without losing it. The row stays — with its
+ * recipe, its costing and every past order line pointing at it — so the dish
+ * can come back in a season, and last winter's numbers still add up.
+ *
+ * Deleting the row is deliberately not offered: order_items reference it.
+ */
 export async function retireMenuItem(id: string) {
   await assertRole(MANAGERS);
   await db()`update menu_items set active = false, available = false where id = ${z.string().uuid().parse(id)}`;
+  revalidatePath("/admin/menu");
+  revalidatePath("/");
+}
+
+/** Puts a retired dish back on the live menu, in stock. */
+export async function restoreMenuItem(id: string) {
+  await assertRole(MANAGERS);
+  await db()`update menu_items set active = true, available = true where id = ${z.string().uuid().parse(id)}`;
   revalidatePath("/admin/menu");
   revalidatePath("/");
 }

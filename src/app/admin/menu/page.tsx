@@ -1,5 +1,5 @@
 import { MenuItemForm, type EditableItem } from "@/components/admin/menu-item-form";
-import { MenuRow } from "@/components/admin/menu-row";
+import { MenuRow, RetiredRow } from "@/components/admin/menu-row";
 import { AddonForm, AddonRow, type Addon } from "@/components/admin/addon-form";
 import { BannerForm, BannerRowView, type BannerRow } from "@/components/admin/banner-form";
 import { requireRole } from "@/lib/auth";
@@ -20,6 +20,10 @@ export default async function MenuAdmin() {
       coalesce((select string_agg(a.name, ', ') from menu_item_addons ma join addons a on a.id = ma.addon_id where ma.menu_item_id = m.id), '') as addons,
       (select round(sum(r.quantity * i.rate_paise_per_unit) * 1.15) from recipe_lines r join ingredients i on i.id = r.ingredient_id where r.menu_item_id = m.id) + m.packaging_cost_paise as "foodCostPaise"
     from menu_items m join categories c on c.id = m.category_id where m.active order by c.sort_order, m.sort_order`;
+  const retired = await sql<Item[]>`
+    select m.id, m.name, m.is_veg as "isVeg", m.price_paise as "pricePaise", m.available, m.price_status as "priceStatus",
+      null::int as "foodCostPaise"
+    from menu_items m where not m.active order by m.name`;
   const addons = await sql<Addon[]>`
     select a.id, a.name, a.price_paise as "pricePaise", a.is_veg as "isVeg",
       (select count(*)::int from menu_item_addons ma where ma.addon_id = a.id) as "usedBy"
@@ -66,6 +70,19 @@ export default async function MenuAdmin() {
           {banners.length === 0 && <p className="p-4 text-center text-sm text-muted">No banners running.</p>}
         </div>
       </section>
+
+      {retired.length > 0 && (
+        <section>
+          <h2 className="mb-1 font-display text-[18px] uppercase">Off the menu</h2>
+          <p className="mb-2 text-sm text-muted">
+            {retired.length} dish{retired.length === 1 ? "" : "es"} taken off the live menu. Nothing has been deleted — each one
+            keeps its recipe, its costing and every past order, and goes straight back when you put it back.
+          </p>
+          <div className="overflow-hidden rounded-2xl bg-surface">
+            {retired.map((i) => <RetiredRow key={i.id} item={i} />)}
+          </div>
+        </section>
+      )}
 
       <section>
         <h2 className="mb-1 font-display text-[18px] uppercase">Add-ons</h2>
