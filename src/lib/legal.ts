@@ -15,9 +15,17 @@ export const LEGAL = {
   /** The brand customers know. */
   tradeName: "Abu & Beyond",
 
+  /** A sole proprietorship: the firm and the proprietor are the same legal
+   *  person, which is why the registered name below is a person's name and
+   *  not a company's. */
+  entityType: "sole proprietorship",
+
   operator: {
-    /** Exactly as registered — this must match the Cashfree account. */
+    /** Exactly as registered — this must match the Cashfree account,
+     *  character for character, or activation is rejected. */
     name: "Rushvi Pravinsinh Khambhu",
+    /** What to call them on the page. */
+    title: "Proprietor",
     email: "rushvikhambhu@gmail.com",
     phone: "+919099720300",
     phoneDisplay: "+91 90997 20300",
@@ -50,10 +58,13 @@ export const LEGAL = {
   gstin: null as string | null,
 } as const;
 
-/** "Abu & Beyond is operated by Rushvi Pravinsinh Khambhu, Mount Abu, Rajasthan, India." */
+/**
+ * "Abu & Beyond is a sole proprietorship owned and operated by Rushvi
+ *  Pravinsinh Khambhu, Mount Abu, Rajasthan, India."
+ */
 export function operatedByLine() {
   const where = [LEGAL.address, LEGAL.city, LEGAL.state, LEGAL.country].filter(Boolean).join(", ");
-  return `${LEGAL.tradeName} is operated by ${LEGAL.operator.name}, ${where}.`;
+  return `${LEGAL.tradeName} is a ${LEGAL.entityType} owned and operated by ${LEGAL.operator.name}, ${where}.`;
 }
 
 /** The registration numbers we actually hold, as "LABEL NUMBER" strings. */

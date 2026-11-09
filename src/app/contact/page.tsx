@@ -50,8 +50,11 @@ export default function ContactPage() {
 
         <dl className="mt-4 flex flex-col gap-3 text-[15px]">
           <div>
-            <dt className="text-[11px] uppercase tracking-wide text-muted">Registered name</dt>
+            <dt className="text-[11px] uppercase tracking-wide text-muted">{LEGAL.operator.title}</dt>
             <dd className="font-semibold">{LEGAL.operator.name}</dd>
+            <dd className="text-[13px] text-muted">
+              Registered name of the {LEGAL.entityType}, trading as {LEGAL.tradeName}
+            </dd>
           </div>
           <div>
             <dt className="text-[11px] uppercase tracking-wide text-muted">Email</dt>
