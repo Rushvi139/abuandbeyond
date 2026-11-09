@@ -21,7 +21,7 @@ export type ExpenseRow = {
   updatedBy: string | null;
 };
 
-const COLS = "md:grid-cols-[6.5rem_1fr_8.5rem_8.5rem_5.5rem_7rem_7rem_4.5rem]";
+const COLS = "md:grid-cols-[6rem_minmax(9rem,1fr)_7.5rem_7.5rem_5rem_6rem_6.5rem_4.5rem]";
 
 const day = (s: string) => new Date(`${s}T00:00:00Z`).toLocaleDateString("en-IN", { day: "numeric", month: "short", timeZone: "UTC" });
 
@@ -181,7 +181,7 @@ function Row({ row: r, categories, canEdit, canDelete }: { row: ExpenseRow; cate
                     ) : (
                       <Cell
                         value={r.vendor ?? ""}
-                        placeholder="—"
+                       
                         readOnly={!canEdit}
                         save={(v) => updateExpenseCell(r.id, "vendor", v)}
                       />
@@ -189,11 +189,11 @@ function Row({ row: r, categories, canEdit, canDelete }: { row: ExpenseRow; cate
                   </Field>
 
                   <Field label="Mode">
-                    <Cell value={r.mode ?? ""} placeholder="—" readOnly={!canEdit} save={(v) => updateExpenseCell(r.id, "mode", v)} />
+                    <Cell value={r.mode ?? ""} readOnly={!canEdit} save={(v) => updateExpenseCell(r.id, "mode", v)} />
                   </Field>
 
                   <Field label="Ref">
-                    <Cell value={r.reference ?? ""} placeholder="—" readOnly={!canEdit} save={(v) => updateExpenseCell(r.id, "reference", v)} />
+                    <Cell value={r.reference ?? ""} readOnly={!canEdit} save={(v) => updateExpenseCell(r.id, "reference", v)} />
                   </Field>
 
                   <Field label="Amount" align="right">

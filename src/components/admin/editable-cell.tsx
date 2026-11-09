@@ -10,7 +10,11 @@ export type CellProps = {
   display?: string;
   kind?: Kind;
   options?: { value: string; label: string }[];
+  /** Hint shown inside the input while editing — never in place of a value,
+   *  or an empty cell reads as filled in. */
   placeholder?: string;
+  /** What an empty cell shows. A dash, unless the column needs more. */
+  emptyLabel?: string;
   align?: "left" | "right";
   save: (next: string) => Promise<CellResult>;
   /** A column the signed-in role may read but not change. */
@@ -23,7 +27,7 @@ export type CellProps = {
  * server refuses, so a rejected edit never leaves a wrong number on screen
  * pretending to be saved.
  */
-export function Cell({ value, display, kind = "text", options, placeholder, align = "left", save, readOnly }: CellProps) {
+export function Cell({ value, display, kind = "text", options, placeholder, emptyLabel = "—", align = "left", save, readOnly }: CellProps) {
   const [editing, setEditing] = useState(false);
   const [shown, setShown] = useState(value);
   const [draft, setDraft] = useState(value);
@@ -61,7 +65,7 @@ export function Cell({ value, display, kind = "text", options, placeholder, alig
     }
   }
 
-  const label = display && shown === value ? display : shown || placeholder || "—";
+  const label = display && shown === value ? display : shown || emptyLabel;
 
   if (readOnly) return <span className={align === "right" ? "block text-right" : undefined}>{label}</span>;
 

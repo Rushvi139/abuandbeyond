@@ -9,7 +9,6 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 ARG NEXT_PUBLIC_SITE_URL
-ARG NEXT_PUBLIC_RAZORPAY_KEY_ID
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN npm run build
 

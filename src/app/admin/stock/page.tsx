@@ -1,18 +1,17 @@
 import Link from "next/link";
 import { IngredientForm, MovementForm } from "@/components/admin/stock-forms";
-import { requireRole } from "@/lib/auth";
+import { StockTable } from "@/components/admin/stock-table";
+import { MANAGERS, requireRole } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { formatINR } from "@/lib/pricing";
 
 export const dynamic = "force-dynamic";
 
 type Row = { id: string; name: string; unit: string; group: string | null; rate: number; reorder: number; onHand: number; isLow: boolean; usedIn: number; lastPurchase: string | null };
 
 const fmtQty = (q: number, unit: string) => (unit === "pc" ? `${Math.round(q)} pc` : q >= 1000 ? `${(q / 1000).toFixed(2)} ${unit === "g" ? "kg" : "L"}` : `${Math.round(q)} ${unit}`);
-const fmtRate = (paisePerUnit: number, unit: string) => (unit === "pc" ? `${formatINR(Math.round(paisePerUnit))}/pc` : `${formatINR(Math.round(paisePerUnit * 1000))}/${unit === "g" ? "kg" : "L"}`);
 
 export default async function StockPage({ searchParams }: { searchParams: Promise<{ q?: string; low?: string }> }) {
-  await requireRole(["owner", "manager"], "/admin/stock");
+  const staff = await requireRole(MANAGERS, "/admin/stock");
   const { q, low } = await searchParams;
   const like = q ? `%${q}%` : null;
   const rows = await db()<Row[]>`
@@ -57,25 +56,8 @@ export default async function StockPage({ searchParams }: { searchParams: Promis
             <IngredientForm />
           </section>
         </div>
-        <div className="overflow-x-auto rounded-2xl bg-surface lg:col-span-2">
-          <table className="w-full min-w-[680px] text-sm">
-            <thead className="text-left text-xs uppercase tracking-wide text-muted">
-              <tr><th className="px-4 py-3">Ingredient</th><th className="px-4 py-3">Group</th><th className="px-4 py-3 text-right">On hand</th><th className="px-4 py-3 text-right">Reorder at</th><th className="px-4 py-3 text-right">Rate</th><th className="px-4 py-3 text-right">Dishes</th><th className="px-4 py-3"></th></tr>
-            </thead>
-            <tbody>
-              {rows.map((r) => (
-                <tr key={r.id} className={`border-t border-line ${r.isLow ? "bg-error/5" : ""}`}>
-                  <td className="px-4 py-2.5 font-semibold">{r.isLow && <span className="mr-1.5 inline-block h-2 w-2 rounded-full bg-error align-middle" />}{r.name}</td>
-                  <td className="px-4 py-2.5 text-muted">{r.group ?? "—"}</td>
-                  <td className={`px-4 py-2.5 text-right font-semibold ${r.isLow ? "text-error" : ""}`}>{fmtQty(r.onHand, r.unit)}</td>
-                  <td className="px-4 py-2.5 text-right text-muted">{fmtQty(r.reorder, r.unit)}</td>
-                  <td className="px-4 py-2.5 text-right text-muted">{fmtRate(r.rate, r.unit)}</td>
-                  <td className="px-4 py-2.5 text-right text-muted">{r.usedIn}</td>
-                  <td className="px-4 py-2.5 text-right"><IngredientForm ingredient={r} /></td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="lg:col-span-2">
+          <StockTable rows={rows} canEdit={MANAGERS.includes(staff.role)} />
         </div>
       </div>
 

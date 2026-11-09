@@ -21,7 +21,7 @@ export type BillRow = {
   updatedBy: string | null;
 };
 
-const COLS = "md:grid-cols-[1fr_7rem_6.5rem_6.5rem_7rem_6rem_7rem_8rem]";
+const COLS = "md:grid-cols-[minmax(9rem,1fr)_6.5rem_5.5rem_5.5rem_6.5rem_5.5rem_6.5rem_7.5rem]";
 const day = (s: string | null) => (s ? new Date(`${s}T00:00:00Z`).toLocaleDateString("en-IN", { day: "numeric", month: "short", timeZone: "UTC" }) : "");
 
 export function BillRegister({ rows, today, canEdit, canDelete }: { rows: BillRow[]; today: string; canEdit: boolean; canDelete: boolean }) {
@@ -95,7 +95,7 @@ function Row({ row: r, today, canEdit, canDelete }: { row: BillRow; today: strin
               </Field>
 
               <Field label="Bill no.">
-                <Cell value={r.billNumber ?? ""} placeholder="—" readOnly={!canEdit} save={(v) => updateBillCell(r.id, "bill_number", v)} />
+                <Cell value={r.billNumber ?? ""} readOnly={!canEdit} save={(v) => updateBillCell(r.id, "bill_number", v)} />
               </Field>
 
               <Field label="Date">

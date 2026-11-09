@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PayBill } from "@/components/admin/accounts-forms";
-import { requireRole } from "@/lib/auth";
+import { VendorDetailsCard } from "@/components/admin/vendor-details";
+import { BOOKKEEPERS, requireRole } from "@/lib/auth";
 import { vendorDetail } from "@/lib/admin/accounts-queries";
 import { formatINR } from "@/lib/pricing";
 
@@ -11,7 +12,7 @@ const d = (s: string | null) => (s ? new Date(`${s}T00:00:00Z`).toLocaleDateStri
 const mon = (s: string) => new Date(`${s}-01T00:00:00Z`).toLocaleDateString("en-IN", { month: "short", year: "2-digit", timeZone: "UTC" });
 
 export default async function VendorPage({ params }: { params: Promise<{ id: string }> }) {
-  await requireRole(["owner"], "/admin/accounts");
+  const staff = await requireRole(BOOKKEEPERS, "/admin/accounts");
   const { id } = await params;
   if (!/^[0-9a-f-]{36}$/i.test(id)) notFound();
   const data = await vendorDetail(id);
@@ -30,14 +31,7 @@ export default async function VendorPage({ params }: { params: Promise<{ id: str
     <div className="flex flex-col gap-5">
       <div>
         <Link href="/admin/accounts" className="text-sm font-semibold text-muted underline-offset-2 hover:underline">← Accounts</Link>
-        <h1 className="mt-1 font-display text-[32px] uppercase">{vendor.name}</h1>
-        <p className="text-sm text-muted">
-          {[vendor.category, vendor.contactPerson, vendor.phone, vendor.gstin && `GSTIN ${vendor.gstin}`,
-            vendor.paymentTermsDays != null && `${vendor.paymentTermsDays}-day terms`]
-            .filter(Boolean)
-            .join(" · ") || "No contact details on file"}
-        </p>
-        {vendor.notes && <p className="mt-1 text-sm">{vendor.notes}</p>}
+        <VendorDetailsCard vendor={vendor} canEdit={BOOKKEEPERS.includes(staff.role)} />
       </div>
 
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">

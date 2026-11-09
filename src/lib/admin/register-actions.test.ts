@@ -12,27 +12,34 @@ vi.mock("next/cache", () => ({ revalidatePath: () => {} }));
 const staff = { id: "00000000-0000-4000-8000-000000000001", role: "owner" };
 vi.mock("@/lib/auth", () => ({
   BOOKKEEPERS: ["owner", "manager", "rider"],
+  MANAGERS: ["owner", "manager"],
   assertRole: vi.fn(async () => staff),
 }));
 
-/** Records every statement so a test can assert nothing ran. */
+/** Records every statement and what was bound to it, so a test can assert
+ *  nothing ran — or check the exact number that reached the column. */
 const statements: string[] = [];
+const bound: unknown[][] = [];
 const rowsFor: { value: Record<string, unknown>[] } = { value: [] };
 const sql = Object.assign(
   async (strings: TemplateStringsArray, ...vals: unknown[]) => {
     statements.push(strings.join("?").replace(/\s+/g, " ").trim());
-    void vals;
+    bound.push(vals);
     return rowsFor.value;
   },
   { begin: async (fn: (tx: unknown) => Promise<unknown>) => fn(sql) },
 );
+
+/** The values bound to the one statement matching a fragment. */
+const boundFor = (fragment: string) => bound[statements.findIndex((s) => s.includes(fragment))];
 vi.mock("@/lib/db", () => ({ db: () => sql }));
 
-const { updateExpenseCell, updateBillCell } = await import("./register-actions");
+const { updateExpenseCell, updateBillCell, updateVendorCell, updateIngredientCell } = await import("./register-actions");
 const ID = "11111111-1111-4111-8111-111111111111";
 
 beforeEach(() => {
   statements.length = 0;
+  bound.length = 0;
   rowsFor.value = [];
 });
 
@@ -85,6 +92,80 @@ describe("expense cell validation", () => {
     const r = await updateExpenseCell(ID, "amount_paise", "132.50");
     expect(r.error).toBeUndefined();
     expect(statements.join(" ")).toContain("update expenses set amount_paise");
+  });
+});
+
+describe("every editable surface guards its own columns", () => {
+  it.each([
+    ["vendor", (f: string) => updateVendorCell(ID, f, "x")],
+    ["ingredient", (f: string) => updateIngredientCell(ID, f, "1")],
+  ])("%s refuses a column outside its own list", async (_name, call) => {
+    for (const field of ["id", "active", "created_at", "name, active = false"]) {
+      statements.length = 0;
+      expect((await call(field)).error).toBe("That column can't be edited.");
+      expect(statements).toHaveLength(0);
+    }
+  });
+});
+
+describe("vendor cells", () => {
+  it("refuses a name already taken by another vendor", async () => {
+    rowsFor.value = [{ id: "someone-else" }];
+    const r = await updateVendorCell(ID, "name", "Abu Dairy");
+    expect(r.error).toBe("Another vendor already has that name.");
+    expect(statements.join(" ")).not.toContain("update vendors");
+  });
+
+  it("will not leave a vendor nameless", async () => {
+    const r = await updateVendorCell(ID, "name", "A");
+    expect(r.error).toBe("A vendor needs a name.");
+    expect(statements).toHaveLength(0);
+  });
+
+  it("keeps payment terms a sane whole number of days", async () => {
+    expect((await updateVendorCell(ID, "payment_terms_days", "7.5")).error).toContain("whole number");
+    expect((await updateVendorCell(ID, "payment_terms_days", "900")).error).toContain("whole number");
+    expect(statements).toHaveLength(0);
+    expect((await updateVendorCell(ID, "payment_terms_days", "")).error).toBeUndefined();
+  });
+});
+
+describe("ingredient rates", () => {
+  // The conversion that costs every dish on the menu. ₹240/kg must land as
+  // 24 paise per gram, not 24000 — a thousandfold error in recipe costing.
+  it("stores a per-kilo rate as paise per gram", async () => {
+    rowsFor.value = [{ unit: "g" }];
+    expect((await updateIngredientCell(ID, "rate", "240")).error).toBeUndefined();
+    expect(Number(boundFor("rate_paise_per_unit")[0])).toBeCloseTo(24, 4);
+  });
+
+  it("stores a per-litre rate as paise per millilitre", async () => {
+    rowsFor.value = [{ unit: "ml" }];
+    await updateIngredientCell(ID, "rate", "180"); // ₹180/L
+    expect(Number(boundFor("rate_paise_per_unit")[0])).toBeCloseTo(18, 4);
+  });
+
+  it("stores a per-piece rate as paise per piece", async () => {
+    rowsFor.value = [{ unit: "pc" }];
+    await updateIngredientCell(ID, "rate", "12"); // ₹12 each
+    expect(Number(boundFor("rate_paise_per_unit")[0])).toBeCloseTo(1200, 4);
+  });
+
+  it("keeps a reorder level in base units, as the add form takes it", async () => {
+    rowsFor.value = [{ unit: "g" }];
+    await updateIngredientCell(ID, "reorder_level", "2000"); // 2000 g
+    expect(Number(boundFor("reorder_level")[0])).toBe(2000);
+  });
+
+  it("refuses a duplicate ingredient name", async () => {
+    rowsFor.value = [{ id: "other" }];
+    expect((await updateIngredientCell(ID, "name", "Paneer")).error).toBe("Another ingredient already has that name.");
+    expect(statements.join(" ")).not.toContain("update ingredients set name");
+  });
+
+  it("refuses a negative rate", async () => {
+    expect((await updateIngredientCell(ID, "rate", "-5")).error).toBeTruthy();
+    expect(statements).toHaveLength(0);
   });
 });
 

@@ -90,8 +90,8 @@ export async function spendByHead(monthStart: string): Promise<SpendSlice[]> {
 /** Everything one vendor has ever sent us, and everything we have paid them. */
 export async function vendorDetail(id: string) {
   const sql = db();
-  const [vendor] = await sql<{ id: string; name: string; category: string | null; contactPerson: string | null; phone: string | null; gstin: string | null; paymentTermsDays: number | null; notes: string | null; active: boolean }[]>`
-    select id, name, category, contact_person as "contactPerson", phone, gstin,
+  const [vendor] = await sql<{ id: string; name: string; category: string | null; contactPerson: string | null; phone: string | null; email: string | null; gstin: string | null; paymentTermsDays: number | null; notes: string | null; active: boolean }[]>`
+    select id, name, category, contact_person as "contactPerson", phone, email, gstin,
       payment_terms_days as "paymentTermsDays", notes, active
     from vendors where id = ${id}`;
   if (!vendor) return null;
