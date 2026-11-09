@@ -208,6 +208,23 @@ Update this file after every meaningful implementation change.
   never `param = '' or col >= param::date`. Postgres does not promise to
   short-circuit OR, so the blank still reaches the cast and throws.
 
+- Editable everywhere (9 Nov 2026): ingredient name, group, reorder level
+  and rate are cells on /admin/stock; vendor name, trade, contact, phone,
+  email, GSTIN, terms and notes are cells on the vendor page. Rates are
+  typed per kg/L/pc and stored per g/ml/pc, matching `saveIngredient` —
+  the test pins ₹240/kg -> 24 paise/g, and that arithmetic must not drift.
+  A rename checks for a clash, since the ledger groups vendors by name.
+- DEPLOY.md written: the commands, why `migrate` is a separate step,
+  telling a stale tools image from a stale file set, rollback, restore,
+  and what each volume holds.
+- The nightly backup now tars the `uploads` volume alongside the pg_dump.
+  Invoices and slips live there, not in Postgres.
+- Dropped `NEXT_PUBLIC_RAZORPAY_KEY_ID` from Dockerfile and compose —
+  unused since the Cashfree migration.
+- Watch for: a grid whose fixed columns exceed the container collapses its
+  `1fr` to nothing and overlaps text. Give the flexible column a
+  `minmax()` floor and wrap the table in `overflow-x-auto`.
+
 ## In Progress
 
 - None.
