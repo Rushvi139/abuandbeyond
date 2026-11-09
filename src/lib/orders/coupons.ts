@@ -23,9 +23,9 @@ export type CouponCheck =
   | { ok: true; coupon: Coupon; discountPaise: number }
   | { ok: false; reason: string };
 
-/** Orders that actually hold a coupon slot. An abandoned checkout or a failed
- *  payment must not burn one, so those statuses are excluded here and the same
- *  rule is used for every count. */
+/** Orders that actually hold a coupon slot. An abandoned checkout, a failed
+ *  payment or a staff demo must not burn one, so those are excluded here and
+ *  the same rule is used for every count. */
 const LIVE = ["pending_payment", "payment_failed", "cancelled"];
 
 const today = () => new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" });
@@ -71,7 +71,7 @@ export async function checkCoupon(
     const [{ n }] = await sql<{ n: number }[]>`
       select count(*)::int as n from coupon_redemptions r
       join orders o on o.id = r.order_id
-      where r.coupon_id = ${c.id} and o.status <> all(${LIVE})`;
+      where r.coupon_id = ${c.id} and not o.is_demo and o.status <> all(${LIVE})`;
     if (n >= c.maxRedemptions) return { ok: false, reason: "That code has been fully claimed." };
   }
 
@@ -80,7 +80,7 @@ export async function checkCoupon(
       select count(*)::int as n from coupon_redemptions r
       join orders o on o.id = r.order_id
       join customers cu on cu.id = r.customer_id
-      where r.coupon_id = ${c.id} and cu.phone = ${customerPhone} and o.status <> all(${LIVE})`;
+      where r.coupon_id = ${c.id} and cu.phone = ${customerPhone} and not o.is_demo and o.status <> all(${LIVE})`;
     if (n >= c.perCustomerLimit) {
       return { ok: false, reason: n === 1 ? "You've already used this code." : "You've used this code the maximum number of times." };
     }
@@ -114,6 +114,6 @@ export async function redemptionCounts(sql: Sql = db()) {
   return sql<{ couponId: string; used: number; discounted: number }[]>`
     select r.coupon_id as "couponId", count(*)::int as used, sum(r.discount_paise)::bigint as discounted
     from coupon_redemptions r join orders o on o.id = r.order_id
-    where o.status <> all(${LIVE})
+    where not o.is_demo and o.status <> all(${LIVE})
     group by r.coupon_id`;
 }

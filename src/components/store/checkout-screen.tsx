@@ -27,7 +27,7 @@ declare global {
   }
 }
 
-export function CheckoutScreen({ deliveryFeePaise, sourceRef }: { deliveryFeePaise: number; sourceRef?: string }) {
+export function CheckoutScreen({ deliveryFeePaise, sourceRef, staffName }: { deliveryFeePaise: number; sourceRef?: string; staffName?: string | null }) {
   const cart = useCart();
   const router = useRouter();
   const [name, setName] = useState("");
@@ -48,7 +48,7 @@ export function CheckoutScreen({ deliveryFeePaise, sourceRef }: { deliveryFeePai
   const total = cart.subtotalPaise - discount + gst + deliveryFeePaise;
   const valid = name.trim().length >= 2 && /^[6-9]\d{9}$/.test(phone) && cart.lines.length > 0;
 
-  async function pay() {
+  async function pay(demo = false) {
     if (!valid || busy) return;
     setBusy(true);
     setError(null);
@@ -59,6 +59,7 @@ export function CheckoutScreen({ deliveryFeePaise, sourceRef }: { deliveryFeePai
         body: JSON.stringify({
           name, phone, stayType: stay, propertyName, roomOrLandmark: room, notes, sourceRef,
           couponCode: coupon?.code ?? "",
+          ...(demo ? { demo: true } : {}),
           ...(pin ? { lat: pin.lat, lng: pin.lng } : {}),
           lat: pin?.lat, lng: pin?.lng,
           lines: cart.lines.map((l) => ({ itemId: l.itemId, qty: l.qty, optionIds: l.options.map((o) => o.optionId), addonIds: l.addons.map((a) => a.addonId), note: l.note ?? "" })),
@@ -66,7 +67,14 @@ export function CheckoutScreen({ deliveryFeePaise, sourceRef }: { deliveryFeePai
       });
       const json = await res.json();
       if (!json.ok) throw new Error(json.error?.message ?? "Couldn't place the order");
-      const d = json.data as { code: string; number: number; amountPaise: number; paymentSessionId: string; mode: "sandbox" | "production" };
+      const d = json.data as { code: string; number: number; amountPaise: number; paymentSessionId: string; mode: "sandbox" | "production"; demo?: boolean };
+
+      // A demo order is already paid on the server; there is no gateway step.
+      if (d.demo) {
+        cart.clear();
+        router.push(`/o/${d.code}`);
+        return;
+      }
       if (!window.Cashfree) throw new Error("Payment page didn't load. Check your connection and try again.");
       const cashfree = window.Cashfree({ mode: d.mode });
       const result = await cashfree.checkout({ paymentSessionId: d.paymentSessionId, redirectTarget: "_modal" });
@@ -190,10 +198,26 @@ export function CheckoutScreen({ deliveryFeePaise, sourceRef }: { deliveryFeePai
       {error && <p role="alert" className="mt-3 rounded-xl bg-error/10 px-4 py-3 text-sm font-semibold text-error">{error}</p>}
 
       <div className="fixed inset-x-0 bottom-0 mx-auto max-w-md border-t border-line bg-paper px-3 pb-5 pt-3">
-        <button type="button" onClick={pay} disabled={!valid || busy} className="flex h-[60px] w-full flex-col items-center justify-center rounded-[18px] bg-clay text-ink disabled:opacity-50">
+        <button type="button" onClick={() => pay(false)} disabled={!valid || busy} className="flex h-[60px] w-full flex-col items-center justify-center rounded-[18px] bg-clay text-ink disabled:opacity-50">
           <span className="text-[17px] font-bold">{busy ? "Opening payment…" : `Pay ${formatINR(total, { decimals: true })}`}</span>
           <span className="text-xs font-medium">UPI · Card · Netbanking — secured by Cashfree</span>
         </button>
+
+        {/* Staff only, and only visible because someone is signed in on this
+            device. Walks the whole path — ticket, kitchen, rider — with no
+            money and no gateway. The order is marked as a demo, so it never
+            reaches sales, costing or the indent. */}
+        {staffName && (
+          <button
+            type="button"
+            onClick={() => pay(true)}
+            disabled={!valid || busy}
+            className="mt-2 flex h-11 w-full items-center justify-center gap-2 rounded-[14px] border-[1.5px] border-dashed border-ink text-sm font-bold disabled:opacity-50"
+          >
+            {busy ? "Placing…" : "Place as demo — no payment"}
+            <span className="text-xs font-medium text-muted">({staffName})</span>
+          </button>
+        )}
       </div>
     </div>
   );

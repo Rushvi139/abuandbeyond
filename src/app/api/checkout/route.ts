@@ -1,4 +1,6 @@
+import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
+import { currentStaff } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { CheckoutSchema, createOrder } from "@/lib/orders/create";
 import { cashfreeConfigured, cashfreeMode, createCashfreeOrder } from "@/lib/payments/cashfree";
@@ -7,14 +9,43 @@ import { rememberCustomer } from "@/lib/customers/session";
 export const runtime = "nodejs";
 
 export async function POST(req: Request) {
-  const parsed = CheckoutSchema.safeParse(await req.json().catch(() => null));
+  const body = await req.json().catch(() => null);
+  const parsed = CheckoutSchema.safeParse(body);
   if (!parsed.success) {
     const first = parsed.error.issues[0];
     return NextResponse.json({ ok: false, error: { code: "invalid", message: first?.message ?? "Check the form" } }, { status: 400 });
   }
+
+  // A staff member can push a real cart through without paying, to walk the
+  // whole path — menu, checkout, kitchen ticket, rider — before the gateway is
+  // live. Gated on a staff session, not on a flag in the request, and the order
+  // is marked is_demo so it never reaches sales, costing or the indent.
+  const wantsDemo = (body as { demo?: unknown } | null)?.demo === true;
+  const staff = wantsDemo ? await currentStaff() : null;
+  if (wantsDemo && !staff) {
+    return NextResponse.json({ ok: false, error: { code: "forbidden", message: "Sign in as staff to place a demo order." } }, { status: 403 });
+  }
+
   try {
-    const order = await createOrder(parsed.data);
+    const order = await createOrder(parsed.data, wantsDemo ? { source: "demo" } : {});
     await rememberCustomer(order.customerId); // so this device finds its own order history later
+
+    if (wantsDemo && staff) {
+      const sql = db();
+      await sql.begin(async (tx) => {
+        await tx`update orders set status = 'paid', paid_at = now(), is_demo = true where id = ${order.id}`;
+        await tx`insert into order_status_events (order_id, from_status, to_status, actor_id, note)
+          values (${order.id}, 'pending_payment', 'paid', ${staff.id}, 'demo order from checkout')`;
+      });
+      revalidatePath("/admin");
+      revalidatePath("/kitchen");
+      revalidatePath("/rider");
+      return NextResponse.json({
+        ok: true,
+        data: { code: order.code, number: order.number, amountPaise: order.totalPaise, demo: true },
+      });
+    }
+
     if (!cashfreeConfigured()) {
       return NextResponse.json({ ok: false, error: { code: "payments_off", message: "Online payment isn't switched on yet." } }, { status: 503 });
     }
