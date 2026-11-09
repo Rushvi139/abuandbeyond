@@ -1,6 +1,8 @@
 import "server-only";
 import { z } from "zod";
+import type { Sql } from "postgres";
 import { db } from "@/lib/db";
+import { checkCoupon } from "@/lib/orders/coupons";
 import { gstOn } from "@/lib/pricing";
 
 export const CheckoutSchema = z.object({
@@ -13,6 +15,7 @@ export const CheckoutSchema = z.object({
   lng: z.number().optional(),
   notes: z.string().trim().max(300).optional().or(z.literal("")),
   sourceRef: z.string().trim().max(60).optional(),
+  couponCode: z.string().trim().max(40).optional().or(z.literal("")),
   lines: z
     .array(
       z.object({
@@ -79,11 +82,28 @@ export async function createOrder(input: CheckoutInput, opts: { source?: string;
   const subtotal = priced.reduce((n, p) => n + p.unit * p.qty, 0);
   const [{ value: feeJson }] = await sql<{ value: number }[]>`select value from settings where key = 'delivery_fee_paise'`;
   const deliveryFee = Number(feeJson) || 0;
-  const gst = gstOn(subtotal);
-  const total = subtotal + gst + deliveryFee;
   const phone = "+91" + input.phone;
 
   return sql.begin(async (tx) => {
+    // The coupon is re-checked here, inside the transaction, against the price
+    // the server just worked out. Whatever the browser said the discount was
+    // is not consulted — it is a number from a form.
+    let coupon: { id: string; code: string } | null = null;
+    let discount = 0;
+    if (input.couponCode) {
+      // Lock the coupon row so two people spending the last redemption at the
+      // same moment cannot both pass the count.
+      await tx`select id from coupons where upper(code) = upper(${input.couponCode}) for update`;
+      const check = await checkCoupon(input.couponCode, subtotal, phone, tx as unknown as Sql);
+      if (!check.ok) throw new Error(check.reason);
+      coupon = { id: check.coupon.id, code: check.coupon.code };
+      discount = check.discountPaise;
+    }
+
+    // GST is charged on what the customer actually pays for the food, so the
+    // discount comes off the taxable value before the 5% is worked out.
+    const gst = gstOn(subtotal - discount);
+    const total = subtotal - discount + gst + deliveryFee;
     const [customer] = await tx<{ id: string }[]>`insert into customers (phone, name) values (${phone}, ${input.name})
       on conflict (phone) do update set name = coalesce(excluded.name, customers.name) returning id`;
     const [property] = input.sourceRef
@@ -91,10 +111,10 @@ export async function createOrder(input: CheckoutInput, opts: { source?: string;
       : [];
     const [order] = await tx<{ id: string; order_code: string; order_number: number }[]>`insert into orders
       (customer_id, status, source, source_ref, property_id, stay_type, property_name, room_or_landmark, lat, lng, notes,
-       subtotal_paise, gst_paise, delivery_fee_paise, total_paise, created_by)
+       subtotal_paise, discount_paise, promo_code, gst_paise, delivery_fee_paise, total_paise, created_by)
       values (${customer.id}, 'pending_payment', ${opts.source ?? "web"}, ${input.sourceRef ?? null}, ${property?.id ?? null},
         ${input.stayType}, ${input.propertyName || null}, ${input.roomOrLandmark || null}, ${input.lat ?? null}, ${input.lng ?? null},
-        ${input.notes || null}, ${subtotal}, ${gst}, ${deliveryFee}, ${total}, ${opts.createdBy ?? null})
+        ${input.notes || null}, ${subtotal}, ${discount}, ${coupon?.code ?? null}, ${gst}, ${deliveryFee}, ${total}, ${opts.createdBy ?? null})
       returning id, order_code, order_number`;
     for (const p of priced) {
       const [oi] = await tx<{ id: string }[]>`insert into order_items
@@ -106,7 +126,11 @@ export async function createOrder(input: CheckoutInput, opts: { source?: string;
       for (const a of p.addons)
         await tx`insert into order_item_addons (order_item_id, addon_id, name_snapshot, price_paise) values (${oi.id}, ${a.id}, ${a.name}, ${a.price_paise})`;
     }
+    if (coupon) {
+      await tx`insert into coupon_redemptions (coupon_id, order_id, customer_id, discount_paise)
+        values (${coupon.id}, ${order.id}, ${customer.id}, ${discount})`;
+    }
     await tx`insert into order_status_events (order_id, from_status, to_status) values (${order.id}, null, 'pending_payment')`;
-    return { id: order.id, code: order.order_code, number: order.order_number, totalPaise: total, customerName: input.name, phone, customerId: customer.id };
+    return { id: order.id, code: order.order_code, number: order.order_number, totalPaise: total, discountPaise: discount, promoCode: coupon?.code ?? null, customerName: input.name, phone, customerId: customer.id };
   });
 }

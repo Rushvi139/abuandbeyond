@@ -34,7 +34,7 @@ export default async function ExpenseRegisterPage({ searchParams }: { searchPara
   const [rows, categories, vendorNames, modes] = await Promise.all([
     sql<ExpenseRow[]>`
       select e.id, e.spent_on::text as "spentOn", e.description, e.category_id as "categoryId", c.name as category,
-        v.name as vendor, e.vendor_id as "vendorId", e.amount_paise::bigint as amount, e.mode, e.reference,
+        v.name as vendor, e.vendor_id as "vendorId", e.amount_paise::bigint as amount, e.mode, e.reference, e.note,
         e.file_path as "filePath", u.full_name as "updatedBy"
       from expenses e
       join expense_categories c on c.id = e.category_id

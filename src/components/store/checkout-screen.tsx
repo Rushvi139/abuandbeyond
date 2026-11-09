@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useCart } from "@/hooks/use-cart";
 import { formatINR, gstOn } from "@/lib/pricing";
+import { CouponField, type Applied } from "@/components/store/coupon-field";
 import { LocationPin, type Pin } from "./location-pin";
 import { VegMark } from "./veg-mark";
 
@@ -38,9 +39,13 @@ export function CheckoutScreen({ deliveryFeePaise, sourceRef }: { deliveryFeePai
   const [notes, setNotes] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [coupon, setCoupon] = useState<Applied>(null);
 
-  const gst = gstOn(cart.subtotalPaise);
-  const total = cart.subtotalPaise + gst + deliveryFeePaise;
+  // GST is charged on what is actually paid for the food, so the discount comes
+  // off first. The server works this out again before taking any money.
+  const discount = coupon?.discountPaise ?? 0;
+  const gst = gstOn(cart.subtotalPaise - discount);
+  const total = cart.subtotalPaise - discount + gst + deliveryFeePaise;
   const valid = name.trim().length >= 2 && /^[6-9]\d{9}$/.test(phone) && cart.lines.length > 0;
 
   async function pay() {
@@ -53,6 +58,7 @@ export function CheckoutScreen({ deliveryFeePaise, sourceRef }: { deliveryFeePai
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name, phone, stayType: stay, propertyName, roomOrLandmark: room, notes, sourceRef,
+          couponCode: coupon?.code ?? "",
           ...(pin ? { lat: pin.lat, lng: pin.lng } : {}),
           lat: pin?.lat, lng: pin?.lng,
           lines: cart.lines.map((l) => ({ itemId: l.itemId, qty: l.qty, optionIds: l.options.map((o) => o.optionId), addonIds: l.addons.map((a) => a.addonId), note: l.note ?? "" })),
@@ -166,8 +172,15 @@ export function CheckoutScreen({ deliveryFeePaise, sourceRef }: { deliveryFeePai
         </div>
       </section>
 
+      <section className="mt-5">
+        <CouponField subtotalPaise={cart.subtotalPaise} phone={phone} applied={coupon} onChange={setCoupon} />
+      </section>
+
       <section className="mt-5 flex flex-col gap-2.5 rounded-[18px] bg-surface p-4 text-sm">
         <div className="flex justify-between"><span className="text-muted">Item total</span><span>{formatINR(cart.subtotalPaise, { decimals: true })}</span></div>
+        {discount > 0 && (
+          <div className="flex justify-between text-success"><span>Coupon {coupon?.code}</span><span>−{formatINR(discount, { decimals: true })}</span></div>
+        )}
         <div className="flex justify-between"><span className="text-muted">GST 5%</span><span>{formatINR(gst, { decimals: true })}</span></div>
         <div className="flex justify-between"><span className="text-muted">Delivery</span><span>{deliveryFeePaise ? formatINR(deliveryFeePaise) : "Free"}</span></div>
         <div className="h-px bg-line" />

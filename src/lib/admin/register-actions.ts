@@ -25,11 +25,13 @@ const EXPENSE_FIELDS = {
   amount_paise: money,
   mode: text(20),
   reference: text(60),
+  note: text(300),
   vendor: text(80),
 } as const;
 
 const BILL_FIELDS = {
   bill_number: text(40),
+  note: text(300),
   bill_date: date,
   due_on: text(10),
   amount_paise: money,
@@ -71,6 +73,8 @@ export async function updateExpenseCell(id: string, field: string, raw: string):
     await sql`update expenses set description = ${v}, updated_at = now(), updated_by = ${staff.id} where id = ${id}`;
   } else if (field === "mode") {
     await sql`update expenses set mode = ${v || null}, updated_at = now(), updated_by = ${staff.id} where id = ${id}`;
+  } else if (field === "note") {
+    await sql`update expenses set note = ${v || null}, updated_at = now(), updated_by = ${staff.id} where id = ${id}`;
   } else {
     await sql`update expenses set reference = ${v || null}, updated_at = now(), updated_by = ${staff.id} where id = ${id}`;
   }
@@ -105,6 +109,8 @@ export async function updateBillCell(id: string, field: string, raw: string): Pr
   } else if (field === "due_on") {
     if (v && !date.safeParse(v).success) return { error: "Use a real date, or clear it." };
     await sql`update vendor_bills set due_on = ${v || null}, updated_at = now(), updated_by = ${staff.id} where id = ${id}`;
+  } else if (field === "note") {
+    await sql`update vendor_bills set note = ${v || null}, updated_at = now(), updated_by = ${staff.id} where id = ${id}`;
   } else {
     await sql`update vendor_bills set bill_number = ${v || null}, updated_at = now(), updated_by = ${staff.id} where id = ${id}`;
   }

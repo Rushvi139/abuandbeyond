@@ -17,6 +17,7 @@ export type ExpenseRow = {
   amount: number;
   mode: string | null;
   reference: string | null;
+  note: string | null;
   filePath: string | null;
   updatedBy: string | null;
 };
@@ -218,6 +219,15 @@ function Row({ row: r, categories, canEdit, canDelete }: { row: ExpenseRow; cate
                     {canDelete && <DeleteCell what={r.description} onDelete={() => deleteExpense(r.id)} />}
                   </div>
 
+        <div className="col-span-2 md:col-span-8 md:-mt-0.5">
+          <span className="text-[10px] uppercase tracking-wide text-muted md:mr-2">Remarks</span>
+          <Cell
+            value={r.note ?? ""}
+            placeholder="Anything worth remembering about this spend"
+            readOnly={!canEdit}
+            save={(v) => updateExpenseCell(r.id, "note", v)}
+          />
+        </div>
         {r.updatedBy && <p className="col-span-2 text-[11px] text-muted md:col-span-8 md:-mt-1">edited by {r.updatedBy}</p>}
       </div>
     </div>

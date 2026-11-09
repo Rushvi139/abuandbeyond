@@ -5,6 +5,7 @@ import { acceptOrder, assignRider, cancelOrder, setStatus } from "@/lib/orders/a
 import type { OrderView } from "@/lib/orders/queries";
 import { STATUS_LABEL, type OrderStatus } from "@/lib/orders/status";
 import { formatINR } from "@/lib/pricing";
+import { PrintButton } from "@/components/kitchen/auto-print";
 import { VegMark } from "@/components/store/veg-mark";
 
 const CUISINE: Record<string, string> = { abu: "ABU", italy: "ABU & ITALY", mexico: "ABU & MEXICO", china: "ABU & CHINA", lebanon: "ABU & LEBANON" };
@@ -64,6 +65,9 @@ export function OrderCard({ order, riders, role, compact = false, dark = false }
         ))}
       </ul>
       {order.notes && <p className={`rounded-xl px-3 py-2 text-[13px] ${dark ? "bg-paper/10" : "bg-paper"}`}>Delivery: {order.notes}</p>}
+      {order.kitchenNote && (
+        <p className={`rounded-xl px-3 py-2 text-[13px] font-semibold ${dark ? "bg-acid text-ink" : "bg-acid/30"}`}>Note: {order.kitchenNote}</p>
+      )}
 
       <footer className="flex flex-wrap items-center gap-2">
         {order.status === "paid" && canKitchen && (
@@ -93,6 +97,7 @@ export function OrderCard({ order, riders, role, compact = false, dark = false }
         {(order.status === "ready" || order.status === "out_for_delivery") && (
           <a href={`tel:${order.customer.phone}`} className={`h-10 rounded-xl px-3 text-xs font-semibold leading-10 ${dark ? "bg-paper/15" : "bg-paper"}`}>Call {order.customer.phone.replace("+91", "")}</a>
         )}
+        {canKitchen && <PrintButton orderId={order.id} printed={order.kotPrintedAt != null} />}
         {order.lat && order.lng && (
           <a href={`https://maps.google.com/?q=${order.lat},${order.lng}`} target="_blank" rel="noreferrer" className={`h-10 rounded-xl px-3 text-xs font-semibold leading-10 ${dark ? "bg-paper/15" : "bg-paper"}`}>Map</a>
         )}

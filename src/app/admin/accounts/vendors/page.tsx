@@ -30,7 +30,7 @@ export default async function VendorBillsPage({ searchParams }: { searchParams: 
           vb.bill_date::text as "billDate", vb.due_on::text as "dueOn",
           vb.amount_paise::bigint as amount, vb.gst_paise::bigint as gst,
           coalesce((select sum(p.amount_paise) from vendor_payments p where p.vendor_bill_id = vb.id), 0)::bigint as paid,
-          vb.file_path as "filePath", u.full_name as "updatedBy"
+          vb.note, vb.file_path as "filePath", u.full_name as "updatedBy"
         from vendor_bills vb
         join vendors v on v.id = vb.vendor_id
         left join staff_users u on u.id = vb.updated_by

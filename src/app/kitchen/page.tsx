@@ -2,6 +2,7 @@ import Image from "next/image";
 import { OrderCard } from "@/components/admin/order-card";
 import { StaffLive } from "@/components/admin/live";
 import { Batching } from "@/components/admin/batching";
+import { AutoPrint } from "@/components/kitchen/auto-print";
 import { requireRole } from "@/lib/auth";
 import { getLiveOrders } from "@/lib/orders/queries";
 
@@ -24,6 +25,7 @@ export default async function KitchenPage({ searchParams }: { searchParams: Prom
         <Image src="/brand/patch-mono-white.png" alt="Abu & Beyond" width={66} height={47} />
         <h1 className="font-display text-[28px] uppercase">Kitchen</h1>
         <span className={`rounded-full px-3 py-1 text-sm font-bold ${fresh ? "bg-acid text-ink" : "bg-paper/15"}`}>{fresh} new</span>
+        <AutoPrint orderIds={all.filter((o) => o.status === "paid").map((o) => o.id)} />
         <nav className="ml-auto flex gap-1.5 overflow-x-auto">
           <a href="/kitchen" className={`h-9 flex-none rounded-full px-3 text-sm leading-9 ${!station ? "bg-paper text-ink font-semibold" : "bg-paper/15"}`}>All</a>
           {Object.entries(STATIONS).map(([id, name]) => (

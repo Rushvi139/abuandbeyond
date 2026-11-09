@@ -17,6 +17,7 @@ export type BillRow = {
   amount: number;
   gst: number;
   paid: number;
+  note: string | null;
   filePath: string | null;
   updatedBy: string | null;
 };
@@ -148,6 +149,10 @@ function Row({ row: r, today, canEdit, canDelete }: { row: BillRow; today: strin
                 {canDelete && r.paid === 0 && <DeleteCell what={`bill from ${r.vendor}`} onDelete={() => deleteBill(r.id)} />}
               </div>
 
+      <div className="col-span-2 md:col-span-8 md:-mt-0.5">
+        <span className="text-[10px] uppercase tracking-wide text-muted md:mr-2">Remarks</span>
+        <Cell value={r.note ?? ""} placeholder="Short delivery, rate change, part payment agreed…" readOnly={!canEdit} save={(v) => updateBillCell(r.id, "note", v)} />
+      </div>
       {r.updatedBy && <p className="col-span-2 text-[11px] text-muted md:col-span-8 md:-mt-1">edited by {r.updatedBy}</p>}
       </div>
     </div>
