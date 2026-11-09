@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { StoreNav } from "./store-nav";
 import { RibbonSlot } from "./ribbon-slot";
+import { LEGAL, operatedByLine, registrations } from "@/lib/legal";
 
 export type Section = { heading: string; body: string[] };
 
@@ -27,14 +28,27 @@ export function LegalPage({ title, updated, intro, sections }: { title: string; 
         ))}
       </div>
 
-      <div className="mt-7 flex flex-wrap gap-x-3 gap-y-1 px-5 text-[13px] text-muted">
+      {/* Every policy page has to say who "we" is, or it is a promise from
+          nobody. One block, one source, so the three cannot drift apart. */}
+      <section className="mx-5 mt-7 rounded-2xl bg-surface p-4 text-[13px] leading-relaxed text-muted">
+        <h2 className="mb-1 font-display text-[15px] uppercase tracking-wide text-ink">Who you are dealing with</h2>
+        <p>{operatedByLine()}</p>
+        {registrations().length > 0 && <p className="mt-1">{registrations().join(" · ")}</p>}
+        <p className="mt-1">
+          <a href={`mailto:${LEGAL.operator.email}`} className="underline underline-offset-2">{LEGAL.operator.email}</a>
+          {" · "}
+          <a href={`tel:${LEGAL.operator.phone}`} className="underline underline-offset-2">{LEGAL.operator.phoneDisplay}</a>
+        </p>
+      </section>
+
+      <div className="mt-5 flex flex-wrap gap-x-3 gap-y-1 px-5 text-[13px] text-muted">
         <Link href="/terms" className="underline-offset-2 hover:underline">Terms</Link>
         <span aria-hidden="true">·</span>
         <Link href="/privacy" className="underline-offset-2 hover:underline">Privacy</Link>
         <span aria-hidden="true">·</span>
         <Link href="/refunds" className="underline-offset-2 hover:underline">Refunds &amp; cancellations</Link>
         <span aria-hidden="true">·</span>
-        <Link href="/support" className="underline-offset-2 hover:underline">Contact us</Link>
+        <Link href="/contact" className="underline-offset-2 hover:underline">Contact us</Link>
       </div>
 
       <StoreNav active="support" />

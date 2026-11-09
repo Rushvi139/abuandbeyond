@@ -1,4 +1,5 @@
 import { LegalPage } from "@/components/store/legal-page";
+import { LEGAL, operatedByLine } from "@/lib/legal";
 
 export const metadata = { title: "Terms · Abu & Beyond" };
 
@@ -12,8 +13,8 @@ export default function TermsPage() {
         {
           heading: "Who we are",
           body: [
-            "Abu & Beyond is a delivery-only kitchen operating in Mount Abu, Rajasthan, India. We cook and deliver our own food; we do not resell anyone else's.",
-            "You can reach us through the Help page, by phone or on WhatsApp, during our serving hours.",
+            operatedByLine() + " It is a delivery-only kitchen: we cook and deliver our own food, and do not resell anyone else's.",
+            `Reach us on ${LEGAL.support.phoneDisplay} or at ${LEGAL.operator.email}. Full details are on the Contact us page.`,
           ],
         },
         {

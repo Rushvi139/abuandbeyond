@@ -94,7 +94,7 @@ export function Welcome() {
           {COPY.cta}
         </button>
         <div className="mt-3 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-[12px] text-muted">
-          <Link href="/support" onClick={close} className="font-semibold text-ink underline-offset-2 hover:underline">Help</Link>
+          <Link href="/contact" onClick={close} className="font-semibold text-ink underline-offset-2 hover:underline">Contact</Link>
           <span aria-hidden="true">·</span>
           <Link href="/terms" onClick={close} className="underline-offset-2 hover:underline">Terms</Link>
           <span aria-hidden="true">·</span>

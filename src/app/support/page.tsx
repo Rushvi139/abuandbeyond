@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { operatedByLine } from "@/lib/legal";
 import { StoreNav } from "@/components/store/store-nav";
 import { RibbonSlot } from "@/components/store/ribbon-slot";
 import { CateringForm } from "@/components/store/catering-form";
@@ -95,7 +96,10 @@ export default async function SupportPage() {
           <Link href="/privacy" className="underline-offset-2 hover:underline">Privacy</Link>
           <span aria-hidden="true">·</span>
           <Link href="/refunds" className="underline-offset-2 hover:underline">Refunds &amp; cancellations</Link>
+          <span aria-hidden="true">·</span>
+          <Link href="/contact" className="underline-offset-2 hover:underline">Contact us</Link>
         </div>
+        <p className="mt-3 text-[13px] leading-relaxed text-muted">{operatedByLine()}</p>
       </section>
 
       <StoreNav active="support" />

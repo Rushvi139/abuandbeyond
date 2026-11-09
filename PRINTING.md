@@ -102,5 +102,7 @@ Chrome.
   step 1; this is not an app problem.
 - **Prints a cut-off right edge** — the printer is 58 mm, or its driver is set
   to 58 mm.
-- **Nothing happens on tap** — the pop-up blocker. The ticket prints from a
-  hidden frame on the same site, so allow pop-ups for abuandbeyond.in.
+- **Nothing happens on tap** — the ticket renders in a hidden frame and asks
+  the browser to print it. If no dialog appears, open
+  `/kitchen/kot/<order id>` directly and press Ctrl+P. If that works, the
+  frame is being blocked; tell me and I'll switch it to a real tab.
