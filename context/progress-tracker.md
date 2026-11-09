@@ -225,6 +225,30 @@ Update this file after every meaningful implementation change.
   `1fr` to nothing and overlaps text. Give the flexible column a
   `minmax()` floor and wrap the table in `overflow-x-auto`.
 
+- KOT (9 Nov 2026): `/kitchen/kot/[id]` is one ticket for an 80 mm
+  thermal roll — no prices, big order number, notes boxed. Per-screen
+  auto-print toggle (off by default, localStorage) plus a Print KOT
+  button per card. Double printing is prevented by a conditional update
+  on `orders.kot_printed_at`, not by anything the browser remembers;
+  two concurrent claims were tested and exactly one wins.
+- Coupons (9 Nov 2026): `/admin/coupons` for percent or flat codes with
+  minimum order, date window, total and per-customer limits, and
+  first-order-only. Checkout has a code box; `/api/coupon` only previews.
+  The rules that must not be loosened:
+  - GST is charged on the DISCOUNTED value (`gstOn(subtotal - discount)`).
+  - A discount is clamped to the bill, so a total can never go negative.
+  - A percentage coupon must have `max_discount_paise`; the form refuses
+    to save one without it.
+  - The order transaction re-checks the coupon and locks the coupon row;
+    the browser's discount is never read.
+  - Redemptions count only orders NOT in pending_payment / payment_failed
+    / cancelled, so an abandoned checkout doesn't burn someone's code.
+  - Unknown and switched-off codes return the same message on purpose.
+  `coupons.test.ts` pins the arithmetic.
+- Remarks (9 Nov 2026): `expenses.note` and `vendor_bills.note`, editable
+  in both registers; `orders.kitchen_note` for a line staff add for the
+  kitchen, shown on the card and at the top of the ticket.
+
 ## In Progress
 
 - None.
