@@ -7,6 +7,7 @@ import { useState } from "react";
 import { useCart } from "@/hooks/use-cart";
 import { formatINR, gstOn } from "@/lib/pricing";
 import { CouponField, type Applied } from "@/components/store/coupon-field";
+import { ClosedNotice, useServiceOpen } from "@/components/store/service-gate";
 import { LocationPin, type Pin } from "./location-pin";
 import { VegMark } from "./veg-mark";
 
@@ -32,6 +33,8 @@ export function CheckoutScreen({ deliveryFeePaise, sourceRef, staffName }: { del
   const router = useRouter();
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
+  const [altPhone, setAltPhone] = useState("");
+  const open = useServiceOpen();
   const [stay, setStay] = useState<Stay>("hotel");
   const [propertyName, setPropertyName] = useState("");
   const [room, setRoom] = useState("");
@@ -46,7 +49,8 @@ export function CheckoutScreen({ deliveryFeePaise, sourceRef, staffName }: { del
   const discount = coupon?.discountPaise ?? 0;
   const gst = gstOn(cart.subtotalPaise - discount);
   const total = cart.subtotalPaise - discount + gst + deliveryFeePaise;
-  const valid = name.trim().length >= 2 && /^[6-9]\d{9}$/.test(phone) && cart.lines.length > 0;
+  const shut = open === false;
+  const valid = name.trim().length >= 2 && /^[6-9]\d{9}$/.test(phone) && cart.lines.length > 0 && !shut;
 
   async function pay(demo = false) {
     if (!valid || busy) return;
@@ -57,7 +61,7 @@ export function CheckoutScreen({ deliveryFeePaise, sourceRef, staffName }: { del
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          name, phone, stayType: stay, propertyName, roomOrLandmark: room, notes, sourceRef,
+          name, phone, altPhone, stayType: stay, propertyName, roomOrLandmark: room, notes, sourceRef,
           couponCode: coupon?.code ?? "",
           ...(demo ? { demo: true } : {}),
           ...(pin ? { lat: pin.lat, lng: pin.lng } : {}),
@@ -154,6 +158,30 @@ export function CheckoutScreen({ deliveryFeePaise, sourceRef, staffName }: { del
           </div>
           <span className="text-xs text-hill">Your confirmation and live updates arrive here.</span>
         </div>
+        {/* Mount Abu has real dead spots — inside the older hotels, down
+            towards Gaumukh. A rider at the gate with one unreachable number
+            is the commonest way a delivery goes wrong here. */}
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor="alt" className={label}>
+            Another number <span className="font-normal text-muted">(optional)</span>
+          </label>
+          <div className="flex h-[50px] overflow-hidden rounded-xl border-[1.5px] border-line bg-surface">
+            <span className="flex items-center border-r border-line px-3 text-base font-semibold">+91</span>
+            <input
+              id="alt"
+              inputMode="numeric"
+              autoComplete="tel-national"
+              value={altPhone}
+              onChange={(e) => setAltPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
+              placeholder="10-digit number"
+              className="flex-1 bg-transparent px-3 text-base"
+            />
+          </div>
+          <span className="text-xs text-hill">
+            Please give a number with working network and WhatsApp — the signal drops in parts of Mount Abu, and our rider
+            will try this one if yours doesn&apos;t ring.
+          </span>
+        </div>
         <fieldset>
           <legend className={`${label} mb-2`}>Staying at</legend>
           <div className="grid grid-cols-4 gap-2">
@@ -180,6 +208,8 @@ export function CheckoutScreen({ deliveryFeePaise, sourceRef, staffName }: { del
         </div>
       </section>
 
+      <ClosedNotice />
+
       <section className="mt-5">
         <CouponField subtotalPaise={cart.subtotalPaise} phone={phone} applied={coupon} onChange={setCoupon} />
       </section>
@@ -199,8 +229,12 @@ export function CheckoutScreen({ deliveryFeePaise, sourceRef, staffName }: { del
 
       <div className="fixed inset-x-0 bottom-0 mx-auto max-w-md border-t border-line bg-paper px-3 pb-5 pt-3">
         <button type="button" onClick={() => pay(false)} disabled={!valid || busy} className="flex h-[60px] w-full flex-col items-center justify-center rounded-[18px] bg-clay text-ink disabled:opacity-50">
-          <span className="text-[17px] font-bold">{busy ? "Opening payment…" : `Pay ${formatINR(total, { decimals: true })}`}</span>
-          <span className="text-xs font-medium">UPI · Card · Netbanking — secured by Cashfree</span>
+          <span className="text-[17px] font-bold">
+            {shut ? "Closed right now" : busy ? "Opening payment…" : `Pay ${formatINR(total, { decimals: true })}`}
+          </span>
+          <span className="text-xs font-medium">
+            {shut ? "We'll take your order when we open" : "UPI · Card · Netbanking — secured by Cashfree"}
+          </span>
         </button>
 
         {/* Staff only, and only visible because someone is signed in on this

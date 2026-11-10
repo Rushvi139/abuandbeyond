@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { lineKey, useCart, type CartLine } from "@/hooks/use-cart";
 import { formatINR, gstRegistered, taxLine } from "@/lib/pricing";
+import { ServiceBadge } from "@/components/store/service-badge";
 import { CUISINE_LABEL, type Category, type MenuItem } from "@/lib/menu/types";
 import { VegMark } from "./veg-mark";
 import { StoreNav } from "./store-nav";
@@ -90,6 +91,7 @@ export function MenuScreen({ categories, closingLabel, banners = [] }: { categor
           <Image src="/brand/patch-primary-tilted.png" alt="Abu & Beyond" width={104} height={78} priority className="-ml-2" />
           <div className="flex flex-col items-end gap-0.5 text-right">
             <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-hill">Delivering in Mount Abu</span>
+            <ServiceBadge compact />
             {closingLabel && <span className="text-[13px] text-muted">{closingLabel}</span>}
           </div>
         </div>

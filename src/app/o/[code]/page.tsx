@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { HappyBear } from "@/components/store/happy-bear";
 import { LiveStatus } from "@/components/store/live-status";
+import { RollCatch } from "@/components/store/roll-catch";
 import { formatINR } from "@/lib/pricing";
 import { getOrderByCode } from "@/lib/orders/queries";
 import { CUSTOMER_STEPS, STATUS_LABEL, stepIndex } from "@/lib/orders/status";
@@ -85,6 +86,14 @@ export default async function OrderPage({ params }: { params: Promise<{ code: st
         <div className="mt-2 flex justify-between border-t border-line pt-2 font-bold"><span>{order.gstPaise > 0 ? "Paid incl. GST" : "Paid"}</span><span>{formatINR(order.totalPaise, { decimals: true })}</span></div>
         <p className="mt-2 text-xs text-muted">Delivering to {[order.propertyName, order.roomOrLandmark].filter(Boolean).join(", ") || order.stayType}</p>
       </section>
+
+      {/* Only while they are actually waiting. Once it is delivered or dead,
+          the page should be about the order, not a game. */}
+      {!done && !dead && (
+        <div className="mx-5">
+          <RollCatch />
+        </div>
+      )}
 
       <div className="mx-5 mt-4 grid grid-cols-2 gap-2.5">
         {wa ? (

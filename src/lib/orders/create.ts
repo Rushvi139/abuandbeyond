@@ -8,6 +8,7 @@ import { gstOn } from "@/lib/pricing";
 export const CheckoutSchema = z.object({
   name: z.string().trim().min(2).max(80),
   phone: z.string().trim().regex(/^[6-9]\d{9}$/, "10-digit Indian mobile number"),
+  altPhone: z.string().trim().regex(/^[6-9]\d{9}$/, "10-digit Indian mobile number").optional().or(z.literal("")),
   stayType: z.enum(["hotel", "villa", "homestay", "home", "other"]),
   propertyName: z.string().trim().max(120).optional().or(z.literal("")),
   roomOrLandmark: z.string().trim().max(120).optional().or(z.literal("")),
@@ -111,10 +112,10 @@ export async function createOrder(input: CheckoutInput, opts: { source?: string;
       : [];
     const [order] = await tx<{ id: string; order_code: string; order_number: number }[]>`insert into orders
       (customer_id, status, source, source_ref, property_id, stay_type, property_name, room_or_landmark, lat, lng, notes,
-       subtotal_paise, discount_paise, promo_code, gst_paise, delivery_fee_paise, total_paise, created_by)
+       alt_phone, subtotal_paise, discount_paise, promo_code, gst_paise, delivery_fee_paise, total_paise, created_by)
       values (${customer.id}, 'pending_payment', ${opts.source ?? "web"}, ${input.sourceRef ?? null}, ${property?.id ?? null},
         ${input.stayType}, ${input.propertyName || null}, ${input.roomOrLandmark || null}, ${input.lat ?? null}, ${input.lng ?? null},
-        ${input.notes || null}, ${subtotal}, ${discount}, ${coupon?.code ?? null}, ${gst}, ${deliveryFee}, ${total}, ${opts.createdBy ?? null})
+        ${input.notes || null}, ${input.altPhone ? "+91" + input.altPhone : null}, ${subtotal}, ${discount}, ${coupon?.code ?? null}, ${gst}, ${deliveryFee}, ${total}, ${opts.createdBy ?? null})
       returning id, order_code, order_number`;
     for (const p of priced) {
       const [oi] = await tx<{ id: string }[]>`insert into order_items

@@ -1,6 +1,7 @@
 import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
 import { currentStaff } from "@/lib/auth";
+import { REFUSE_ORDERS_WHEN_CLOSED, hoursLine, serviceState } from "@/lib/hours";
 import { db } from "@/lib/db";
 import { CheckoutSchema, createOrder } from "@/lib/orders/create";
 import { cashfreeConfigured, cashfreeMode, createCashfreeOrder } from "@/lib/payments/cashfree";
@@ -22,6 +23,22 @@ export async function POST(req: Request) {
   // is marked is_demo so it never reaches sales, costing or the indent.
   const wantsDemo = (body as { demo?: unknown } | null)?.demo === true;
   const staff = wantsDemo ? await currentStaff() : null;
+
+  // The real guard is here, not on the button. Taking money for food nobody
+  // is in the kitchen to cook means a refund and a guest who waited. Staff
+  // demos are exempt, so the flow can be tested at any hour.
+  if (REFUSE_ORDERS_WHEN_CLOSED && !wantsDemo) {
+    const state = serviceState();
+    if (!state.open) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: { code: "closed", message: `The kitchen is closed — we open at ${state.opensAt}. We cook ${hoursLine()}.` },
+        },
+        { status: 409 },
+      );
+    }
+  }
   if (wantsDemo && !staff) {
     return NextResponse.json({ ok: false, error: { code: "forbidden", message: "Sign in as staff to place a demo order." } }, { status: 403 });
   }

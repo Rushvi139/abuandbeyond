@@ -98,6 +98,15 @@ export function OrderCard({ order, riders, role, compact = false, dark = false }
           <a href={`tel:${order.customer.phone}`} className={`h-10 rounded-xl px-3 text-xs font-semibold leading-10 ${dark ? "bg-paper/15" : "bg-paper"}`}>Call {order.customer.phone.replace("+91", "")}</a>
         )}
         {canKitchen && <PrintButton orderId={order.id} printed={order.kotPrintedAt != null} />}
+        {order.altPhone && (
+          <a
+            href={`tel:${order.altPhone}`}
+            title="Alternate number the guest gave"
+            className={`h-10 rounded-xl px-3 text-xs font-semibold leading-10 ${dark ? "bg-paper/15" : "bg-paper"}`}
+          >
+            Call 2nd
+          </a>
+        )}
         {/* Always offer directions. With a shared pin we route to the exact
             coordinates; without one, to the property and landmark, which Maps
             resolves well enough on this plateau. A rider on a bike should
