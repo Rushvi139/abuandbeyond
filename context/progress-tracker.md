@@ -398,6 +398,13 @@ Phase 5 — Full WhatsApp ordering (deferred)
     Needs: Meta catalogue sync, bowl/fries choices as separate SKUs or
     follow-up buttons, physical-goods fields on `order_details`.
 
+Later (owner asked, not scheduled): replace the leopard entrance
+(`leopard-intro.tsx`, `welcome.tsx`) with the bear: real logo stays still, the
+bear rises from behind its top edge, sits on it and eats the roll in a loop,
+using `public/brand/bear-eating.webp|webm`. Code animation, not AI video
+(Canva video needs a paid plan and cannot keep the logo exact). Respect
+`prefers-reduced-motion`. Confirm with the owner whether the welcome card stays.
+
 ## Open Questions
 
 - WhatsApp go-live (owner): submit the 4 templates in WhatsApp Manager and
