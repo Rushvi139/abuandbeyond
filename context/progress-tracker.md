@@ -275,6 +275,20 @@ Update this file after every meaningful implementation change.
   in both registers; `orders.kitchen_note` for a line staff add for the
   kitchen, shown on the card and at the top of the ticket.
 
+- SEO + indexing (10 Nov 2026): the site was not in Google at all — no
+  robots.txt, no sitemap, no structured data. Added `src/app/robots.ts`
+  (staff, checkout, account and order pages disallowed), `src/app/sitemap.ts`,
+  `metadataBase` + Open Graph/Twitter cards with `public/brand/og-image.png`
+  (the locked patch logo on bone), a keyword-led home title, Restaurant
+  JSON-LD on `/` built live from the menu (`src/lib/seo.ts`), and noindex
+  layouts on every staff/personal route. Seven server-rendered keyword
+  landing pages at `/[landing]` from `src/lib/seo-pages.ts` (keyword map in
+  its header): food delivery, late night, pizza, pasta, burgers, Lebanese,
+  shakes — each lists live dishes and links back to the menu. Canonical is
+  set per page, never in the layout (it would be inherited by every page).
+  Fixed the pre-existing `<a>`→`<Link>` lint errors on /kitchen and /rider
+  that were failing `npm run build`.
+
 ## In Progress
 
 - None.
@@ -329,6 +343,12 @@ Phase 5 — Full WhatsApp ordering (deferred)
     follow-up buttons, physical-goods fields on `order_details`.
 
 ## Open Questions
+
+- SEO, owner-side: verify abuandbeyond.in in Google Search Console (DNS TXT
+  record at the domain registrar), submit /sitemap.xml, and create the Google
+  Business Profile (delivery-only = service-area business). Add the GBP
+  review link to Menu → Contact & social. Optional env:
+  `GOOGLE_SITE_VERIFICATION` for the HTML-tag method.
 
 - Leopard entrance (user wants the YE Garba reel feel: character comes
   down from the top, settles on the logo with a leg hanging, realistic
