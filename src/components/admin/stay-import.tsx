@@ -36,8 +36,9 @@ export function StayImport() {
     <div className="rounded-2xl bg-surface p-4">
       <h2 className="font-display text-[20px] uppercase">Load the sweep</h2>
       <p className="mt-1 text-sm text-muted">
-        Pick <code className="text-hill">mount_abu_all_stays.csv</code>. Re-running the sweep updates what&apos;s here rather than
-        duplicating it — your notes and QR links are kept.
+        Pick <code className="text-hill">Mount_Abu_Stays_Master.csv</code> — the cleaned one with type, zone and distance,
+        not the raw <code className="text-hill">mount_abu_all_stays.csv</code>. Re-running the sweep updates what&apos;s here
+        rather than duplicating it — your notes and QR links are kept.
       </p>
       <label className="mt-3 flex h-12 cursor-pointer items-center justify-center rounded-xl bg-ink px-4 text-sm font-bold text-reversed has-[:disabled]:opacity-60">
         <input type="file" accept=".csv,text/csv" onChange={onPick} disabled={pending} className="hidden" />
