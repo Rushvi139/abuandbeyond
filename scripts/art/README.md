@@ -68,6 +68,10 @@ Keep it identical but for the subject, or the set stops matching:
 
 ## State
 
+Focaccia sandwiches (added in /admin, not in the CSV) have their own roundels plus a
+`focaccia-sandwich` category fallback. Their slugs were not known when the art
+was made, so `STICKER_BY_PREFIX` in `menu-screen.tsx` matches on the start of the slug.
+
 All 31 dishes in `db/seed/menu_items.csv` have one. A new dish needs a new
 illustration, a composite and a line in `STICKER`; until it has one it falls
 back to its category sticker, so the menu never looks half-finished.

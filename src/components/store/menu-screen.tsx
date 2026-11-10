@@ -54,12 +54,31 @@ const STICKER: Record<string, string> = {
   "nutella-shake": "/brand/stickers/dishes/nutella-shake.png",
 
   // Per category, for everything without its own yet.
+  "focaccia-sandwich": "/brand/stickers/dishes/focaccia-sandwich.png",
+  focaccia: "/brand/stickers/dishes/focaccia-sandwich.png",
   pizza: "/brand/stickers/pizza.png",
   pasta: "/brand/stickers/pasta.png",
   "laffa-rolls": "/brand/stickers/rolls.png",
   bowls: "/brand/stickers/rice-bowls.png",
   burgers: "/brand/stickers/burgers.png",
 };
+
+/**
+ * Dishes the owner added in /admin have slugs we could not know when the art
+ * was made, and a repeat name gets a random suffix. Match on the start of the
+ * slug, most specific first ("chicken-l-and-t" before "l-and-t").
+ */
+const STICKER_BY_PREFIX: [string, string][] = [
+  ["chicken-l-and-t", "/brand/stickers/dishes/chicken-l-and-t-classic.png"],
+  ["l-and-t", "/brand/stickers/dishes/l-and-t-classic.png"],
+  ["rosemary-chicken", "/brand/stickers/dishes/rosemary-chicken-pesto.png"],
+  ["paneer-pesto", "/brand/stickers/dishes/paneer-pesto-sandwich.png"],
+];
+
+/** The dish's own roundel, else its category's, else nothing (a coloured tile). */
+function stickerFor(slug: string, categorySlug: string): string | null {
+  return STICKER[slug] ?? STICKER_BY_PREFIX.find(([p]) => slug.startsWith(p))?.[1] ?? STICKER[categorySlug] ?? null;
+}
 
 const TILE: Record<MenuItem["cuisine"], string> = {
   italy: "bg-clay text-ink",
@@ -198,7 +217,7 @@ export function MenuScreen({ categories, closingLabel, banners = [] }: { categor
           >
             <h2 className="mb-1 font-display text-[22px] uppercase tracking-wide">{c.name}</h2>
             {c.items.map((item) => (
-              <ItemRow key={item.id} item={item} sticker={STICKER[item.slug] ?? STICKER[c.slug] ?? null} qty={cart.qtyOfItem(item.id)} onAdd={() => quickAdd(item)} onMinus={() => decrement(item)} onCustomise={() => setSheetItem(item)} />
+              <ItemRow key={item.id} item={item} sticker={stickerFor(item.slug, c.slug)} qty={cart.qtyOfItem(item.id)} onAdd={() => quickAdd(item)} onMinus={() => decrement(item)} onCustomise={() => setSheetItem(item)} />
             ))}
           </section>
         ))}
@@ -228,7 +247,7 @@ export function MenuScreen({ categories, closingLabel, banners = [] }: { categor
 
       <StoreNav active="menu" />
 
-      {sheetItem && <ItemSheet item={sheetItem} sticker={STICKER[sheetItem.slug] ?? STICKER[categories.find((c) => c.items.some((i) => i.id === sheetItem.id))?.slug ?? ""] ?? null} onClose={() => setSheetItem(null)} onAdd={(line, qty) => { cart.add(line, qty); setSheetItem(null); }} />}
+      {sheetItem && <ItemSheet item={sheetItem} sticker={stickerFor(sheetItem.slug, categories.find((c) => c.items.some((i) => i.id === sheetItem.id))?.slug ?? "")} onClose={() => setSheetItem(null)} onAdd={(line, qty) => { cart.add(line, qty); setSheetItem(null); }} />}
     </div>
   );
 }

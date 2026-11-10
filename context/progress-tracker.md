@@ -335,6 +335,16 @@ Update this file after every meaningful implementation change.
   category positions unless `SEED_OVERWRITE=1`, so a deploy keeps the order.
 - Section headings keep the brand display type (uppercase by style).
 
+### Focaccia sandwich illustrations
+
+- Roundels for Rosemary Chicken Pesto, Paneer Pesto Sandwich, L&T Classic and
+  Chicken L&T Classic, plus a category fallback (veg L&T art, text "Focaccia
+  Sandwich"). Same pipeline and prompt as the other 31.
+- Matched by slug prefix (`STICKER_BY_PREFIX`) because admin-added dishes get
+  slugs we cannot know in advance. Confirm the full name of the Rosemary
+  Chicken dish: the art says "Rosemary Chicken Pesto" (the screenshot was
+  truncated); the text is drawn locally so a fix is a re-composite, not a re-generation.
+
 ## In Progress
 
 - None.
