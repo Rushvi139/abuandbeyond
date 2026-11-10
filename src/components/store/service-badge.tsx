@@ -1,16 +1,17 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { hoursLine, serviceState } from "@/lib/hours";
+import { serviceState, serviceWindows } from "@/lib/hours";
 
 /**
- * Open or shut, and the hours either way.
+ * The hours, then whether we are open right now underneath them.
  *
- * Rendered on the client and re-checked every minute: the page is cached by
- * the browser, and a badge that said "Open" because it was rendered at 2:58pm
- * is worse than no badge at all.
+ * The status is rendered on the client and re-checked every minute: the page
+ * is cached by the browser, and a badge that said "Open now" because it was
+ * rendered at 2:58pm is worse than no badge at all. The hours themselves are
+ * fixed, so they render immediately and never flicker.
  */
-export function ServiceBadge({ compact }: { compact?: boolean }) {
+export function ServiceBadge({ align = "right" }: { align?: "left" | "right" }) {
   const [state, setState] = useState<ReturnType<typeof serviceState> | null>(null);
 
   useEffect(() => {
@@ -20,24 +21,29 @@ export function ServiceBadge({ compact }: { compact?: boolean }) {
     return () => clearInterval(id);
   }, []);
 
-  // Nothing until the client has checked, so the server never renders a
-  // status that is already stale by the time anyone reads it.
-  if (!state) return <span className="text-[11px] text-muted">{hoursLine()}</span>;
+  const windows = serviceWindows();
 
   return (
-    <span className={`inline-flex flex-wrap items-center gap-x-2 gap-y-0.5 ${compact ? "text-[11px]" : "text-[12px]"}`}>
-      <span
-        className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide ${
-          state.open ? "bg-success/15 text-success" : "bg-ink/10 text-ink"
-        }`}
-      >
-        <span className={`h-1.5 w-1.5 rounded-full ${state.open ? "bg-success" : "bg-muted"}`} aria-hidden="true" />
-        {state.open ? "Open now" : "Closed"}
-      </span>
-      <span className="text-muted">
-        {state.open ? `until ${state.closesAt} · ` : `opens ${state.opensAt} · `}
-        {hoursLine()}
-      </span>
-    </span>
+    <div className={`flex flex-col gap-1 ${align === "right" ? "items-end text-right" : "items-start text-left"}`}>
+      <dl className="text-[12px] leading-tight text-muted">
+        {windows.map((w) => (
+          <div key={w.label} className="flex gap-1.5 whitespace-nowrap">
+            <dt className="font-semibold text-ink">{w.label}:</dt>
+            <dd>{w.when}</dd>
+          </div>
+        ))}
+      </dl>
+
+      {state && (
+        <span
+          className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${
+            state.open ? "bg-success/15 text-success" : "bg-ink/10 text-ink"
+          }`}
+        >
+          <span className={`h-1.5 w-1.5 flex-none rounded-full ${state.open ? "bg-success" : "bg-muted"}`} aria-hidden="true" />
+          {state.open ? `Open till ${state.closesAt}` : `Closed · opens ${state.opensAt}`}
+        </span>
+      )}
+    </div>
   );
 }

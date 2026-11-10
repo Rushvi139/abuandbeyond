@@ -8,9 +8,9 @@
  *
  * Times are Asia/Kolkata whatever the server's own clock is set to.
  */
-export const SERVICE: { from: string; to: string }[] = [
-  { from: "12:00", to: "15:00" },
-  { from: "19:00", to: "02:00" },
+export const SERVICE: { label: string; from: string; to: string }[] = [
+  { label: "Day", from: "12:00", to: "15:00" },
+  { label: "Evening", from: "19:00", to: "02:00" },
 ];
 
 /** Set false to keep taking orders while the kitchen is shut (pre-orders). */
@@ -35,16 +35,20 @@ export function kolkataMinutes(now: Date = new Date()): number {
   return (h % 24) * 60 + m;
 }
 
-/** "19:00" → "7:00 pm" */
+/** "19:00" → "7 PM", "19:30" → "7:30 PM" */
 export function pretty(hhmm: string): string {
   const [h, m] = hhmm.split(":").map(Number);
-  const suffix = h < 12 ? "am" : "pm";
+  const suffix = h < 12 ? "AM" : "PM";
   const hour = h % 12 === 0 ? 12 : h % 12;
   return m === 0 ? `${hour} ${suffix}` : `${hour}:${String(m).padStart(2, "0")} ${suffix}`;
 }
 
-/** "12 pm – 3 pm · 7 pm – 2 am" */
-export const hoursLine = () => SERVICE.map((w) => `${pretty(w.from)} – ${pretty(w.to)}`).join(" · ");
+/** [{ label: "Day", when: "12 PM to 3 PM" }, …] — one line each on screen. */
+export const serviceWindows = () =>
+  SERVICE.map((w) => ({ label: w.label, when: `${pretty(w.from)} to ${pretty(w.to)}` }));
+
+/** "Day 12 PM to 3 PM · Evening 7 PM to 2 AM", for prose and error messages. */
+export const hoursLine = () => serviceWindows().map((w) => `${w.label} ${w.when}`).join(" · ");
 
 export type ServiceState = {
   open: boolean;

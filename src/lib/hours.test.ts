@@ -1,12 +1,16 @@
 import { describe, expect, it } from "vitest";
-import { hoursLine, serviceState } from "./hours";
+import { hoursLine, serviceState, serviceWindows } from "./hours";
 
 /** A Kolkata wall-clock time, as a real instant. +05:30 is fixed year-round. */
 const at = (hhmm: string, day = "2026-11-10") => new Date(`${day}T${hhmm}:00+05:30`);
 
 describe("service hours", () => {
   it("reads back the way the owner wrote them", () => {
-    expect(hoursLine()).toBe("12 pm – 3 pm · 7 pm – 2 am");
+    expect(hoursLine()).toBe("Day 12 PM to 3 PM · Evening 7 PM to 2 AM");
+    expect(serviceWindows()).toEqual([
+      { label: "Day", when: "12 PM to 3 PM" },
+      { label: "Evening", when: "7 PM to 2 AM" },
+    ]);
   });
 
   it("is open during the lunch window", () => {
@@ -30,16 +34,16 @@ describe("service hours", () => {
   });
 
   it("says when we next open, wrapping to tomorrow after the last shift", () => {
-    expect(serviceState(at("03:00")).opensAt).toBe("12 pm");
-    expect(serviceState(at("16:00")).opensAt).toBe("7 pm");
+    expect(serviceState(at("03:00")).opensAt).toBe("12 PM");
+    expect(serviceState(at("16:00")).opensAt).toBe("7 PM");
     // 11:00 is before lunch, so lunch is next — not tomorrow's.
-    expect(serviceState(at("11:00")).opensAt).toBe("12 pm");
+    expect(serviceState(at("11:00")).opensAt).toBe("12 PM");
   });
 
   it("says when the current shift ends", () => {
-    expect(serviceState(at("13:00")).closesAt).toBe("3 pm");
-    expect(serviceState(at("21:00")).closesAt).toBe("2 am");
-    expect(serviceState(at("01:00")).closesAt).toBe("2 am");
+    expect(serviceState(at("13:00")).closesAt).toBe("3 PM");
+    expect(serviceState(at("21:00")).closesAt).toBe("2 AM");
+    expect(serviceState(at("01:00")).closesAt).toBe("2 AM");
   });
 
   // The server runs in UTC. 20:00 UTC is 01:30 next day in Kolkata, inside the
