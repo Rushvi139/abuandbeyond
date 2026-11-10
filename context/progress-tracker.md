@@ -13,6 +13,24 @@ Update this file after every meaningful implementation change.
 
 ## Completed
 
+- 10 Nov (pay on delivery): Cashfree isn't activated, so the checkout dead-ended
+  on "online payment isn't switched on yet". Cash or UPI to the rider at the
+  door is now a full payment path: the order is confirmed and cooked at once,
+  while the money is recorded separately when the rider actually has it
+  (`orders.payment_mode`, `collected_at`, `collected_by`; a `payments` row with
+  gateway `on_delivery` so it reconciles like an online payment). Collecting is
+  limited to rider/manager/owner and to orders that have left the kitchen — a
+  cook tapping it would put cash in the books that nobody is holding. The
+  kitchen screen, the KOT and the guest's own page all say *not paid* until it
+  is collected, and the guest's page reads "Pay ₹X at the door", never "Paid".
+  Accounts grows a "To collect" tile. The `cod_enabled` setting (dead since
+  0001) now switches cash off once Cashfree is live, with a toggle on /admin;
+  with no gateway it stays on regardless, so the shop can never end up taking
+  no orders at all.
+  **A UPI deep link or QR was considered and rejected**: UPI intents have no
+  callback, so nothing would confirm the money arrived and staff would verify
+  every payment by eye. Revisit only with a real UPI collect API.
+
 - 8 Nov (new logo): brand kit of 8 Nov 2026 dropped in across the app — the
   hand-drawn lopsided ridge with Guru Shikhar on the left, the smaller tilted
   Jost ampersand, the wider 1.4:1 patch and the ink footer bar. Every lockup
