@@ -1,4 +1,17 @@
-// Loads the live menu and costing data from db/seed/*.csv. Safe to re-run: upserts by natural key.
+// Loads the live menu and costing data from db/seed/*.csv.
+//
+// The CSV is the LAUNCH menu, not the source of truth. Once a row exists, the
+// owner owns it: a price, an add-on price or an ingredient rate changed in
+// /admin is never overwritten from the file. This matters because the deploy
+// command runs the seed, so anything the seed overwrites silently reverts on
+// every deploy — which is exactly what happened to the menu prices.
+//
+// New rows still come in, and fields the admin cannot edit (pack kit, costing
+// reference, sort order) are still refreshed.
+//
+// To deliberately push the CSV over live data — a real bulk price change —
+// run it with SEED_OVERWRITE=1. Never set that in the compose file.
+//
 // Usage: npm run db:seed   (needs DATABASE_URL; run db:migrate first)
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
@@ -13,6 +26,9 @@ type Row = Record<string, string>;
 const read = (f: string): Row[] =>
   parse(readFileSync(join(process.cwd(), "db", "seed", f)), { columns: true, skip_empty_lines: true, trim: true });
 const paise = (inr: string) => Math.round(Number(inr) * 100);
+/** Opt-in, for a deliberate bulk reset from the file. Off on every deploy. */
+const OVERWRITE = process.env.SEED_OVERWRITE === "1";
+
 const slugify = (s: string) => s.toLowerCase().replace(/&/g, "and").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 
 async function main() {
@@ -48,11 +64,21 @@ async function main() {
         values (${m.sku}, ${m.slug}, ${m.name}, ${categoryId.get(m.category)!}, ${m.station}, ${m.cuisine_sticker},
           ${m.is_veg === "True"}, ${paise(m.price_inr)}, ${paise(m.packaging_cost_inr)},
           ${m.pack_kit || null}, ${m.price_status}, ${m.costing_ref || null}, ${i + 1})
-        on conflict (sku) do update set slug = excluded.slug, name = excluded.name, category_id = excluded.category_id,
-          station_id = excluded.station_id, cuisine = excluded.cuisine, is_veg = excluded.is_veg,
-          price_paise = excluded.price_paise, packaging_cost_paise = excluded.packaging_cost_paise,
-          pack_kit_id = excluded.pack_kit_id, price_status = excluded.price_status,
-          costing_ref = excluded.costing_ref, sort_order = excluded.sort_order
+        on conflict (sku) do update set
+          -- Admin-owned. Only a deliberate SEED_OVERWRITE=1 run touches these.
+          name = case when ${OVERWRITE} then excluded.name else menu_items.name end,
+          category_id = case when ${OVERWRITE} then excluded.category_id else menu_items.category_id end,
+          station_id = case when ${OVERWRITE} then excluded.station_id else menu_items.station_id end,
+          cuisine = case when ${OVERWRITE} then excluded.cuisine else menu_items.cuisine end,
+          is_veg = case when ${OVERWRITE} then excluded.is_veg else menu_items.is_veg end,
+          price_paise = case when ${OVERWRITE} then excluded.price_paise else menu_items.price_paise end,
+          packaging_cost_paise = case when ${OVERWRITE} then excluded.packaging_cost_paise else menu_items.packaging_cost_paise end,
+          -- Not editable in admin, so the file stays authoritative. The slug
+          -- is left alone either way: it is in URLs and in the sticker map.
+          pack_kit_id = excluded.pack_kit_id,
+          price_status = excluded.price_status,
+          costing_ref = excluded.costing_ref,
+          sort_order = excluded.sort_order
         returning id`;
       itemId.set(m.sku, row.id);
 
@@ -94,7 +120,9 @@ async function main() {
     for (const a of addons) {
       const [row] = await tx<{ id: string }[]>`insert into addons (name, price_paise, is_veg)
         values (${a.name}, ${paise(a.price_inr)}, ${a.is_veg === "true"})
-        on conflict (name) do update set price_paise = excluded.price_paise, is_veg = excluded.is_veg
+        on conflict (name) do update set
+          price_paise = case when ${OVERWRITE} then excluded.price_paise else addons.price_paise end,
+          is_veg = case when ${OVERWRITE} then excluded.is_veg else addons.is_veg end
         returning id`;
       const cats = new Set(a.applies_to.split(";"));
       for (const m of menu.filter((x) => cats.has(x.category))) {
@@ -112,8 +140,10 @@ async function main() {
       const ratePaise = perUnitInr * 100;
       const [row] = await tx<{ id: string }[]>`insert into ingredients (name, procurement_group, unit, rate_paise_per_unit)
         values (${r.ingredient}, ${group.get(r.ingredient) ?? null}, ${r.unit}, ${ratePaise.toFixed(4)})
-        on conflict (name) do update set procurement_group = excluded.procurement_group, unit = excluded.unit,
-          rate_paise_per_unit = excluded.rate_paise_per_unit
+        on conflict (name) do update set
+          procurement_group = case when ${OVERWRITE} then excluded.procurement_group else ingredients.procurement_group end,
+          unit = case when ${OVERWRITE} then excluded.unit else ingredients.unit end,
+          rate_paise_per_unit = case when ${OVERWRITE} then excluded.rate_paise_per_unit else ingredients.rate_paise_per_unit end
         returning id`;
       ingredient.set(r.ingredient, { id: row.id, rate: ratePaise });
     }

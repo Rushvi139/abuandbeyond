@@ -13,6 +13,8 @@ export default defineConfig({
   },
   test: {
     environment: "node",
-    include: ["src/**/*.test.ts"],
+    // scripts/ too: the seed runs on every deploy, so its guard tests
+    // matter as much as the app's.
+    include: ["src/**/*.test.ts", "scripts/**/*.test.ts"],
   },
 });
