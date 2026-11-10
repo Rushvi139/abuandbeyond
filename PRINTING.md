@@ -45,6 +45,23 @@ each time the browser restarts. It is a workaround, not the plan.
 4. Check the paper. Width should be 80 mm with nothing cut off at the right.
    If it is wrong, tell me the printer model and what came out.
 
+## Get these print settings right once
+
+The ticket is laid out for an 80 mm roll. Most "it doesn't look like the
+design" reports are one of these four, not the page:
+
+| Setting | Must be |
+|---|---|
+| Paper size | 80 mm roll / "Receipt", **not** A4 |
+| Margins | None (the page sets its own 3 mm) |
+| Scale | 100%, **not** "Fit to page" |
+| Headers and footers | **Off** — otherwise Chrome prints the URL and date on your ticket |
+
+Set them once in a manual print; Chrome reuses them, including under kiosk
+printing. If the paper still looks wrong after that, print
+`kot-80mm.pdf` (ask and I will regenerate it) on the same printer: if the PDF
+comes out right and the site does not, it is the dialog, not the ticket.
+
 ## Making it print without the dialog
 
 Step 3 pops a dialog every time, which is no good mid-service. To print
@@ -71,10 +88,14 @@ screen in a kitchen. To get out, Alt+F4 (Windows) or Alt+Tab to another window.
 
 ## Which screen prints
 
-Auto-print is **off by default and remembered per device**. A kitchen has one
-printer and often several screens; if every tablet auto-printed you would get
-four copies of every ticket. Turn it on only on the device wired to the
-printer.
+Auto-print is **on by default and remembered per device**. A ticket that does
+not print is a missed order, so paper is the safe default.
+
+You will not get four copies from four screens — the first screen to claim an
+order wins and the rest print nothing. But that is also the catch: if a phone
+with no printer claims the ticket first, no paper comes out. **Turn auto-print
+off on every screen except the one wired to the printer.** One tap, remembered
+on that device.
 
 Two screens cannot double-print even if both are on: the first one to claim an
 order wins, and the claim is recorded on the server. A refresh, a second tab,

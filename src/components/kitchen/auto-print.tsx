@@ -19,10 +19,11 @@ export function printKot(orderId: string) {
 /**
  * Watches the orders on the pass and prints each new one once.
  *
- * Off by default, and remembered per device: a kitchen has one printer but
- * often several screens, and a toggle that defaulted to on would have every
- * tablet in the building firing at the same roll. Which device prints is a
- * decision for whoever is standing next to the printer.
+ * On by default, and remembered per device. A ticket that does not print is a
+ * missed order, so paper is the safe default. Several screens can have it on
+ * without duplicate tickets — the first to claim an order wins — but only the
+ * screen attached to the printer produces paper, so turn it off on the others
+ * or a claimed ticket can end up on a phone that cannot print it.
  *
  * The guard against double printing is server-side (`claimKot`), not this
  * component's memory — a refresh, a second tab, or a tablet waking up must not
@@ -35,9 +36,13 @@ export function AutoPrint({ orderIds }: { orderIds: string[] }) {
 
   useEffect(() => {
     try {
-      setOn(localStorage.getItem(KEY) === "1");
+      // On unless this device has been told otherwise. A ticket that fails to
+      // print is a missed order, so the safe default is paper. Turning it off
+      // is one tap and is remembered, which is what the screens without a
+      // printer need.
+      setOn(localStorage.getItem(KEY) !== "0");
     } catch {
-      /* private window, or storage blocked: stay off */
+      setOn(true); // storage blocked — still print
     }
     setReady(true);
   }, []);

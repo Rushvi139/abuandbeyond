@@ -3,6 +3,7 @@ import { MenuRow, RetiredRow } from "@/components/admin/menu-row";
 import { AddonForm, AddonRow, type Addon } from "@/components/admin/addon-form";
 import { BannerForm, BannerRowView, type BannerRow } from "@/components/admin/banner-form";
 import { requireRole } from "@/lib/auth";
+import { taxLine } from "@/lib/pricing";
 import { saveSocialLinks } from "@/lib/crm/actions";
 import { db } from "@/lib/db";
 
@@ -39,7 +40,7 @@ export default async function MenuAdmin() {
     <div className="flex flex-col gap-5">
       <div>
         <h1 className="font-display text-[32px] uppercase">Menu</h1>
-        <p className="text-sm text-muted">Switch a dish off when it sells out. Prices are before 5% GST. New dishes show on the site immediately.</p>
+        <p className="text-sm text-muted">{taxLine()}. Switch a dish off when it sells out. New dishes show on the site immediately.</p>
       </div>
       <section>
         <h2 className="mb-2 text-xs font-bold uppercase tracking-wide text-muted">Add a dish</h2>

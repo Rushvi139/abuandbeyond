@@ -30,7 +30,7 @@ export default async function RiderPage() {
         <a href="/rider/bills" className="h-10 rounded-xl border-[1.5px] border-ink px-3 text-sm font-semibold leading-10">Bills</a>
       </header>
       <div className="flex flex-col gap-3">
-        {ready.length > 1 && <RunMap kitchen={kitchen} stops={ready} />}
+        {ready.length > 0 && <RunMap kitchen={kitchen} stops={ready} />}
         {ready.map((o) => <OrderCard key={o.id} order={o} role={staff.role} compact />)}
         {ready.length === 0 && <p className="rounded-2xl bg-surface p-6 text-center text-muted">Nothing to pick up right now.</p>}
         {soon.length > 0 && (

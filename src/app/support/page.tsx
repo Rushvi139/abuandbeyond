@@ -14,7 +14,7 @@ const FAQ = [
   { q: "Can I change or cancel my order?", a: "Call or WhatsApp us straight away. If the kitchen hasn't started cooking it, we'll change it. Once it's on the pass we can't take it back." },
   { q: "Something was wrong with my food.", a: "Tell us the same evening, with a photo if you can. We'd rather remake it or refund it than have you eat something we're not proud of." },
   { q: "Do you cook Jain / no onion-garlic?", a: "For a lot of dishes, yes. Leave it in the note on the dish or the delivery note, and we'll tell you if a dish can't be done that way." },
-  { q: "Is the price inclusive of taxes?", a: "Menu prices are before GST. The 5% is added once at checkout, and there's no delivery fee at the moment." },
+  { q: "Is the price inclusive of taxes?", a: "The price you see is the price you pay. All taxes are included, and there's no delivery fee at the moment." },
 ];
 
 export default async function SupportPage() {

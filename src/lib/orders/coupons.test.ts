@@ -53,11 +53,13 @@ describe("GST follows the discount", () => {
   // being paid for = ₹20, not ₹25. Charging GST on the pre-discount value would
   // overcharge the customer and overstate the kitchen's output tax.
   it("is charged on the discounted value", async () => {
-    const { gstOn } = await import("../pricing");
+    // gstAt, not gstOn: the rule under test is which base the tax applies to,
+    // and that must stay right whether or not we are currently registered.
+    const { gstAt } = await import("../pricing");
     const subtotal = 50_000;
     const discount = discountFor(coupon({ kind: "flat", valuePaise: 10_000 }), subtotal);
     expect(discount).toBe(10_000);
-    expect(gstOn(subtotal - discount)).toBe(2_000);
-    expect(gstOn(subtotal)).toBe(2_500);
+    expect(gstAt(subtotal - discount)).toBe(2_000);
+    expect(gstAt(subtotal)).toBe(2_500);
   });
 });

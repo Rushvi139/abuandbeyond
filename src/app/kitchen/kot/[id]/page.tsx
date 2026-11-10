@@ -93,8 +93,13 @@ export default async function KotPage({
           thermal printer, where millimetres and monospace matter more than the
           design system. */}
       <style>{`
+        /* auto height, so the roll is cut after the last line instead of
+           feeding a full page of blank paper. */
         @page { size: 80mm auto; margin: 3mm; }
-        html, body { margin: 0; padding: 0; background: #fff; }
+        html, body { margin: 0; padding: 0; height: auto; background: #fff; }
+        /* Browsers drop backgrounds and shading when printing unless told
+           otherwise, which is what turns a boxed note into plain text. */
+        * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
         .kot {
           width: 74mm; margin: 0 auto; padding: 2mm 0;
           font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
@@ -107,7 +112,7 @@ export default async function KotPage({
         .where { margin-top: 2px; font-size: 14px; font-weight: 700; }
         hr { border: 0; border-top: 1px dashed #000; margin: 6px 0; }
         .items { list-style: none; margin: 0; padding: 0; }
-        .items li { margin-bottom: 7px; }
+        .items li { margin-bottom: 7px; page-break-inside: avoid; break-inside: avoid; }
         .qty { font-size: 17px; font-weight: 700; min-width: 30px; }
         .name { font-size: 17px; font-weight: 700; }
         .veg { color: #000; }
@@ -116,6 +121,7 @@ export default async function KotPage({
         .note {
           margin-top: 2px; margin-left: 36px; padding: 2px 4px;
           font-weight: 700; border: 1px solid #000;
+          page-break-inside: avoid; break-inside: avoid;
         }
         .big-note { margin-left: 0; font-size: 14px; }
         footer .muted { margin-top: 3px; }

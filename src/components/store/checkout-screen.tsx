@@ -189,7 +189,7 @@ export function CheckoutScreen({ deliveryFeePaise, sourceRef, staffName }: { del
         {discount > 0 && (
           <div className="flex justify-between text-success"><span>Coupon {coupon?.code}</span><span>−{formatINR(discount, { decimals: true })}</span></div>
         )}
-        <div className="flex justify-between"><span className="text-muted">GST 5%</span><span>{formatINR(gst, { decimals: true })}</span></div>
+        {gst > 0 && <div className="flex justify-between"><span className="text-muted">GST 5%</span><span>{formatINR(gst, { decimals: true })}</span></div>}
         <div className="flex justify-between"><span className="text-muted">Delivery</span><span>{deliveryFeePaise ? formatINR(deliveryFeePaise) : "Free"}</span></div>
         <div className="h-px bg-line" />
         <div className="flex justify-between text-base font-bold"><span>To pay</span><span>{formatINR(total, { decimals: true })}</span></div>

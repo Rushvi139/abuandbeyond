@@ -27,7 +27,7 @@ export default function TermsPage() {
         {
           heading: "Prices and payment",
           body: [
-            "All prices are in Indian Rupees. Menu prices are shown before tax; 5% GST is added once at checkout, and the total you approve is the total you pay.",
+            "All prices are in Indian Rupees and include all applicable taxes. The total you approve at checkout is the total you pay — nothing is added afterwards.",
             "Payment is online, through our payment gateway. We never see or store your card or UPI details.",
           ],
         },

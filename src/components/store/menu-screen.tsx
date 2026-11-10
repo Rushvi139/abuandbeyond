@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { lineKey, useCart, type CartLine } from "@/hooks/use-cart";
-import { formatINR } from "@/lib/pricing";
+import { formatINR, gstRegistered, taxLine } from "@/lib/pricing";
 import { CUISINE_LABEL, type Category, type MenuItem } from "@/lib/menu/types";
 import { VegMark } from "./veg-mark";
 import { StoreNav } from "./store-nav";
@@ -100,7 +100,7 @@ export function MenuScreen({ categories, closingLabel, banners = [] }: { categor
         </h1>
         <div className="mt-4 flex flex-wrap items-center justify-between gap-2">
           <span className="text-[13px] text-muted">
-            {dishCount} dish{dishCount === 1 ? "" : "es"} · prices + 5% GST
+            {dishCount} dish{dishCount === 1 ? "" : "es"} · {taxLine().toLowerCase()}
           </span>
           <div className="flex gap-2" role="group" aria-label="Filter by veg or non-veg">
             <button
@@ -169,7 +169,7 @@ export function MenuScreen({ categories, closingLabel, banners = [] }: { categor
                 {cart.count} item{cart.count > 1 ? "s" : ""}
               </span>
               <span className="text-[17px] font-bold">
-                {formatINR(cart.subtotalPaise)} <span className="text-xs font-normal text-kraft">+ GST</span>
+                {formatINR(cart.subtotalPaise)}{gstRegistered() && <span className="text-xs font-normal text-kraft"> + GST</span>}
               </span>
             </div>
             <Link href="/checkout" className="flex h-12 items-center gap-2 rounded-[14px] bg-clay px-5 text-[15px] font-bold text-ink">

@@ -98,9 +98,22 @@ export function OrderCard({ order, riders, role, compact = false, dark = false }
           <a href={`tel:${order.customer.phone}`} className={`h-10 rounded-xl px-3 text-xs font-semibold leading-10 ${dark ? "bg-paper/15" : "bg-paper"}`}>Call {order.customer.phone.replace("+91", "")}</a>
         )}
         {canKitchen && <PrintButton orderId={order.id} printed={order.kotPrintedAt != null} />}
-        {order.lat && order.lng && (
-          <a href={`https://maps.google.com/?q=${order.lat},${order.lng}`} target="_blank" rel="noreferrer" className={`h-10 rounded-xl px-3 text-xs font-semibold leading-10 ${dark ? "bg-paper/15" : "bg-paper"}`}>Map</a>
-        )}
+        {/* Always offer directions. With a shared pin we route to the exact
+            coordinates; without one, to the property and landmark, which Maps
+            resolves well enough on this plateau. A rider on a bike should
+            never have to retype an address. */}
+        <a
+          href={`https://www.google.com/maps/dir/?api=1&travelmode=two-wheeler&destination=${encodeURIComponent(
+            order.lat != null && order.lng != null
+              ? `${order.lat},${order.lng}`
+              : [order.propertyName, order.roomOrLandmark, "Mount Abu, Rajasthan"].filter(Boolean).join(", "),
+          )}`}
+          target="_blank"
+          rel="noreferrer"
+          className={`h-10 rounded-xl px-3 text-xs font-semibold leading-10 ${dark ? "bg-paper/15" : "bg-paper"}`}
+        >
+          {order.lat != null && order.lng != null ? "Navigate · pinned" : "Navigate"}
+        </a>
         <span className={`ml-auto text-sm font-bold ${dark ? "text-kraft" : ""}`}>{formatINR(order.totalPaise)}</span>
       </footer>
       {err && <p className="text-xs font-semibold text-error">{err}</p>}

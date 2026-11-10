@@ -82,7 +82,7 @@ export default async function OrderPage({ params }: { params: Promise<{ code: st
             <span>{formatINR(l.linePaise)}</span>
           </div>
         ))}
-        <div className="mt-2 flex justify-between border-t border-line pt-2 font-bold"><span>Paid incl. GST</span><span>{formatINR(order.totalPaise, { decimals: true })}</span></div>
+        <div className="mt-2 flex justify-between border-t border-line pt-2 font-bold"><span>{order.gstPaise > 0 ? "Paid incl. GST" : "Paid"}</span><span>{formatINR(order.totalPaise, { decimals: true })}</span></div>
         <p className="mt-2 text-xs text-muted">Delivering to {[order.propertyName, order.roomOrLandmark].filter(Boolean).join(", ") || order.stayType}</p>
       </section>
 

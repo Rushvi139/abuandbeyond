@@ -29,7 +29,7 @@ export function MenuItemForm({ item, categories }: { item?: EditableItem; catego
       <input name="category" required list="cats" defaultValue={item?.category} placeholder="Category (pick or type a new one)" className={inp} />
       <datalist id="cats">{categories.map((c) => <option key={c} value={c} />)}</datalist>
       <select name="isVeg" defaultValue={item ? (item.isVeg ? "veg" : "nonveg") : "veg"} className={inp}><option value="veg">Veg</option><option value="nonveg">Non-veg</option></select>
-      <label className="flex items-center gap-2 text-sm">₹ <input name="priceInr" type="number" step="1" min="1" required defaultValue={item ? item.pricePaise / 100 : ""} placeholder="Price before GST" className={`${inp} flex-1`} /></label>
+      <label className="flex items-center gap-2 text-sm">₹ <input name="priceInr" type="number" step="1" min="1" required defaultValue={item ? item.pricePaise / 100 : ""} placeholder="Price on the menu" className={`${inp} flex-1`} /></label>
       <label className="flex items-center gap-2 text-sm">Pack ₹ <input name="packagingInr" type="number" step="0.1" min="0" defaultValue={item ? item.packagingPaise / 100 : 12} className={`${inp} flex-1`} /></label>
       <select name="station" defaultValue={item?.station ?? "wok_momos"} className={inp}>
         <option value="pizza_oven">Pizza & Oven</option><option value="wok_momos">Wok & Momos</option><option value="grill_rolls">Grill & Rolls</option><option value="fryer">Fryer</option><option value="cold_drinks">Cold & Drinks</option>
