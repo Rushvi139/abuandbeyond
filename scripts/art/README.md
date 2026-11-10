@@ -66,9 +66,8 @@ Keep it identical but for the subject, or the set stops matching:
 > no border, no frame, no circle. Single centred object on a plain flat cream
 > background. No photorealism, no gradients, no drop shadows.
 
-## Done so far
+## State
 
-margherita-pizza, veggies-pizza, four-cheese-pizza, pesto-pizza,
-arrabbiata-pasta, alfredo-pasta.
-
-Remaining: the other 25 in `db/seed/menu_items.csv`.
+All 31 dishes in `db/seed/menu_items.csv` have one. A new dish needs a new
+illustration, a composite and a line in `STICKER`; until it has one it falls
+back to its category sticker, so the menu never looks half-finished.
