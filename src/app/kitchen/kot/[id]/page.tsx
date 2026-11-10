@@ -44,6 +44,9 @@ export default async function KotPage({
             {date(o.createdAt)}
           </span>
         </div>
+        {o.paymentMode === "on_delivery" && (
+          <div className="scheduled">COLLECT {(o.totalPaise / 100).toLocaleString("en-IN")} — NOT PAID</div>
+        )}
         {o.scheduledFor && (
           <div className="scheduled">DELIVER AT {clockLabel(new Date(o.scheduledFor))}</div>
         )}

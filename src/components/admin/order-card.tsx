@@ -7,6 +7,7 @@ import { STATUS_LABEL, type OrderStatus } from "@/lib/orders/status";
 import { formatINR } from "@/lib/pricing";
 import { PrintButton } from "@/components/kitchen/auto-print";
 import { clockLabel } from "@/lib/hours";
+import { CollectButton } from "@/components/admin/collect-button";
 import { VegMark } from "@/components/store/veg-mark";
 
 const CUISINE: Record<string, string> = { abu: "ABU", italy: "ABU & ITALY", mexico: "ABU & MEXICO", china: "ABU & CHINA", lebanon: "ABU & LEBANON" };
@@ -70,6 +71,11 @@ export function OrderCard({ order, riders, role, compact = false, dark = false }
         ))}
       </ul>
       {order.notes && <p className={`rounded-xl px-3 py-2 text-[13px] ${dark ? "bg-paper/10" : "bg-paper"}`}>Delivery: {order.notes}</p>}
+      {order.paymentMode === "on_delivery" && !order.collectedAt && (
+        <p className="rounded-xl bg-acid px-3 py-2 text-[13px] font-bold uppercase tracking-wide text-ink">
+          Not paid · collect {formatINR(order.totalPaise)} at the door
+        </p>
+      )}
       {order.scheduledFor && (
         <p className="rounded-xl bg-hill px-3 py-2 text-[13px] font-bold uppercase tracking-wide text-reversed">
           Scheduled · deliver {scheduledLabel(order.scheduledFor)}
@@ -108,6 +114,13 @@ export function OrderCard({ order, riders, role, compact = false, dark = false }
           <a href={`tel:${order.customer.phone}`} className={`h-10 rounded-xl px-3 text-xs font-semibold leading-10 ${dark ? "bg-paper/15" : "bg-paper"}`}>Call {order.customer.phone.replace("+91", "")}</a>
         )}
         {canKitchen && <PrintButton orderId={order.id} printed={order.kotPrintedAt != null} />}
+        {/* Only whoever actually handles the money, and only once the food has
+            left the kitchen. A cook tapping this marks cash received that
+            nobody is holding, and the evening count never balances again. */}
+        {order.paymentMode === "on_delivery" && canRider &&
+          ["ready", "out_for_delivery", "delivered"].includes(order.status) && (
+          <CollectButton orderId={order.id} amountPaise={order.totalPaise} collected={order.collectedAt != null} />
+        )}
         {order.altPhone && (
           <a
             href={`tel:${order.altPhone}`}

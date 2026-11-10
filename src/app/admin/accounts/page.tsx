@@ -3,7 +3,7 @@ import { BillForm, ExpenseForm, PayBill } from "@/components/admin/accounts-form
 import { requireRole } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { formatINR } from "@/lib/pricing";
-import { spendByHead, vendorLedger } from "@/lib/admin/accounts-queries";
+import { spendByHead, uncollected, vendorLedger } from "@/lib/admin/accounts-queries";
 
 export const dynamic = "force-dynamic";
 
@@ -46,7 +46,7 @@ export default async function AccountsPage({ searchParams }: { searchParams: Pro
     where e.spent_on >= ${start}::date and e.spent_on < (${start}::date + interval '1 month') order by e.spent_on desc, e.created_at desc limit 100`;
   const categories = await sql<{ id: string; name: string }[]>`select id, name from expense_categories order by name`;
   const vendors = await sql<{ name: string }[]>`select name from vendors where active order by name`;
-  const [ledger, spend] = await Promise.all([vendorLedger(start), spendByHead(start)]);
+  const [ledger, spend, toCollect] = await Promise.all([vendorLedger(start), spendByHead(start), uncollected()]);
 
   // Outstanding is every unpaid bill, whenever it was raised — an October bill
   // we never settled is still money owed in November.
@@ -77,6 +77,14 @@ export default async function AccountsPage({ searchParams }: { searchParams: Pro
         <Stat label="Expenses" value={formatINR(tot.expenses)} />
         <Stat label="Left over" value={formatINR(tot.net - tot.bills - tot.expenses)} sub="sales − bills − expenses" tone={tot.net - tot.bills - tot.expenses < 0 ? "bad" : "good"} />
         <Stat label="Paid out" value={formatINR(paidMonth)} sub="to vendors this month" />
+        {toCollect.count > 0 && (
+          <Stat
+            label="To collect"
+            value={formatINR(toCollect.amountPaise)}
+            sub={`${toCollect.count} pay-on-delivery order${toCollect.count === 1 ? "" : "s"} not handed in`}
+            tone="warn"
+          />
+        )}
         <Stat
           label="Still owed"
           value={formatINR(duesTotal)}

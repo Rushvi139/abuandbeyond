@@ -44,6 +44,8 @@ export type OrderView = {
   kitchenNote: string | null;
   altPhone: string | null;
   scheduledFor: string | null;
+  paymentMode: "online" | "on_delivery";
+  collectedAt: string | null;
   customer: { id: string; name: string | null; phone: string };
   rider: { id: string; name: string } | null;
   lines: OrderLine[];
@@ -56,7 +58,7 @@ const base = (sql = db()) => sql`
     o.subtotal_paise as "subtotalPaise", o.gst_paise as "gstPaise", o.delivery_fee_paise as "deliveryFeePaise", o.total_paise as "totalPaise",
     o.prep_minutes as "prepMinutes", o.paid_at as "paidAt", o.delivered_at as "deliveredAt", o.created_at as "createdAt",
     o.gateway_order_id as "gatewayOrderId", o.kot_printed_at as "kotPrintedAt",
-    o.kitchen_note as "kitchenNote", o.alt_phone as "altPhone", o.scheduled_for as "scheduledFor", o.discount_paise as "discountPaise", o.promo_code as "promoCode",
+    o.kitchen_note as "kitchenNote", o.alt_phone as "altPhone", o.scheduled_for as "scheduledFor", o.payment_mode as "paymentMode", o.collected_at as "collectedAt", o.discount_paise as "discountPaise", o.promo_code as "promoCode",
     json_build_object('id', c.id, 'name', c.name, 'phone', c.phone) as customer,
     case when r.id is null then null else json_build_object('id', r.id, 'name', r.full_name) end as rider,
     coalesce((select json_agg(json_build_object(

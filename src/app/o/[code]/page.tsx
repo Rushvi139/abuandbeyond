@@ -30,7 +30,16 @@ export default async function OrderPage({ params }: { params: Promise<{ code: st
       <LiveStatus code={code} />
       <div className={`rounded-b-[28px] px-5 pb-7 pt-6 ${dead ? "bg-ink text-reversed" : "bg-clay"}`}>
         <div className="flex items-center justify-between">
-          <span className="text-[11px] font-bold uppercase tracking-[0.15em]">{dead ? STATUS_LABEL[order.status] : `Paid · ${formatINR(order.totalPaise, { decimals: true })}`}</span>
+          {/* "Paid" on a pay-on-delivery order is a lie the guest will notice
+              at the door, so say what they actually owe until they have
+              handed it over. */}
+          <span className="text-[11px] font-bold uppercase tracking-[0.15em]">
+            {dead
+              ? STATUS_LABEL[order.status]
+              : order.paymentMode === "on_delivery" && !order.collectedAt
+                ? `Pay ${formatINR(order.totalPaise, { decimals: true })} at the door`
+                : `Paid · ${formatINR(order.totalPaise, { decimals: true })}`}
+          </span>
           <Image src="/brand/ampersand-seal-acid.png" alt="" width={44} height={44} />
         </div>
         <h1 className="mt-2 font-display text-[46px] uppercase leading-[0.98]">
@@ -66,7 +75,9 @@ export default async function OrderPage({ params }: { params: Promise<{ code: st
                     {!last && <span className={`my-0.5 w-0.5 flex-1 ${state === "done" ? "bg-success" : "bg-line"}`} />}
                   </div>
                   <div className="flex flex-col gap-0.5 pt-0.5">
-                    <span className={`text-[15px] ${state === "next" ? "font-medium text-muted" : state === "now" ? "font-bold" : "font-semibold"}`}>{s.label}</span>
+                    <span className={`text-[15px] ${state === "next" ? "font-medium text-muted" : state === "now" ? "font-bold" : "font-semibold"}`}>
+                      {s.status === "paid" && order.paymentMode === "on_delivery" ? "Order placed" : s.label}
+                    </span>
                     <span className="text-xs text-muted">{ev ? t(ev.at) : s.sub}</span>
                   </div>
                 </li>
@@ -83,7 +94,12 @@ export default async function OrderPage({ params }: { params: Promise<{ code: st
             <span>{formatINR(l.linePaise)}</span>
           </div>
         ))}
-        <div className="mt-2 flex justify-between border-t border-line pt-2 font-bold"><span>{order.gstPaise > 0 ? "Paid incl. GST" : "Paid"}</span><span>{formatINR(order.totalPaise, { decimals: true })}</span></div>
+        <div className="mt-2 flex justify-between border-t border-line pt-2 font-bold"><span>{order.paymentMode === "on_delivery" ? (order.collectedAt ? "Paid on delivery" : "Pay on delivery") : order.gstPaise > 0 ? "Paid incl. GST" : "Paid"}</span><span>{formatINR(order.totalPaise, { decimals: true })}</span></div>
+        {order.paymentMode === "on_delivery" && !order.collectedAt && (
+          <p className="mt-2 rounded-xl bg-acid/40 px-3 py-2 text-[13px] font-semibold">
+            Please keep {formatINR(order.totalPaise, { decimals: true })} ready — cash or UPI to the rider.
+          </p>
+        )}
         {order.scheduledFor && (
           <p className="mt-2 rounded-xl bg-hill/15 px-3 py-2 text-[13px] font-semibold">
             Scheduled for {new Intl.DateTimeFormat("en-IN", { timeZone: "Asia/Kolkata", weekday: "short", hour: "numeric", minute: "2-digit", hour12: true }).format(new Date(order.scheduledFor))}

@@ -126,3 +126,13 @@ export async function vendorDetail(id: string) {
 
   return { vendor, bills, payments, expenses, byMonth };
 }
+
+/** Pay-on-delivery orders the rider hasn't handed in yet. */
+export async function uncollected() {
+  const [row] = await db()<{ n: number; amount: number }[]>`
+    select count(*)::int as n, coalesce(sum(total_paise), 0)::bigint as amount
+    from orders
+    where payment_mode = 'on_delivery' and collected_at is null and not is_demo
+      and status not in ('pending_payment', 'payment_failed', 'cancelled')`;
+  return { count: row?.n ?? 0, amountPaise: Number(row?.amount ?? 0) };
+}

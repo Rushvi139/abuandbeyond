@@ -1,10 +1,12 @@
 import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
 import { currentStaff } from "@/lib/auth";
+import { transition } from "@/lib/orders/transition";
 import { REFUSE_ORDERS_WHEN_CLOSED, hoursLine, serviceState } from "@/lib/hours";
 import { db } from "@/lib/db";
 import { CheckoutSchema, createOrder } from "@/lib/orders/create";
 import { cashfreeConfigured, cashfreeMode, createCashfreeOrder } from "@/lib/payments/cashfree";
+import { codAllowed } from "@/lib/orders/cod";
 import { rememberCustomer } from "@/lib/customers/session";
 
 export const runtime = "nodejs";
@@ -65,6 +67,24 @@ export async function POST(req: Request) {
       return NextResponse.json({
         ok: true,
         data: { code: order.code, number: order.number, amountPaise: order.totalPaise, demo: true },
+      });
+    }
+
+    // Pay on delivery: no gateway at all. The order is confirmed and goes to
+    // the kitchen straight away; the money is a separate fact, recorded when
+    // the rider actually collects it. `payment_mode` carries that distinction
+    // so the books never show cash we haven't got.
+    if (parsed.data.payOnDelivery) {
+      if (!(await codAllowed())) {
+        return NextResponse.json({ ok: false, error: { code: "cod_off", message: "Pay on delivery isn't available right now." } }, { status: 503 });
+      }
+      await transition(order.id, "paid", { note: "pay on delivery" });
+      revalidatePath("/admin");
+      revalidatePath("/kitchen");
+      revalidatePath("/rider");
+      return NextResponse.json({
+        ok: true,
+        data: { code: order.code, number: order.number, amountPaise: order.totalPaise, payOnDelivery: true },
       });
     }
 

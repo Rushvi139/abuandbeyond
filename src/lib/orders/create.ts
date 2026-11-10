@@ -20,6 +20,7 @@ export const CheckoutSchema = z.object({
   couponCode: z.string().trim().max(40).optional().or(z.literal("")),
   /** ISO instant for a scheduled delivery; empty or absent means as soon as possible. */
   scheduledFor: z.string().trim().max(40).optional().or(z.literal("")),
+  payOnDelivery: z.boolean().optional(),
   lines: z
     .array(
       z.object({
@@ -125,10 +126,10 @@ export async function createOrder(input: CheckoutInput, opts: { source?: string;
       : [];
     const [order] = await tx<{ id: string; order_code: string; order_number: number }[]>`insert into orders
       (customer_id, status, source, source_ref, property_id, stay_type, property_name, room_or_landmark, lat, lng, notes,
-       alt_phone, scheduled_for, subtotal_paise, discount_paise, promo_code, gst_paise, delivery_fee_paise, total_paise, created_by)
+       alt_phone, scheduled_for, payment_mode, subtotal_paise, discount_paise, promo_code, gst_paise, delivery_fee_paise, total_paise, created_by)
       values (${customer.id}, 'pending_payment', ${opts.source ?? "web"}, ${input.sourceRef ?? null}, ${property?.id ?? null},
         ${input.stayType}, ${input.propertyName || null}, ${input.roomOrLandmark || null}, ${input.lat ?? null}, ${input.lng ?? null},
-        ${input.notes || null}, ${input.altPhone ? "+91" + input.altPhone : null}, ${scheduledFor}, ${subtotal}, ${discount}, ${coupon?.code ?? null}, ${gst}, ${deliveryFee}, ${total}, ${opts.createdBy ?? null})
+        ${input.notes || null}, ${input.altPhone ? "+91" + input.altPhone : null}, ${scheduledFor}, ${input.payOnDelivery ? "on_delivery" : "online"}, ${subtotal}, ${discount}, ${coupon?.code ?? null}, ${gst}, ${deliveryFee}, ${total}, ${opts.createdBy ?? null})
       returning id, order_code, order_number`;
     for (const p of priced) {
       const [oi] = await tx<{ id: string }[]>`insert into order_items

@@ -29,7 +29,7 @@ declare global {
   }
 }
 
-export function CheckoutScreen({ deliveryFeePaise, sourceRef, staffName }: { deliveryFeePaise: number; sourceRef?: string; staffName?: string | null }) {
+export function CheckoutScreen({ deliveryFeePaise, sourceRef, staffName, paymentsOn = true, codOn = true }: { deliveryFeePaise: number; sourceRef?: string; staffName?: string | null; paymentsOn?: boolean; codOn?: boolean }) {
   const cart = useCart();
   const router = useRouter();
   const [name, setName] = useState("");
@@ -37,6 +37,7 @@ export function CheckoutScreen({ deliveryFeePaise, sourceRef, staffName }: { del
   const [altPhone, setAltPhone] = useState("");
   const open = useServiceOpen();
   const [scheduledFor, setScheduledFor] = useState("");
+  const [codBusy, setCodBusy] = useState(false);
   const [stay, setStay] = useState<Stay>("hotel");
   const [propertyName, setPropertyName] = useState("");
   const [room, setRoom] = useState("");
@@ -54,7 +55,7 @@ export function CheckoutScreen({ deliveryFeePaise, sourceRef, staffName }: { del
   const shut = open === false && !scheduledFor;
   const valid = name.trim().length >= 2 && /^[6-9]\d{9}$/.test(phone) && cart.lines.length > 0 && !shut;
 
-  async function pay(demo = false) {
+  async function pay(demo = false, payOnDelivery = false) {
     if (!valid || busy) return;
     setBusy(true);
     setError(null);
@@ -67,6 +68,7 @@ export function CheckoutScreen({ deliveryFeePaise, sourceRef, staffName }: { del
           couponCode: coupon?.code ?? "",
           scheduledFor,
           ...(demo ? { demo: true } : {}),
+          ...(payOnDelivery ? { payOnDelivery: true } : {}),
           ...(pin ? { lat: pin.lat, lng: pin.lng } : {}),
           lat: pin?.lat, lng: pin?.lng,
           lines: cart.lines.map((l) => ({ itemId: l.itemId, qty: l.qty, optionIds: l.options.map((o) => o.optionId), addonIds: l.addons.map((a) => a.addonId), note: l.note ?? "" })),
@@ -76,8 +78,9 @@ export function CheckoutScreen({ deliveryFeePaise, sourceRef, staffName }: { del
       if (!json.ok) throw new Error(json.error?.message ?? "Couldn't place the order");
       const d = json.data as { code: string; number: number; amountPaise: number; paymentSessionId: string; mode: "sandbox" | "production"; demo?: boolean };
 
-      // A demo order is already paid on the server; there is no gateway step.
-      if (d.demo) {
+      // Demo and pay-on-delivery orders are already confirmed on the server;
+      // neither has a gateway step to open.
+      if (d.demo || (d as { payOnDelivery?: boolean }).payOnDelivery) {
         cart.clear();
         router.push(`/o/${d.code}`);
         return;
@@ -235,7 +238,8 @@ export function CheckoutScreen({ deliveryFeePaise, sourceRef, staffName }: { del
       {error && <p role="alert" className="mt-3 rounded-xl bg-error/10 px-4 py-3 text-sm font-semibold text-error">{error}</p>}
 
       <div className="fixed inset-x-0 bottom-0 mx-auto max-w-md border-t border-line bg-paper px-3 pb-5 pt-3">
-        <button type="button" onClick={() => pay(false)} disabled={!valid || busy} className="flex h-[60px] w-full flex-col items-center justify-center rounded-[18px] bg-clay text-ink disabled:opacity-50">
+        {paymentsOn && (
+        <button type="button" onClick={() => { setCodBusy(false); pay(false); }} disabled={!valid || busy} className="flex h-[60px] w-full flex-col items-center justify-center rounded-[18px] bg-clay text-ink disabled:opacity-50">
           <span className="text-[17px] font-bold">
             {shut ? "Closed right now" : busy ? "Opening payment…" : `Pay ${formatINR(total, { decimals: true })}`}
           </span>
@@ -247,6 +251,30 @@ export function CheckoutScreen({ deliveryFeePaise, sourceRef, staffName }: { del
                 : "UPI · Card · Netbanking — secured by Cashfree"}
           </span>
         </button>
+        )}
+
+        {/* The way to take money with no gateway — and the backup when there
+            is one and it is down. The order is confirmed and cooked; the cash
+            is recorded separately when the rider actually has it. */}
+        {codOn && (
+        <button
+          type="button"
+          onClick={() => { setCodBusy(true); pay(false, true); }}
+          disabled={!valid || busy}
+          className={
+            paymentsOn
+              ? "mt-2 flex h-[52px] w-full flex-col items-center justify-center rounded-[16px] border-2 border-ink disabled:opacity-50"
+              : "flex h-[60px] w-full flex-col items-center justify-center rounded-[18px] bg-clay text-ink disabled:opacity-50"
+          }
+        >
+          <span className={paymentsOn ? "text-[15px] font-bold" : "text-[17px] font-bold"}>
+            {busy && codBusy ? "Placing your order…" : shut ? "Closed right now" : `Pay on delivery · ${formatINR(total, { decimals: true })}`}
+          </span>
+          <span className={`text-[11px] font-medium ${paymentsOn ? "text-muted" : ""}`}>
+            Cash or UPI to the rider at your door
+          </span>
+        </button>
+        )}
 
         {/* Staff only, and only visible because someone is signed in on this
             device. Walks the whole path — ticket, kitchen, rider — with no
