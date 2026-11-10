@@ -19,7 +19,9 @@ in Mount Abu. Next.js 15 + our own Postgres (Docker) + Cashfree + WhatsApp Cloud
 - `npm run lint`, `npm test` (Vitest)
 - `npm run db:migrate` — apply `db/migrations/*.sql` (needs DATABASE_URL)
 - `npm run db:seed` — load the live menu from `db/seed/*.csv`
-- On the server: `docker compose run --rm migrate` does both
+- On the server: `./deploy.sh` (backup, pull, build, migrate). The seed is
+  deliberate and separate: `docker compose run --rm seed`, only when the menu
+  CSV gained a dish. A deploy must never reset what the owner typed in /admin.
 
 ## Hard rules
 

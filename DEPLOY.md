@@ -10,13 +10,61 @@ SSH to the VPS, then:
 
 ```sh
 cd /opt/abuandbeyond
-git pull
-docker compose up -d --build
-docker compose run --rm migrate
+./deploy.sh
 ```
 
-That is it. The app keeps serving while the new image builds; the swap at the
-end costs a few seconds.
+That takes a backup first, pulls, rebuilds, migrates, and checks the site
+answers before telling you it worked. The app keeps serving while the new
+image builds; the swap at the end costs a few seconds.
+
+By hand, if you prefer:
+
+```sh
+docker compose run --rm backup-now     # dump + uploads tarball, right now
+git pull
+docker compose up -d --build
+docker compose run --rm migrate        # schema only
+```
+
+## What a deploy does to your data
+
+**Nothing, except add to the schema.** This is worth being precise about,
+because for one day it was not true.
+
+| Step | Touches your data? |
+|---|---|
+| `git pull`, `up --build` | No. Code and images only; the database is a volume. |
+| `run --rm migrate` | Adds tables and columns. Each migration runs once ever, in its own transaction, recorded in `schema_migrations`. |
+| `run --rm seed` | **Yes — only run it on purpose.** |
+
+Orders, customers, expenses, vendor bills, stays, coupons, stock movements and
+uploaded invoices are never written by a deploy. Keep typing into `/admin` and
+keep deploying; the two do not collide.
+
+### The seed is not part of a deploy
+
+`docker compose run --rm seed` loads `db/seed/*.csv`. It used to run inside the
+`migrate` service, which meant **every deploy reset menu prices, add-on prices
+and ingredient rates to the CSV** — four times in one day before anyone
+connected a price "not saving" to having just deployed.
+
+Now it is its own command, and even when you run it the file no longer wins:
+anything editable in `/admin` (name, category, station, cuisine, veg flag,
+price, packaging; add-on price; ingredient group, unit, rate) is left exactly
+as the kitchen set it. Only new rows and fields with no editor — pack kits,
+costing references, sort order — come from the file.
+
+Run it when you have **added dishes to the CSV**. You do not need it otherwise.
+
+To deliberately push the CSV over live values — a real bulk price change —
+`docker compose run --rm -e SEED_OVERWRITE=1 seed`. Take a backup first; that
+command is the one thing here that can undo an evening of edits.
+
+### Changing a price
+
+In `/admin` → Menu. That is the source of truth now, and it survives deploys.
+Change `db/seed/menu_items.csv` as well if you want a fresh database to start
+from the new price, but editing the CSV alone changes nothing on the server.
 
 ### Why `migrate` is a separate command
 
@@ -70,6 +118,12 @@ new nullable columns — so an older app keeps working against a newer database.
 Do not write a migration that drops or renames a column in use without a
 two-step plan, or this stops being true.
 
+That additive rule is what makes a code rollback safe on its own: the old image
+simply ignores the new column. If a release ever does need the database rolled
+back too, that is the pre-deploy dump in `./backups/predeploy-*`, and it costs
+you every order taken since — so prefer rolling the code back and fixing
+forward.
+
 ## What lives where
 
 | Thing | Where | Survives a rebuild? |
@@ -80,7 +134,9 @@ two-step plan, or this stops being true.
 | The app itself | image, rebuilt each deploy | n/a |
 
 The `backup` container dumps Postgres **and** tars the uploads volume once a
-day, keeping `BACKUP_KEEP_DAYS` (default 14). A database-only backup would
+day, keeping `BACKUP_KEEP_DAYS` (default 14), and `backup-now` takes the same
+pair on demand — which is what `deploy.sh` does before it changes anything, so
+the fallback is a dump from a minute ago rather than from last night. A database-only backup would
 restore the books with every receipt gone, which is why both are taken.
 
 Pull a copy down to your Mac now and then:
@@ -90,6 +146,11 @@ scp 'root@<vps>:/opt/abuandbeyond/backups/*' ~/Backups/abuandbeyond/
 ```
 
 ### Restoring
+
+Tested end to end on 10 Nov: dump, drop the database, restore. All orders,
+expenses, bills and stays came back, `schema_migrations` came back with them,
+and the next `run --rm migrate` was a no-op rather than re-running everything
+from 0001 — which is the part that would hurt.
 
 ```sh
 gunzip -c backups/abuandbeyond-2026-11-09_0200.sql.gz | \

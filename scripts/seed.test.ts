@@ -51,8 +51,22 @@ describe("seed", () => {
     expect(src).toContain('process.env.SEED_OVERWRITE === "1"');
   });
 
-  it("does not turn the guard on for itself", () => {
+  it("is never switched on by the compose file", () => {
+    // Mentioning it in a comment is fine and useful; setting it is the bug,
+    // because then every deploy pushes the CSV over live prices again.
+    const set = readFileSync(join(process.cwd(), "docker-compose.yml"), "utf8")
+      .split("\n")
+      .filter((l) => !l.trim().startsWith("#"))
+      .filter((l) => /SEED_OVERWRITE\s*[:=]/.test(l));
+    expect(set, "docker-compose.yml sets SEED_OVERWRITE").toEqual([]);
+  });
+
+  it("does not seed on deploy", () => {
+    // The migrate service is what a deploy runs. The seed is the only thing
+    // that can overwrite the menu, so it must be a separate, deliberate run.
     const compose = readFileSync(join(process.cwd(), "docker-compose.yml"), "utf8");
-    expect(compose).not.toContain("SEED_OVERWRITE");
+    const migrate = compose.slice(compose.indexOf("\n  migrate:"), compose.indexOf("\n  seed:"));
+    expect(migrate).toContain("db:migrate");
+    expect(migrate, "the migrate service runs the seed again").not.toContain("db:seed");
   });
 });

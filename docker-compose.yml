@@ -98,7 +98,57 @@ services:
     depends_on:
       db:
         condition: service_healthy
-    command: ["sh", "-c", "npm run db:migrate && npm run db:seed"]
+    # Migrations only. The seed used to run here too, which meant every
+    # deploy silently reset menu prices, add-on prices and ingredient rates
+    # to the CSV — four times in one day before anyone connected the two.
+    # Loading the menu is a deliberate act now: `compose run --rm seed`.
+    command: ["sh", "-c", "npm run db:migrate"]
+
+  # Loads db/seed/*.csv. Run it on a fresh database, or after editing the CSV.
+  # It inserts what is missing and leaves everything the owner edits alone;
+  # SEED_OVERWRITE=1 is the deliberate "push the file over live data".
+  seed:
+    profiles: ["tools"]
+    build:
+      context: .
+      target: tools
+    env_file: .env
+    environment:
+      DATABASE_URL: *db-url
+    volumes:
+      - ./db:/app/db:ro
+      - ./scripts:/app/scripts:ro
+    depends_on:
+      db:
+        condition: service_healthy
+    command: ["sh", "-c", "npm run db:seed"]
+
+  # One dump, now, rather than waiting for the nightly loop. The deploy script
+  # runs this before it touches anything.
+  backup-now:
+    profiles: ["tools"]
+    image: postgres:16-alpine
+    env_file: .env
+    environment:
+      PGHOST: db
+      PGUSER: ${POSTGRES_USER:-abu}
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+      PGDATABASE: ${POSTGRES_DB:-abuandbeyond}
+      TZ: Asia/Kolkata
+    volumes:
+      - ./backups:/backups
+      - uploads:/uploads:ro
+    depends_on:
+      db:
+        condition: service_healthy
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        stamp=$$(date +%Y-%m-%d_%H%M%S)
+        pg_dump --no-owner | gzip > /backups/predeploy-$$stamp.sql.gz || exit 1
+        tar czf /backups/predeploy-uploads-$$stamp.tar.gz -C /uploads . || exit 1
+        ls -lh /backups/predeploy-$$stamp.sql.gz
+        echo "pre-deploy backup taken: predeploy-$$stamp"
 
   caddy:
     profiles: ["caddy"]
