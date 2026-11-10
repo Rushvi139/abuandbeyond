@@ -5,6 +5,7 @@ import { logout, requireRole } from "@/lib/auth";
 import { AdminNav } from "@/components/admin/nav";
 
 export const dynamic = "force-dynamic";
+export const metadata = { robots: { index: false, follow: false } };
 
 async function signOut() {
   "use server";

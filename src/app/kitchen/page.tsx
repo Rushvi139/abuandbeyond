@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import { OrderCard } from "@/components/admin/order-card";
 import { StaffLive } from "@/components/admin/live";
 import { Batching } from "@/components/admin/batching";
@@ -39,9 +40,9 @@ export default async function KitchenPage({ searchParams }: { searchParams: Prom
         <span className={`rounded-full px-3 py-1 text-sm font-bold ${fresh ? "bg-acid text-ink" : "bg-paper/15"}`}>{fresh} new</span>
         <AutoPrint orderIds={all.filter((o) => o.status === "paid" && dueNow(o)).map((o) => o.id)} />
         <nav className="ml-auto flex gap-1.5 overflow-x-auto">
-          <a href="/kitchen" className={`h-9 flex-none rounded-full px-3 text-sm leading-9 ${!station ? "bg-paper text-ink font-semibold" : "bg-paper/15"}`}>All</a>
+          <Link href="/kitchen" className={`h-9 flex-none rounded-full px-3 text-sm leading-9 ${!station ? "bg-paper text-ink font-semibold" : "bg-paper/15"}`}>All</Link>
           {Object.entries(STATIONS).map(([id, name]) => (
-            <a key={id} href={`/kitchen?station=${id}`} className={`h-9 flex-none rounded-full px-3 text-sm leading-9 ${station === id ? "bg-paper text-ink font-semibold" : "bg-paper/15"}`}>{name}</a>
+            <Link key={id} href={`/kitchen?station=${id}`} className={`h-9 flex-none rounded-full px-3 text-sm leading-9 ${station === id ? "bg-paper text-ink font-semibold" : "bg-paper/15"}`}>{name}</Link>
           ))}
         </nav>
       </header>
