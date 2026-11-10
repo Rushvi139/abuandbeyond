@@ -6,6 +6,7 @@ import type { OrderView } from "@/lib/orders/queries";
 import { STATUS_LABEL, type OrderStatus } from "@/lib/orders/status";
 import { formatINR } from "@/lib/pricing";
 import { PrintButton } from "@/components/kitchen/auto-print";
+import { clockLabel } from "@/lib/hours";
 import { VegMark } from "@/components/store/veg-mark";
 
 const CUISINE: Record<string, string> = { abu: "ABU", italy: "ABU & ITALY", mexico: "ABU & MEXICO", china: "ABU & CHINA", lebanon: "ABU & LEBANON" };
@@ -30,7 +31,11 @@ export function OrderCard({ order, riders, role, compact = false, dark = false }
   const canManage = ["owner", "manager"].includes(role);
 
   return (
-    <article className={`flex flex-col gap-3 rounded-2xl p-4 ${dark ? "bg-ink text-reversed" : "bg-surface"} ${pending ? "opacity-60" : ""}`}>
+    <article
+      className={`flex flex-col gap-3 rounded-2xl p-4 ${dark ? "bg-ink text-reversed" : "bg-surface"} ${
+        pending ? "opacity-60" : ""
+      } ${order.scheduledFor ? "ring-2 ring-hill" : ""}`}
+    >
       <header className="flex items-start justify-between gap-2">
         <div>
           <div className="flex items-center gap-2">
@@ -65,6 +70,11 @@ export function OrderCard({ order, riders, role, compact = false, dark = false }
         ))}
       </ul>
       {order.notes && <p className={`rounded-xl px-3 py-2 text-[13px] ${dark ? "bg-paper/10" : "bg-paper"}`}>Delivery: {order.notes}</p>}
+      {order.scheduledFor && (
+        <p className="rounded-xl bg-hill px-3 py-2 text-[13px] font-bold uppercase tracking-wide text-reversed">
+          Scheduled · deliver {scheduledLabel(order.scheduledFor)}
+        </p>
+      )}
       {order.kitchenNote && (
         <p className={`rounded-xl px-3 py-2 text-[13px] font-semibold ${dark ? "bg-acid text-ink" : "bg-acid/30"}`}>Note: {order.kitchenNote}</p>
       )}
@@ -128,4 +138,12 @@ export function OrderCard({ order, riders, role, compact = false, dark = false }
       {err && <p className="text-xs font-semibold text-error">{err}</p>}
     </article>
   );
+}
+
+/** "9:30 PM", or "tomorrow 1:00 PM" when it is not today in Kolkata. */
+function scheduledLabel(iso: string): string {
+  const at = new Date(iso);
+  const day = (d: Date) => new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Kolkata" }).format(d);
+  const prefix = day(at) === day(new Date()) ? "" : "tomorrow ";
+  return prefix + clockLabel(at);
 }

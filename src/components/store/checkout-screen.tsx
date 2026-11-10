@@ -8,6 +8,7 @@ import { useCart } from "@/hooks/use-cart";
 import { formatINR, gstOn } from "@/lib/pricing";
 import { CouponField, type Applied } from "@/components/store/coupon-field";
 import { ClosedNotice, useServiceOpen } from "@/components/store/service-gate";
+import { WhenPicker } from "@/components/store/when-picker";
 import { LocationPin, type Pin } from "./location-pin";
 import { VegMark } from "./veg-mark";
 
@@ -35,6 +36,7 @@ export function CheckoutScreen({ deliveryFeePaise, sourceRef, staffName }: { del
   const [phone, setPhone] = useState("");
   const [altPhone, setAltPhone] = useState("");
   const open = useServiceOpen();
+  const [scheduledFor, setScheduledFor] = useState("");
   const [stay, setStay] = useState<Stay>("hotel");
   const [propertyName, setPropertyName] = useState("");
   const [room, setRoom] = useState("");
@@ -49,7 +51,7 @@ export function CheckoutScreen({ deliveryFeePaise, sourceRef, staffName }: { del
   const discount = coupon?.discountPaise ?? 0;
   const gst = gstOn(cart.subtotalPaise - discount);
   const total = cart.subtotalPaise - discount + gst + deliveryFeePaise;
-  const shut = open === false;
+  const shut = open === false && !scheduledFor;
   const valid = name.trim().length >= 2 && /^[6-9]\d{9}$/.test(phone) && cart.lines.length > 0 && !shut;
 
   async function pay(demo = false) {
@@ -63,6 +65,7 @@ export function CheckoutScreen({ deliveryFeePaise, sourceRef, staffName }: { del
         body: JSON.stringify({
           name, phone, altPhone, stayType: stay, propertyName, roomOrLandmark: room, notes, sourceRef,
           couponCode: coupon?.code ?? "",
+          scheduledFor,
           ...(demo ? { demo: true } : {}),
           ...(pin ? { lat: pin.lat, lng: pin.lng } : {}),
           lat: pin?.lat, lng: pin?.lng,
@@ -211,6 +214,10 @@ export function CheckoutScreen({ deliveryFeePaise, sourceRef, staffName }: { del
       <ClosedNotice />
 
       <section className="mt-5">
+        <WhenPicker value={scheduledFor} onChange={setScheduledFor} />
+      </section>
+
+      <section className="mt-5">
         <CouponField subtotalPaise={cart.subtotalPaise} phone={phone} applied={coupon} onChange={setCoupon} />
       </section>
 
@@ -233,7 +240,11 @@ export function CheckoutScreen({ deliveryFeePaise, sourceRef, staffName }: { del
             {shut ? "Closed right now" : busy ? "Opening payment…" : `Pay ${formatINR(total, { decimals: true })}`}
           </span>
           <span className="text-xs font-medium">
-            {shut ? "We'll take your order when we open" : "UPI · Card · Netbanking — secured by Cashfree"}
+            {shut
+              ? "Pick a delivery time above to order ahead"
+              : scheduledFor
+                ? "Scheduled delivery · UPI · Card · Netbanking"
+                : "UPI · Card · Netbanking — secured by Cashfree"}
           </span>
         </button>
 

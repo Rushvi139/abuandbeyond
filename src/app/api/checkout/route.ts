@@ -27,13 +27,18 @@ export async function POST(req: Request) {
   // The real guard is here, not on the button. Taking money for food nobody
   // is in the kitchen to cook means a refund and a guest who waited. Staff
   // demos are exempt, so the flow can be tested at any hour.
-  if (REFUSE_ORDERS_WHEN_CLOSED && !wantsDemo) {
+  // A scheduled order is explicitly for a slot we are open, so being shut
+  // right now is no reason to turn it away — it is the reason to offer it.
+  if (REFUSE_ORDERS_WHEN_CLOSED && !wantsDemo && !parsed.data.scheduledFor) {
     const state = serviceState();
     if (!state.open) {
       return NextResponse.json(
         {
           ok: false,
-          error: { code: "closed", message: `The kitchen is closed — we open at ${state.opensAt}. We cook ${hoursLine()}.` },
+          error: {
+            code: "closed",
+            message: `The kitchen is closed — we open at ${state.opensAt}. Pick a delivery time to order ahead. We cook ${hoursLine()}.`,
+          },
         },
         { status: 409 },
       );

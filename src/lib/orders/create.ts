@@ -3,6 +3,7 @@ import { z } from "zod";
 import type { Sql } from "postgres";
 import { db } from "@/lib/db";
 import { checkCoupon } from "@/lib/orders/coupons";
+import { isBookableSlot } from "@/lib/hours";
 import { gstOn } from "@/lib/pricing";
 
 export const CheckoutSchema = z.object({
@@ -17,6 +18,8 @@ export const CheckoutSchema = z.object({
   notes: z.string().trim().max(300).optional().or(z.literal("")),
   sourceRef: z.string().trim().max(60).optional(),
   couponCode: z.string().trim().max(40).optional().or(z.literal("")),
+  /** ISO instant for a scheduled delivery; empty or absent means as soon as possible. */
+  scheduledFor: z.string().trim().max(40).optional().or(z.literal("")),
   lines: z
     .array(
       z.object({
@@ -85,6 +88,16 @@ export async function createOrder(input: CheckoutInput, opts: { source?: string;
   const deliveryFee = Number(feeJson) || 0;
   const phone = "+91" + input.phone;
 
+  // Re-checked here against the kitchen's own clock. A slot the browser
+  // offered ten minutes ago may no longer have the lead time, and the value
+  // itself arrives from a form, so it is never trusted as given.
+  let scheduledFor: Date | null = null;
+  if (input.scheduledFor) {
+    const at = new Date(input.scheduledFor);
+    if (!isBookableSlot(at)) throw new Error("That delivery time has passed. Pick another slot.");
+    scheduledFor = at;
+  }
+
   return sql.begin(async (tx) => {
     // The coupon is re-checked here, inside the transaction, against the price
     // the server just worked out. Whatever the browser said the discount was
@@ -112,10 +125,10 @@ export async function createOrder(input: CheckoutInput, opts: { source?: string;
       : [];
     const [order] = await tx<{ id: string; order_code: string; order_number: number }[]>`insert into orders
       (customer_id, status, source, source_ref, property_id, stay_type, property_name, room_or_landmark, lat, lng, notes,
-       alt_phone, subtotal_paise, discount_paise, promo_code, gst_paise, delivery_fee_paise, total_paise, created_by)
+       alt_phone, scheduled_for, subtotal_paise, discount_paise, promo_code, gst_paise, delivery_fee_paise, total_paise, created_by)
       values (${customer.id}, 'pending_payment', ${opts.source ?? "web"}, ${input.sourceRef ?? null}, ${property?.id ?? null},
         ${input.stayType}, ${input.propertyName || null}, ${input.roomOrLandmark || null}, ${input.lat ?? null}, ${input.lng ?? null},
-        ${input.notes || null}, ${input.altPhone ? "+91" + input.altPhone : null}, ${subtotal}, ${discount}, ${coupon?.code ?? null}, ${gst}, ${deliveryFee}, ${total}, ${opts.createdBy ?? null})
+        ${input.notes || null}, ${input.altPhone ? "+91" + input.altPhone : null}, ${scheduledFor}, ${subtotal}, ${discount}, ${coupon?.code ?? null}, ${gst}, ${deliveryFee}, ${total}, ${opts.createdBy ?? null})
       returning id, order_code, order_number`;
     for (const p of priced) {
       const [oi] = await tx<{ id: string }[]>`insert into order_items
@@ -132,6 +145,6 @@ export async function createOrder(input: CheckoutInput, opts: { source?: string;
         values (${coupon.id}, ${order.id}, ${customer.id}, ${discount})`;
     }
     await tx`insert into order_status_events (order_id, from_status, to_status) values (${order.id}, null, 'pending_payment')`;
-    return { id: order.id, code: order.order_code, number: order.order_number, totalPaise: total, discountPaise: discount, promoCode: coupon?.code ?? null, customerName: input.name, phone, customerId: customer.id };
+    return { id: order.id, code: order.order_code, number: order.order_number, totalPaise: total, scheduledFor, discountPaise: discount, promoCode: coupon?.code ?? null, customerName: input.name, phone, customerId: customer.id };
   });
 }

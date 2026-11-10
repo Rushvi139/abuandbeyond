@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { PrintOnLoad } from "@/components/kitchen/print-on-load";
 import { requireRole } from "@/lib/auth";
+import { clockLabel } from "@/lib/hours";
 import { getOrderById } from "@/lib/orders/queries";
 
 export const dynamic = "force-dynamic";
@@ -43,6 +44,9 @@ export default async function KotPage({
             {date(o.createdAt)}
           </span>
         </div>
+        {o.scheduledFor && (
+          <div className="scheduled">DELIVER AT {clockLabel(new Date(o.scheduledFor))}</div>
+        )}
         <div className="muted">
           {o.stayType.toUpperCase()}
           {o.isDemo && " · DEMO"}
@@ -110,6 +114,13 @@ export default async function KotPage({
         .big { font-size: 30px; font-weight: 700; line-height: 1; }
         .muted { font-size: 11px; text-transform: uppercase; letter-spacing: .04em; }
         .where { margin-top: 2px; font-size: 14px; font-weight: 700; }
+        /* Inverted, because a cook holding this at the pass must not start a
+           scheduled order early. It is the one thing on the ticket that
+           changes what they do right now. */
+        .scheduled {
+          margin: 3px 0; padding: 3px 5px; background: #000; color: #fff;
+          font-size: 15px; font-weight: 700; letter-spacing: .02em;
+        }
         hr { border: 0; border-top: 1px dashed #000; margin: 6px 0; }
         .items { list-style: none; margin: 0; padding: 0; }
         .items li { margin-bottom: 7px; page-break-inside: avoid; break-inside: avoid; }

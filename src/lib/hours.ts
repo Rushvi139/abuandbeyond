@@ -74,3 +74,60 @@ export function serviceState(now: Date = new Date()): ServiceState {
   const at = SERVICE.find((w) => mins(w.from) === next % DAY)!;
   return { open: false, opensAt: pretty(at.from), closesAt: null };
 }
+
+/** How long before a slot we stop offering it — the kitchen needs the lead. */
+export const SLOT_LEAD_MINUTES = 45;
+/** Slot granularity. */
+const SLOT_STEP = 30;
+
+export type Slot = { value: string; label: string; day: "Today" | "Tomorrow" };
+
+/**
+ * The times a guest may actually choose: half-hour slots inside a service
+ * window, far enough ahead that the kitchen can cook it, up to a day out.
+ *
+ * Built by walking forward in half hours and asking `serviceState` whether
+ * each instant is inside a window — so the midnight wrap is handled by the
+ * one piece of logic that already has tests, rather than by a second copy of
+ * the same arithmetic.
+ */
+export function upcomingSlots(now: Date = new Date(), hoursAhead = 30): Slot[] {
+  const first = new Date(now.getTime() + SLOT_LEAD_MINUTES * 60_000);
+  // Round up to the next half hour.
+  first.setSeconds(0, 0);
+  const over = first.getMinutes() % SLOT_STEP;
+  if (over) first.setMinutes(first.getMinutes() + (SLOT_STEP - over));
+
+  const today = dayKey(now);
+  const out: Slot[] = [];
+  for (let i = 0; i <= (hoursAhead * 60) / SLOT_STEP; i++) {
+    const t = new Date(first.getTime() + i * SLOT_STEP * 60_000);
+    if (!serviceState(t).open) continue;
+    out.push({
+      value: t.toISOString(),
+      label: clockLabel(t),
+      day: dayKey(t) === today ? "Today" : "Tomorrow",
+    });
+  }
+  return out;
+}
+
+/** Whether an instant is a slot we would have offered. Re-checked server-side. */
+export function isBookableSlot(at: Date, now: Date = new Date()): boolean {
+  if (Number.isNaN(at.getTime())) return false;
+  if (at.getTime() < now.getTime() + (SLOT_LEAD_MINUTES - SLOT_STEP) * 60_000) return false;
+  if (at.getTime() > now.getTime() + 36 * 60 * 60_000) return false;
+  return serviceState(at).open;
+}
+
+/** "9:30 PM" in Kolkata. */
+export function clockLabel(at: Date): string {
+  return new Intl.DateTimeFormat("en-IN", {
+    timeZone: "Asia/Kolkata", hour: "numeric", minute: "2-digit", hour12: true,
+  }).format(at).toUpperCase().replace(/\s+/g, " ");
+}
+
+/** The Kolkata calendar day, for telling today from tomorrow. */
+function dayKey(at: Date): string {
+  return new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Kolkata" }).format(at);
+}

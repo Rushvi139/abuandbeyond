@@ -84,6 +84,11 @@ export default async function OrderPage({ params }: { params: Promise<{ code: st
           </div>
         ))}
         <div className="mt-2 flex justify-between border-t border-line pt-2 font-bold"><span>{order.gstPaise > 0 ? "Paid incl. GST" : "Paid"}</span><span>{formatINR(order.totalPaise, { decimals: true })}</span></div>
+        {order.scheduledFor && (
+          <p className="mt-2 rounded-xl bg-hill/15 px-3 py-2 text-[13px] font-semibold">
+            Scheduled for {new Intl.DateTimeFormat("en-IN", { timeZone: "Asia/Kolkata", weekday: "short", hour: "numeric", minute: "2-digit", hour12: true }).format(new Date(order.scheduledFor))}
+          </p>
+        )}
         <p className="mt-2 text-xs text-muted">Delivering to {[order.propertyName, order.roomOrLandmark].filter(Boolean).join(", ") || order.stayType}</p>
       </section>
 

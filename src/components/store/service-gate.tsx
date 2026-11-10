@@ -37,8 +37,7 @@ export function ClosedNotice() {
     <div className="mt-5 rounded-[18px] bg-ink p-4 text-reversed">
       <p className="font-display text-[20px] uppercase leading-none">The kitchen is closed</p>
       <p className="mt-1.5 text-[15px]">
-        We open at <b>{state.opensAt}</b>. Build your order now and it will be here waiting — we just can&apos;t take payment
-        until the pans are on.
+        We open at <b>{state.opensAt}</b>. Pick a delivery time below and we&apos;ll have it ready for you then.
       </p>
       <p className="mt-1 text-[13px] opacity-70">We cook {hoursLine()}.</p>
     </div>
