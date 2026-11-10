@@ -13,7 +13,22 @@ import { StoreNav } from "./store-nav";
 import { BannerStrip, type Banner } from "./banner-strip";
 
 // Sticker artwork from the brand sticker sheet, by category slug (or item slug), else a coloured cuisine tile.
+/**
+ * Dish slug first, category slug second — the lookup below tries the item's
+ * own slug before falling back to its category, so a dish with its own
+ * roundel gets it and the rest still have something that doesn't look
+ * unfinished. Add a file to stickers/dishes/ and a line here.
+ */
 const STICKER: Record<string, string> = {
+  // Per dish.
+  "margherita-pizza": "/brand/stickers/dishes/margherita-pizza.png",
+  "veggies-pizza": "/brand/stickers/dishes/veggies-pizza.png",
+  "four-cheese-pizza": "/brand/stickers/dishes/four-cheese-pizza.png",
+  "pesto-pizza": "/brand/stickers/dishes/pesto-pizza.png",
+  "arrabbiata-pasta": "/brand/stickers/dishes/arrabbiata-pasta.png",
+  "alfredo-pasta": "/brand/stickers/dishes/alfredo-pasta.png",
+
+  // Per category, for everything without its own yet.
   pizza: "/brand/stickers/pizza.png",
   pasta: "/brand/stickers/pasta.png",
   "laffa-rolls": "/brand/stickers/rolls.png",
