@@ -72,8 +72,13 @@ export async function POST(req: Request) {
       }
     }
   } catch (e) {
-    console.error("cashfree webhook handling failed", e);
-    // 200 anyway: the event is recorded, and a retry would hit the same error
+    // The idempotency row was written before the work, so leaving it in place
+    // would make Cashfree's retry look like a duplicate and the payment would
+    // be lost for good. Give the key back and ask them to try again; markPaid
+    // is idempotent, so a retry that succeeds twice is harmless.
+    console.error("cashfree webhook handling failed, releasing for retry", e);
+    await sql`delete from webhook_events where id = ${eventId}`.catch(() => {});
+    return NextResponse.json({ ok: false }, { status: 500 });
   }
   return NextResponse.json({ ok: true });
 }

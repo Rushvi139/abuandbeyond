@@ -116,6 +116,30 @@ services:
       - caddy_data:/data
       - caddy_config:/config
 
+  # Every couple of minutes, ask Cashfree about any order still sitting
+  # unpaid. The webhook and the return-path check both miss sometimes — a
+  # guest who pays and closes the tab, a webhook that never arrives — and
+  # without this the money is taken while the kitchen never sees the order.
+  reconcile:
+    image: curlimages/curl:8.11.1
+    depends_on:
+      - app
+    environment:
+      SECRET: ${INTERNAL_SECRET:-}
+      FALLBACK: ${SESSION_SECRET:?set SESSION_SECRET in .env}
+    restart: unless-stopped
+    entrypoint: ["sh", "-c"]
+    command:
+      - |
+        KEY="$${SECRET:-$$FALLBACK}"
+        sleep 30
+        while true; do
+          curl -fsS -X POST http://app:3000/api/payments/reconcile \
+            -H "x-internal-secret: $$KEY" > /dev/null \
+            || echo "reconcile call failed"
+          sleep 120
+        done
+
 volumes:
   pgdata:
   uploads:
