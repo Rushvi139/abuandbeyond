@@ -183,3 +183,22 @@ one signs.
 
 Nothing is live until a payment has actually gone through. Sandbox UPI
 `testsuccess@gocash` is the two-minute version of that test.
+
+## WhatsApp (Meta Cloud API)
+
+Order updates and replies go through the Cloud API; nothing sends until these
+are in the server `.env` (then `./deploy.sh`):
+
+| Variable | Where it comes from |
+|---|---|
+| `WHATSAPP_PHONE_NUMBER_ID` | WhatsApp Manager → API setup |
+| `WHATSAPP_ACCESS_TOKEN` | a **system-user permanent token** (not the 24-hour test token) |
+| `WHATSAPP_VERIFY_TOKEN` | any long random string you invent; paste the same one into Meta |
+| `WHATSAPP_APP_SECRET` | Meta app → Settings → Basic → App secret |
+
+1. Submit the four templates (`npm run wa:templates` prints them) and wait for approval.
+2. In the Meta app → WhatsApp → Configuration, set the callback URL to
+   `https://abuandbeyond.in/api/whatsapp/webhook`, the verify token above, and
+   subscribe to the **messages** field. Meta calls it once to check the token.
+3. The webhook rejects any request whose signature does not match the app
+   secret, so an unset `WHATSAPP_APP_SECRET` means replies are refused, by design.

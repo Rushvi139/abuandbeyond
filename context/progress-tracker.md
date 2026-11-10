@@ -309,6 +309,20 @@ Update this file after every meaningful implementation change.
 - Bug found while verifying: payload was stored as a JSON *string*, which
   would have sent templates with no variables. Now `sql.json`.
 
+### WhatsApp inbound (unit 13) — built, not yet live
+
+- `GET/POST /api/whatsapp/webhook`: verify-token handshake; POST rejected
+  unless `X-Hub-Signature-256` matches `WHATSAPP_APP_SECRET`. Always 200 after
+  that so Meta never replays a poison message.
+- Guest messages stored as `direction='in'` (migration 0024, unique provider
+  id = Meta's retries are no-ops). Replies are queued through the same outbox:
+  TRACK → latest order link, "same again" → last order's items + menu link,
+  anything else → menu, hours, how to track. STOP / START flip
+  `customers.whatsapp_opt_in`. Max 5 replies per number per 10 minutes.
+- Delivery receipts move our sent rows on to delivered / read / failed, never
+  backwards.
+- Reorder is a text summary plus the menu link, not a pre-filled cart.
+
 ## In Progress
 
 - None.
@@ -331,7 +345,7 @@ Phase 2 — Kitchen and WhatsApp
 10. ~~Kitchen Display~~ done
 11. ~~Rider view~~ done
 12. WhatsApp sender + templates + status notifications
-13. WhatsApp inbound webhook auto-reply (menu link, track, reorder last order)
+13. ~~WhatsApp inbound webhook auto-reply (menu link, track, reorder last order)~~ built — see Completed; needs Meta setup (DEPLOY.md)
 13x. Reorder in WhatsApp: delivered message's "Order again" sends a
      Razorpay `order_details` payment request in the chat; paid → same pipeline
 
@@ -369,9 +383,8 @@ Phase 5 — Full WhatsApp ordering (deferred)
   `WHATSAPP_PHONE_NUMBER_ID` and `WHATSAPP_ACCESS_TOKEN` in the server `.env`;
   then `./deploy.sh` to start the `whatsapp` service. Until then every row is
   `skipped` and nothing is sent. First real send needs the owner's go-ahead.
-- Not started, needs confirming: inbound webhook (verify token, signature
-  check, auto-reply, reorder) and a WhatsApp one-time-code order lookup to
-  replace phone + order number.
+- Not started, needs confirming: a WhatsApp one-time-code (or magic-link)
+  order lookup to replace phone + order number, and a pre-filled reorder cart.
 
 - SEO, owner-side: verify abuandbeyond.in in Google Search Console (DNS TXT
   record at the domain registrar), submit /sitemap.xml, and create the Google
