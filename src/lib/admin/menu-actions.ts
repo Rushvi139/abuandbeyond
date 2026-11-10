@@ -5,6 +5,7 @@ import { z } from "zod";
 import { MANAGERS, assertRole } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { saveUpload } from "@/lib/files";
+import { titleCase } from "@/lib/text";
 
 const slugify = (s: string) => s.toLowerCase().replace(/&/g, "and").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 60);
 
@@ -25,6 +26,7 @@ const ItemSchema = z.object({
 export async function saveMenuItem(formData: FormData) {
   await assertRole(MANAGERS);
   const d = ItemSchema.parse(Object.fromEntries(formData));
+  d.category = titleCase(d.category);
   const photo = formData.get("photo");
   const sql = db();
   const imagePath = photo instanceof File && photo.size > 0 ? "/files/" + (await saveUpload(photo, "menu")) : null;
@@ -126,6 +128,29 @@ export async function saveAddon(formData: FormData) {
 export async function retireAddon(id: string) {
   await assertRole(MANAGERS);
   await db()`update addons set active = false where id = ${id}`;
+  revalidatePath("/admin/menu");
+  revalidatePath("/");
+}
+
+
+/**
+ * Moves a category one place up or down the guest menu.
+ *
+ * Positions are renumbered 1..n first, so a gap or a tie left by older data
+ * can never make a move do nothing, then the two neighbours swap.
+ */
+export async function moveCategory(id: string, direction: "up" | "down") {
+  await assertRole(MANAGERS);
+  const sql = db();
+  await sql.begin(async (tx) => {
+    const rows = await tx<{ id: string }[]>`select id from categories where active order by sort_order, name for update`;
+    const ids = rows.map((r) => r.id);
+    const i = ids.indexOf(id);
+    const j = direction === "up" ? i - 1 : i + 1;
+    if (i === -1 || j < 0 || j >= ids.length) return;
+    [ids[i], ids[j]] = [ids[j], ids[i]];
+    for (const [n, cid] of ids.entries()) await tx`update categories set sort_order = ${n + 1} where id = ${cid}`;
+  });
   revalidatePath("/admin/menu");
   revalidatePath("/");
 }

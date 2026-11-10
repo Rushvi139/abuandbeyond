@@ -1,4 +1,5 @@
 import { db } from "@/lib/db";
+import { sentenceCase, titleCase } from "@/lib/text";
 import type { Category, MenuItem } from "./types";
 
 type Row = {
@@ -32,15 +33,26 @@ export async function getMenu(): Promise<Category[]> {
             from menu_item_addons ma join addons a on a.id = ma.addon_id
             where ma.menu_item_id = m.id and a.active
           ), '[]'::json)
-        ) order by m.sort_order)
+        ) order by m.price_paise, m.name)
         from menu_items m where m.category_id = c.id and m.active
       ) as items
     from categories c
     where c.active
     order by c.sort_order`;
 
+  // Whatever case the owner typed in /admin, the guest sees Title Case names
+  // and sentence-case descriptions. Done here, on the way out, so one place
+  // covers the menu, the item sheet and anything added to the cart.
+  const tidy = (m: MenuItem): MenuItem => ({
+    ...m,
+    name: titleCase(m.name),
+    description: m.description ? sentenceCase(m.description) : m.description,
+    optionGroups: m.optionGroups.map((g) => ({ ...g, name: titleCase(g.name), choices: g.choices.map((c) => ({ ...c, name: titleCase(c.name) })) })),
+    addons: m.addons.map((a) => ({ ...a, name: titleCase(a.name) })),
+  });
+
   return rows
-    .map((r) => ({ id: r.id, name: r.name, slug: r.slug, items: r.items ?? [] }))
+    .map((r) => ({ id: r.id, name: titleCase(r.name), slug: r.slug, items: (r.items ?? []).map(tidy) }))
     .filter((c) => c.items.length > 0);
 }
 

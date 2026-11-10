@@ -1,4 +1,5 @@
 import { MenuItemForm, type EditableItem } from "@/components/admin/menu-item-form";
+import { CategoryOrder } from "@/components/admin/category-order";
 import { MenuRow, RetiredRow } from "@/components/admin/menu-row";
 import { AddonForm, AddonRow, type Addon } from "@/components/admin/addon-form";
 import { BannerForm, BannerRowView, type BannerRow } from "@/components/admin/banner-form";
@@ -20,7 +21,7 @@ export default async function MenuAdmin() {
       coalesce((select g.name || ': ' || string_agg(o.name, ' | ' order by o.sort_order) from option_groups g join options o on o.option_group_id = g.id where g.menu_item_id = m.id group by g.name limit 1), '') as options,
       coalesce((select string_agg(a.name, ', ') from menu_item_addons ma join addons a on a.id = ma.addon_id where ma.menu_item_id = m.id), '') as addons,
       (select round(sum(r.quantity * i.rate_paise_per_unit) * 1.15) from recipe_lines r join ingredients i on i.id = r.ingredient_id where r.menu_item_id = m.id) + m.packaging_cost_paise as "foodCostPaise"
-    from menu_items m join categories c on c.id = m.category_id where m.active order by c.sort_order, m.sort_order`;
+    from menu_items m join categories c on c.id = m.category_id where m.active order by c.sort_order, c.name, m.price_paise, m.name`;
   const retired = await sql<Item[]>`
     select m.id, m.name, m.is_veg as "isVeg", m.price_paise as "pricePaise", m.available, m.price_status as "priceStatus",
       null::int as "foodCostPaise"
@@ -35,6 +36,9 @@ export default async function MenuAdmin() {
     from banners where active order by sort_order, created_at desc`;
   const [social] = await sql<{ value: { instagram: string | null; google_review: string | null; whatsapp: string | null; email: string | null } }[]>`select value from settings where key = 'social_links'`;
   const groups = [...new Set(items.map((i) => i.category))];
+  const order = await sql<{ id: string; name: string; count: number }[]>`
+    select c.id, c.name, (select count(*)::int from menu_items m where m.category_id = c.id and m.active) as count
+    from categories c where c.active order by c.sort_order, c.name`;
 
   return (
     <div className="flex flex-col gap-5">
@@ -42,6 +46,11 @@ export default async function MenuAdmin() {
         <h1 className="font-display text-[32px] uppercase">Menu</h1>
         <p className="text-sm text-muted">{taxLine()}. Switch a dish off when it sells out. New dishes show on the site immediately.</p>
       </div>
+      <section>
+        <h2 className="mb-1 text-xs font-bold uppercase tracking-wide text-muted">Order of sections on the menu</h2>
+        <p className="mb-2 text-sm text-muted">Top of this list is the top of the guest menu. Inside each section, dishes always run cheapest first.</p>
+        <CategoryOrder categories={order.filter((c) => c.count > 0)} />
+      </section>
       <section>
         <h2 className="mb-2 text-xs font-bold uppercase tracking-wide text-muted">Add a dish</h2>
         <MenuItemForm categories={groups} />

@@ -51,7 +51,8 @@ async function main() {
     for (const [i, name] of categoryOrder.entries()) {
       const [row] = await tx<{ id: string }[]>`insert into categories (name, slug, sort_order)
         values (${name}, ${slugify(name)}, ${i + 1})
-        on conflict (name) do update set slug = excluded.slug, sort_order = excluded.sort_order
+        on conflict (name) do update set slug = excluded.slug,
+          sort_order = case when ${OVERWRITE} then excluded.sort_order else categories.sort_order end
         returning id`;
       categoryId.set(name, row.id);
     }

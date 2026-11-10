@@ -323,6 +323,18 @@ Update this file after every meaningful implementation change.
   backwards.
 - Reorder is a text summary plus the menu link, not a pre-filled cart.
 
+### Menu feed: Title Case, price order, arrangeable sections
+
+- Guest menu shows Title Case names (categories, dishes, option and add-on
+  names) and sentence-case descriptions, whatever case /admin holds
+  (`src/lib/text.ts`, applied in `getMenu`). Category names are also
+  Title-Cased on save so "pizza" and "Pizza" cannot become two sections.
+- Inside a section dishes run cheapest first (then by name); admin list too.
+- /admin/menu has "Order of sections on the menu" with up/down arrows
+  (`moveCategory`, renumbers 1..n then swaps). The seed no longer rewrites
+  category positions unless `SEED_OVERWRITE=1`, so a deploy keeps the order.
+- Section headings keep the brand display type (uppercase by style).
+
 ## In Progress
 
 - None.
