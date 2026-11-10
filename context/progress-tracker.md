@@ -289,6 +289,26 @@ Update this file after every meaningful implementation change.
   Fixed the pre-existing `<a>`→`<Link>` lint errors on /kitchen and /rider
   that were failing `npm run build`.
 
+### WhatsApp order notifications (outbox + Cloud API) — built, not yet live
+
+- Guests have no login, so the order page stays the source of truth and
+  WhatsApp is how they are reached when the tab is closed.
+- `transition()` calls `notifyOrderStatus` after the commit. It queues, never
+  sends: rows in `whatsapp_messages` (migration 0023), one per
+  `(order_id, kind)` — a repeated transition cannot message twice. Demo and
+  opted-out customers get nothing. Pay-on-delivery orders also get
+  `collect_at_door` with the amount before the rider arrives.
+- `POST /api/whatsapp/dispatch` (x-internal-secret) drains the queue; the
+  `whatsapp` compose service calls it every 30s. Failures retry with backoff,
+  5 attempts, then `failed`. Unconfigured, rows are written as `skipped`.
+- Four UTILITY templates live in `src/lib/whatsapp/templates.ts`
+  (`npm run wa:templates` prints them for WhatsApp Manager). The review
+  button is `https://g.page/r/{{1}}` because Meta needs a fixed base.
+- Admin order card keeps a `wa.me` click-to-chat button, which works with the
+  normal WhatsApp app and needs no API.
+- Bug found while verifying: payload was stored as a JSON *string*, which
+  would have sent templates with no variables. Now `sql.json`.
+
 ## In Progress
 
 - None.
@@ -343,6 +363,15 @@ Phase 5 — Full WhatsApp ordering (deferred)
     follow-up buttons, physical-goods fields on `order_details`.
 
 ## Open Questions
+
+- WhatsApp go-live (owner): submit the 4 templates in WhatsApp Manager and
+  wait for approval; create a system-user permanent token; set
+  `WHATSAPP_PHONE_NUMBER_ID` and `WHATSAPP_ACCESS_TOKEN` in the server `.env`;
+  then `./deploy.sh` to start the `whatsapp` service. Until then every row is
+  `skipped` and nothing is sent. First real send needs the owner's go-ahead.
+- Not started, needs confirming: inbound webhook (verify token, signature
+  check, auto-reply, reorder) and a WhatsApp one-time-code order lookup to
+  replace phone + order number.
 
 - SEO, owner-side: verify abuandbeyond.in in Google Search Console (DNS TXT
   record at the domain registrar), submit /sitemap.xml, and create the Google

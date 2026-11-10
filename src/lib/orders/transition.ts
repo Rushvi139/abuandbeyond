@@ -1,5 +1,6 @@
 import "server-only";
 import { db } from "@/lib/db";
+import { notifyOrderStatus } from "@/lib/whatsapp/notify";
 import { canTransition, type OrderStatus } from "./status";
 
 /**
@@ -7,7 +8,7 @@ import { canTransition, type OrderStatus } from "./status";
  * status event, stamps paid_at / delivered_at, and on delivery deducts recipe stock.
  */
 export async function transition(orderId: string, to: OrderStatus, opts: { actorId?: string | null; note?: string | null; prepMinutes?: number | null } = {}) {
-  return db().begin(async (tx) => {
+  const result = await db().begin(async (tx) => {
     const [cur] = await tx<{ status: OrderStatus }[]>`select status from orders where id = ${orderId} for update`;
     if (!cur) throw new Error("order not found");
     if (cur.status === to) return cur.status; // idempotent
@@ -36,4 +37,11 @@ export async function transition(orderId: string, to: OrderStatus, opts: { actor
     }
     return to;
   });
+
+  // After the transaction, and never allowed to undo it. The guest's message
+  // is queued, not sent, so this is one insert — but even that failing must
+  // not turn a delivered order into an exception, which is why
+  // `notifyOrderStatus` swallows its own problems.
+  await notifyOrderStatus(orderId, result);
+  return result;
 }

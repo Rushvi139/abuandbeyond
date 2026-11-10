@@ -9,6 +9,7 @@ import { PrintButton } from "@/components/kitchen/auto-print";
 import { clockLabel } from "@/lib/hours";
 import { CollectButton } from "@/components/admin/collect-button";
 import { PaymentLink } from "@/components/admin/payment-link";
+import { WhatsAppButton } from "@/components/admin/whatsapp-button";
 import { VegMark } from "@/components/store/veg-mark";
 
 const CUISINE: Record<string, string> = { abu: "ABU", italy: "ABU & ITALY", mexico: "ABU & MEXICO", china: "ABU & CHINA", lebanon: "ABU & LEBANON" };
@@ -115,6 +116,15 @@ export function OrderCard({ order, riders, role, compact = false, dark = false }
         )}
         {canManage && ["paid", "accepted", "preparing"].includes(order.status) && (
           <button onClick={() => { const r = prompt("Reason for cancelling (customer is refunded):"); if (r) run(() => cancelOrder(order.id, r)); }} className="h-10 rounded-xl px-3 text-xs font-semibold text-error">Cancel</button>
+        )}
+        {/* A rider at the gate with no answer on the phone. Opens WhatsApp
+            with the order number already typed. */}
+        {(order.status === "ready" || order.status === "out_for_delivery") && (
+          <WhatsAppButton
+            phone={order.customer.phone}
+            dark={dark}
+            text={`Hi${order.customer.name ? " " + order.customer.name.split(" ")[0] : ""}, this is Abu & Beyond. Your order #${order.number} is on the way to ${[order.propertyName, order.roomOrLandmark].filter(Boolean).join(", ") || "you"}.`}
+          />
         )}
         {(order.status === "ready" || order.status === "out_for_delivery") && (
           <a href={`tel:${order.customer.phone}`} className={`h-10 rounded-xl px-3 text-xs font-semibold leading-10 ${dark ? "bg-paper/15" : "bg-paper"}`}>Call {order.customer.phone.replace("+91", "")}</a>

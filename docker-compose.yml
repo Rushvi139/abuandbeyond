@@ -190,6 +190,29 @@ services:
           sleep 120
         done
 
+  # Drains the WhatsApp outbox. Separate from the request that placed the
+  # order, so Meta being slow never makes ordering slow. Half a minute,
+  # because "your order is confirmed" arriving two minutes late is useless.
+  whatsapp:
+    image: curlimages/curl:8.11.1
+    depends_on:
+      - app
+    environment:
+      SECRET: ${INTERNAL_SECRET:-}
+      FALLBACK: ${SESSION_SECRET:?set SESSION_SECRET in .env}
+    restart: unless-stopped
+    entrypoint: ["sh", "-c"]
+    command:
+      - |
+        KEY="$${SECRET:-$$FALLBACK}"
+        sleep 30
+        while true; do
+          curl -fsS -X POST http://app:3000/api/whatsapp/dispatch \
+            -H "x-internal-secret: $$KEY" > /dev/null \
+            || echo "whatsapp dispatch call failed"
+          sleep 30
+        done
+
 volumes:
   pgdata:
   uploads:
