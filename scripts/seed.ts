@@ -57,15 +57,38 @@ async function main() {
       itemId.set(m.sku, row.id);
 
       // options column: "Group:choice a|choice b"
-      await tx`delete from option_groups where menu_item_id = ${row.id}`;
+      //
+      // Matched by name and updated in place rather than deleted and rebuilt.
+      // Past order lines point at option ids, so wiping them makes the seed
+      // un-runnable the moment the kitchen has taken an order — which is
+      // exactly when someone reaches for it to change a price.
+      const groupNames = m.options ? [m.options.split(":")[0]] : [];
       if (m.options) {
         const [groupName, choices] = m.options.split(":");
-        const [g] = await tx<{ id: string }[]>`insert into option_groups (menu_item_id, name, required, max_choices)
-          values (${row.id}, ${groupName}, true, 1) returning id`;
-        for (const [j, choice] of choices.split("|").entries()) {
-          await tx`insert into options (option_group_id, name, sort_order) values (${g.id}, ${choice}, ${j + 1})`;
+        const [found] = await tx<{ id: string }[]>`
+          select id from option_groups where menu_item_id = ${row.id} and name = ${groupName}`;
+        const g = found ?? (await tx<{ id: string }[]>`
+          insert into option_groups (menu_item_id, name, required, max_choices)
+          values (${row.id}, ${groupName}, true, 1) returning id`)[0];
+
+        const wanted = choices.split("|");
+        for (const [j, choice] of wanted.entries()) {
+          const [opt] = await tx<{ id: string }[]>`
+            select id from options where option_group_id = ${g.id} and name = ${choice}`;
+          if (opt) await tx`update options set sort_order = ${j + 1} where id = ${opt.id}`;
+          else await tx`insert into options (option_group_id, name, sort_order) values (${g.id}, ${choice}, ${j + 1})`;
         }
+        // Choices dropped from the CSV go, unless an order already used one.
+        await tx`delete from options o
+          where o.option_group_id = ${g.id} and o.name <> all(${wanted})
+            and not exists (select 1 from order_item_options x where x.option_id = o.id)`;
       }
+      // Likewise for whole groups this dish no longer has.
+      await tx`delete from option_groups og
+        where og.menu_item_id = ${row.id} and og.name <> all(${groupNames})
+          and not exists (
+            select 1 from options o join order_item_options x on x.option_id = o.id
+            where o.option_group_id = og.id)`;
     }
 
     for (const a of addons) {
