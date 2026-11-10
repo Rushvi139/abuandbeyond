@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { BOOKKEEPERS, assertRole } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { saveUpload } from "@/lib/files";
+import { UploadError, saveUpload } from "@/lib/files";
 
 // Recording a bill or an expense is data entry, not reading the books: riders who
 // also do the market run can file them, but only the owner sees the ledger.
@@ -18,7 +18,13 @@ async function vendorId(tx: Q, name: string) {
   return e.id;
 }
 
-export async function addExpense(formData: FormData) {
+/**
+ * Returns its complaint rather than throwing it. Next replaces a thrown
+ * server-action message with "An error occurred in the Server Components
+ * render…" in production, so a rejected iPhone photo looked like the whole
+ * feature was broken instead of saying which file to use.
+ */
+export async function addExpense(formData: FormData): Promise<{ error?: string }> {
   const staff = await assertRole(BOOKKEEPERS);
   const d = z.object({
     category: z.string().min(1), spentOn: z.string().date(), description: z.string().trim().min(2).max(200),
@@ -26,16 +32,24 @@ export async function addExpense(formData: FormData) {
     reference: z.string().trim().max(60).optional().or(z.literal("")), vendor: z.string().trim().max(80).optional().or(z.literal("")),
   }).parse(Object.fromEntries(formData));
   const file = formData.get("attachment");
-  const filePath = file instanceof File && file.size > 0 ? await saveUpload(file, "expenses", { maxBytes: 15 * 1024 * 1024 }) : null;
+  let filePath: string | null = null;
+  try {
+    if (file instanceof File && file.size > 0) filePath = await saveUpload(file, "expenses", { maxBytes: 15 * 1024 * 1024 });
+  } catch (e) {
+    if (e instanceof UploadError) return { error: e.message };
+    throw e;
+  }
   const sql = db();
   const vid = d.vendor ? await vendorId(sql as unknown as Q, d.vendor) : null;
   await sql`insert into expenses (category_id, spent_on, description, amount_paise, vendor_id, mode, reference, file_path, created_by)
     values (${d.category}, ${d.spentOn}, ${d.description}, ${paise(d.amountInr)}, ${vid}, ${d.mode || null}, ${d.reference || null}, ${filePath}, ${staff.id})`;
   revalidatePath("/admin/accounts");
   if (vid) revalidatePath(`/admin/accounts/vendors/${vid}`);
+  return {};
 }
 
-export async function addVendorBill(formData: FormData) {
+/** Same as `addExpense`: the reason comes back as data, not as an exception. */
+export async function addVendorBill(formData: FormData): Promise<{ error?: string }> {
   const staff = await assertRole(BOOKKEEPERS);
   const d = z.object({
     vendor: z.string().trim().min(2).max(80), billNumber: z.string().trim().max(60).optional().or(z.literal("")),
@@ -43,7 +57,13 @@ export async function addVendorBill(formData: FormData) {
     paidNow: z.string().optional(), mode: z.string().trim().max(20).optional().or(z.literal("")), reference: z.string().trim().max(60).optional().or(z.literal("")),
   }).parse(Object.fromEntries(formData));
   const file = formData.get("attachment");
-  const filePath = file instanceof File && file.size > 0 ? await saveUpload(file, "bills", { maxBytes: 15 * 1024 * 1024 }) : null;
+  let filePath: string | null = null;
+  try {
+    if (file instanceof File && file.size > 0) filePath = await saveUpload(file, "bills", { maxBytes: 15 * 1024 * 1024 });
+  } catch (e) {
+    if (e instanceof UploadError) return { error: e.message };
+    throw e;
+  }
   const sql = db();
   await sql.begin(async (tx) => {
     const vid = await vendorId(tx as unknown as Q, d.vendor);
@@ -56,6 +76,7 @@ export async function addVendorBill(formData: FormData) {
   revalidatePath("/admin/accounts");
   revalidatePath("/admin/accounts/vendors");
   revalidatePath("/rider/bills");
+  return {};
 }
 
 /**

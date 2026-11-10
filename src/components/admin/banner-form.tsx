@@ -63,7 +63,7 @@ export function BannerForm({ banner }: { banner?: BannerRow }) {
       </label>
       <label className="flex items-center gap-2 text-xs text-muted">
         Background photo
-        <input name="image" type="file" accept="image/jpeg,image/png,image/webp" className="text-xs" />
+        <input name="image" type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" className="text-xs" />
         {banner?.imagePath && <span className="text-success">has photo</span>}
       </label>
       <input name="sortOrder" type="number" min="0" max="999" defaultValue={banner?.sortOrder ?? 100} className={inp} aria-label="Order" />

@@ -7,11 +7,28 @@ const inp = "h-10 rounded-xl border border-line bg-paper px-3 text-sm";
 const today = () => new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" });
 const MODES = ["UPI", "Cash", "Bank", "Card"];
 
-function useSubmit(action: (fd: FormData) => Promise<void>, formId: string) {
+/**
+ * Handles a complaint returned as data as well as one thrown. Production Next
+ * swallows a thrown message, so anything the person needs to read — which
+ * file type to use, how big it may be — comes back in `error` instead.
+ */
+function useSubmit(action: (fd: FormData) => Promise<{ error?: string } | void>, formId: string) {
   const [pending, start] = useTransition();
   const [err, setErr] = useState<string | null>(null);
   const [ok, setOk] = useState(false);
-  const act = (fd: FormData) => start(async () => { setErr(null); try { await action(fd); setOk(true); (document.getElementById(formId) as HTMLFormElement | null)?.reset(); setTimeout(() => setOk(false), 1500); } catch (e) { setErr(e instanceof Error ? e.message : "Couldn't save"); } });
+  const act = (fd: FormData) =>
+    start(async () => {
+      setErr(null);
+      try {
+        const r = await action(fd);
+        if (r && r.error) { setErr(r.error); return; }
+        setOk(true);
+        (document.getElementById(formId) as HTMLFormElement | null)?.reset();
+        setTimeout(() => setOk(false), 1500);
+      } catch (e) {
+        setErr(e instanceof Error ? e.message : "Couldn't save");
+      }
+    });
   return { pending, err, ok, act };
 }
 

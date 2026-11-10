@@ -86,7 +86,7 @@ export function RecipePhotos({ menuItemId, photos }: { menuItemId: string; photo
       )}
       <form action={addRecipePhoto} className="flex flex-wrap items-center gap-2">
         <input type="hidden" name="menuItemId" value={menuItemId} />
-        <input name="photo" type="file" accept="image/jpeg,image/png,image/webp" required className="text-xs" />
+        <input name="photo" type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" required className="text-xs" />
         <input name="caption" maxLength={120} placeholder="What this shows (optional)" className={`${inp} min-w-40 flex-1`} />
         <button className="h-10 rounded-xl bg-ink px-4 text-sm font-semibold text-reversed">Add photo</button>
       </form>

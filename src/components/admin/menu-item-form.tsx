@@ -41,7 +41,7 @@ export function MenuItemForm({ item, categories }: { item?: EditableItem; catego
       <input name="addonNames" defaultValue={item?.addons ?? ""} placeholder="Add-ons, comma-separated: Extra cheese, Add egg" className={`${inp} sm:col-span-2`} />
       <label className="flex items-center gap-2 text-xs text-muted sm:col-span-2">
         Photo (square, JPG/PNG/WebP, up to 8 MB)
-        <input name="photo" type="file" accept="image/jpeg,image/png,image/webp" className="text-xs" />
+        <input name="photo" type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" className="text-xs" />
         {item?.imagePath && <span className="text-success">has photo</span>}
       </label>
       {err && <p className="text-xs font-semibold text-error sm:col-span-2">{err}</p>}
