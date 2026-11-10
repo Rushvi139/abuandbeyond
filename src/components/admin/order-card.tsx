@@ -8,6 +8,7 @@ import { formatINR } from "@/lib/pricing";
 import { PrintButton } from "@/components/kitchen/auto-print";
 import { clockLabel } from "@/lib/hours";
 import { CollectButton } from "@/components/admin/collect-button";
+import { PaymentLink } from "@/components/admin/payment-link";
 import { VegMark } from "@/components/store/veg-mark";
 
 const CUISINE: Record<string, string> = { abu: "ABU", italy: "ABU & ITALY", mexico: "ABU & MEXICO", china: "ABU & CHINA", lebanon: "ABU & LEBANON" };
@@ -43,6 +44,11 @@ export function OrderCard({ order, riders, role, compact = false, dark = false }
             <span className={`font-display ${compact ? "text-[26px]" : "text-[30px]"}`}>#{order.number}</span>
             {order.isDemo && (
               <span className="rounded-full border border-dashed border-current px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider opacity-80">Demo</span>
+            )}
+            {/* Taken on test keys. Once we are live these are the only orders
+                Cashfree will not recognise, so the row has to say so itself. */}
+            {order.gatewayEnv === "sandbox" && (
+              <span className="rounded-full border border-dashed border-current px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider opacity-80">Sandbox</span>
             )}
             <span className={`rounded-full px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide ${STATUS_TONE[order.status]}`}>{STATUS_LABEL[order.status as OrderStatus]}</span>
           </div>
@@ -113,6 +119,7 @@ export function OrderCard({ order, riders, role, compact = false, dark = false }
         {(order.status === "ready" || order.status === "out_for_delivery") && (
           <a href={`tel:${order.customer.phone}`} className={`h-10 rounded-xl px-3 text-xs font-semibold leading-10 ${dark ? "bg-paper/15" : "bg-paper"}`}>Call {order.customer.phone.replace("+91", "")}</a>
         )}
+        {canManage && order.status === "pending_payment" && order.paymentSessionId && <PaymentLink code={order.code} />}
         {canKitchen && <PrintButton orderId={order.id} printed={order.kotPrintedAt != null} />}
         {/* Only whoever actually handles the money, and only once the food has
             left the kitchen. A cook tapping this marks cash received that

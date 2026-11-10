@@ -6,6 +6,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { lineKey, useCart, type CartLine } from "@/hooks/use-cart";
 import { formatINR, gstRegistered, taxLine } from "@/lib/pricing";
 import { ServiceBadge } from "@/components/store/service-badge";
+import { ClosedBanner } from "@/components/store/closed-banner";
 import { CUISINE_LABEL, type Category, type MenuItem } from "@/lib/menu/types";
 import { VegMark } from "./veg-mark";
 import { StoreNav } from "./store-nav";
@@ -126,6 +127,8 @@ export function MenuScreen({ categories, closingLabel, banners = [] }: { categor
           </div>
         </div>
       </header>
+
+      <ClosedBanner />
 
       <BannerStrip banners={banners} />
 

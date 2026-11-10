@@ -40,6 +40,8 @@ export type OrderView = {
   deliveredAt: string | null;
   createdAt: string;
   gatewayOrderId: string | null;
+  paymentSessionId: string | null;
+  gatewayEnv: "sandbox" | "production" | null;
   kotPrintedAt: string | null;
   kitchenNote: string | null;
   altPhone: string | null;
@@ -57,7 +59,7 @@ const base = (sql = db()) => sql`
     o.property_name as "propertyName", o.room_or_landmark as "roomOrLandmark", o.notes, o.lat, o.lng, o.is_demo as "isDemo",
     o.subtotal_paise as "subtotalPaise", o.gst_paise as "gstPaise", o.delivery_fee_paise as "deliveryFeePaise", o.total_paise as "totalPaise",
     o.prep_minutes as "prepMinutes", o.paid_at as "paidAt", o.delivered_at as "deliveredAt", o.created_at as "createdAt",
-    o.gateway_order_id as "gatewayOrderId", o.kot_printed_at as "kotPrintedAt",
+    o.gateway_order_id as "gatewayOrderId", o.payment_session_id as "paymentSessionId", o.gateway_env as "gatewayEnv", o.kot_printed_at as "kotPrintedAt",
     o.kitchen_note as "kitchenNote", o.alt_phone as "altPhone", o.scheduled_for as "scheduledFor", o.payment_mode as "paymentMode", o.collected_at as "collectedAt", o.discount_paise as "discountPaise", o.promo_code as "promoCode",
     json_build_object('id', c.id, 'name', c.name, 'phone', c.phone) as customer,
     case when r.id is null then null else json_build_object('id', r.id, 'name', r.full_name) end as rider,
@@ -88,6 +90,24 @@ export async function getOrderById(id: string): Promise<OrderView | null> {
 export async function getLiveOrders(statuses: OrderStatus[]): Promise<OrderView[]> {
   const sql = db();
   return sql<OrderView[]>`${base(sql)} where o.status in ${sql(statuses)} order by coalesce(o.paid_at, o.created_at) asc`;
+}
+
+/**
+ * Baskets that reached the payment page and stopped there.
+ *
+ * History hides `pending_payment` on purpose — most are someone changing
+ * their mind — but hiding them entirely meant nobody ever knew a sale had
+ * been within one tap. These are recent enough to be worth a message, and
+ * still hold the session that reopens the payment.
+ */
+export async function getAbandonedOrders(hours = 48): Promise<OrderView[]> {
+  const sql = db();
+  return sql<OrderView[]>`${base(sql)}
+    where o.status = 'pending_payment'
+      and not o.is_demo
+      and o.payment_session_id is not null
+      and o.created_at > now() - ${`${hours} hours`}::interval
+    order by o.created_at desc limit 25`;
 }
 
 export async function getRecentOrders(limit = 50, q?: string): Promise<OrderView[]> {

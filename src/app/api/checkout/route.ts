@@ -49,6 +49,11 @@ export async function POST(req: Request) {
   if (wantsDemo && !staff) {
     return NextResponse.json({ ok: false, error: { code: "forbidden", message: "Sign in as staff to place a demo order." } }, { status: 403 });
   }
+  // Checked before the order exists, not after. Refusing a created order
+  // would leave a row that says it will be paid at the door and never is.
+  if (parsed.data.payOnDelivery && !(await codAllowed())) {
+    return NextResponse.json({ ok: false, error: { code: "cod_off", message: "Pay on delivery isn't available right now." } }, { status: 503 });
+  }
 
   try {
     const order = await createOrder(parsed.data, wantsDemo ? { source: "demo" } : {});
@@ -75,9 +80,6 @@ export async function POST(req: Request) {
     // the rider actually collects it. `payment_mode` carries that distinction
     // so the books never show cash we haven't got.
     if (parsed.data.payOnDelivery) {
-      if (!(await codAllowed())) {
-        return NextResponse.json({ ok: false, error: { code: "cod_off", message: "Pay on delivery isn't available right now." } }, { status: 503 });
-      }
       await transition(order.id, "paid", { note: "pay on delivery" });
       revalidatePath("/admin");
       revalidatePath("/kitchen");
@@ -102,7 +104,14 @@ export async function POST(req: Request) {
       notifyUrl: `${site}/api/cashfree/webhook`,
     });
     if (!cf.payment_session_id) throw new Error("Cashfree did not return a payment session");
-    await db()`update orders set gateway_order_id = ${cf.order_id} where id = ${order.id}`;
+    // The session is kept so a guest who closes the tab can be handed the
+    // payment back, and the env so a later switch to live keys does not leave
+    // us holding order ids we can no longer look up.
+    await db()`update orders set
+        gateway_order_id = ${cf.order_id},
+        payment_session_id = ${cf.payment_session_id},
+        gateway_env = ${cashfreeMode()}
+      where id = ${order.id}`;
     return NextResponse.json({
       ok: true,
       data: {

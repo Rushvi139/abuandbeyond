@@ -7,6 +7,7 @@ import { RollCatch } from "@/components/store/roll-catch";
 import { formatINR } from "@/lib/pricing";
 import { getOrderByCode } from "@/lib/orders/queries";
 import { CUSTOMER_STEPS, STATUS_LABEL, stepIndex } from "@/lib/orders/status";
+import { ResumePayment } from "@/components/store/resume-payment";
 import { db } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
@@ -22,6 +23,9 @@ export default async function OrderPage({ params }: { params: Promise<{ code: st
   const idx = stepIndex(order.status);
   const done = order.status === "delivered";
   const dead = order.status === "cancelled" || order.status === "payment_failed" || order.status === "pending_payment";
+  // Unfinished, not failed — the session is still ours, so the guest can pick
+  // the payment back up instead of building the basket again.
+  const resumable = order.status === "pending_payment" && Boolean(order.paymentSessionId);
   const eta = order.prepMinutes ? order.prepMinutes + 15 : null;
   const t = (s: string) => new Date(s).toLocaleTimeString("en-IN", { hour: "numeric", minute: "2-digit", timeZone: "Asia/Kolkata" });
 
@@ -48,9 +52,26 @@ export default async function OrderPage({ params }: { params: Promise<{ code: st
           <span className={dead ? "text-acid" : "text-paper"}>{done ? "delivered." : dead ? "on hold." : "is in."}</span>
         </h1>
         <p className="mt-2 text-[15px] font-medium">
-          {done ? "Hope it hit the spot. See you up here again." : dead ? "Payment didn't complete. Order again from the menu, or message us." : waOn ? "Confirmation sent to your WhatsApp. Updates land there too." : "Keep this page open; it updates live as your food moves."}
+          {done
+            ? "Hope it hit the spot. See you up here again."
+            : resumable
+              ? "Your food isn't ordered yet — the payment wasn't finished. Everything is still here, so you can pick up where you left off."
+              : dead
+                ? "Payment didn't complete. Order again from the menu, or message us."
+                : waOn
+                  ? "Confirmation sent to your WhatsApp. Updates land there too."
+                  : "Keep this page open; it updates live as your food moves."}
         </p>
       </div>
+
+      {resumable && order.paymentSessionId && (
+        <ResumePayment
+          code={order.code}
+          amountPaise={order.totalPaise}
+          paymentSessionId={order.paymentSessionId}
+          mode={order.gatewayEnv === "production" ? "production" : "sandbox"}
+        />
+      )}
 
       {!dead && (
         <section className="mx-5 mt-5 rounded-[18px] bg-surface p-4">

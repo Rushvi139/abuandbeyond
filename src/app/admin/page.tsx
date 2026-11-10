@@ -2,10 +2,11 @@ import Link from "next/link";
 import { OrderCard } from "@/components/admin/order-card";
 import { DemoControls } from "@/components/admin/demo-controls";
 import { CodToggle } from "@/components/admin/cod-toggle";
+import { PaymentLink } from "@/components/admin/payment-link";
 import { StaffLive } from "@/components/admin/live";
 import { requireRole } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { getLiveOrders, getRecentOrders } from "@/lib/orders/queries";
+import { getAbandonedOrders, getLiveOrders, getRecentOrders } from "@/lib/orders/queries";
 import { LIVE } from "@/lib/orders/status";
 import { formatINR } from "@/lib/pricing";
 import { cashfreeConfigured } from "@/lib/payments/cashfree";
@@ -15,7 +16,7 @@ export const dynamic = "force-dynamic";
 export default async function AdminHome({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
   const staff = await requireRole(["owner", "manager"], "/admin");
   const { q } = await searchParams;
-  const [live, recent, riders, demo, today, cod] = await Promise.all([
+  const [live, recent, riders, demo, today, cod, dropped] = await Promise.all([
     getLiveOrders(LIVE),
     getRecentOrders(30, q),
     db()<{ id: string; name: string }[]>`select id, full_name as name from staff_users where role = 'rider' and active order by full_name`,
@@ -23,6 +24,7 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
     db()<{ orders: number; net: number; gross: number }[]>`select count(*)::int as orders, coalesce(sum(subtotal_paise - discount_paise), 0)::bigint as net, coalesce(sum(total_paise), 0)::bigint as gross
       from orders where status not in ('pending_payment','payment_failed','cancelled') and not is_demo and (paid_at at time zone 'Asia/Kolkata')::date = (now() at time zone 'Asia/Kolkata')::date`,
     db()<{ value: boolean }[]>`select value::boolean as value from settings where key = 'cod_enabled'`,
+    getAbandonedOrders(),
   ]);
   const t = today[0];
 
@@ -48,6 +50,33 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
         </div>
       )}
 
+      {dropped.length > 0 && (
+        <section className="rounded-2xl border-[1.5px] border-dashed border-clay p-4">
+          <h2 className="font-display text-[22px] uppercase">Didn&apos;t finish paying</h2>
+          <p className="mt-1 text-sm text-muted">
+            These got as far as the payment page in the last two days. The link below reopens their own order, so they
+            don&apos;t have to build the basket again.
+          </p>
+          <ul className="mt-3 flex flex-col gap-2">
+            {dropped.map((o) => (
+              <li key={o.id} className="flex flex-wrap items-center gap-3 rounded-xl bg-surface px-3 py-2 text-sm">
+                <span className="font-display text-[20px]">#{o.number}</span>
+                <span className="font-medium">{o.customer.name ?? "Guest"}</span>
+                <a href={`tel:${o.customer.phone}`} className="text-muted underline-offset-2 hover:underline">{o.customer.phone}</a>
+                <span className="text-muted">{[o.propertyName, o.roomOrLandmark].filter(Boolean).join(", ") || o.stayType}</span>
+                <span className="text-muted">
+                  {new Date(o.createdAt).toLocaleString("en-IN", { day: "numeric", month: "short", hour: "numeric", minute: "2-digit", timeZone: "Asia/Kolkata" })}
+                </span>
+                <span className="ml-auto flex items-center gap-2">
+                  <span className="font-semibold">{formatINR(o.totalPaise)}</span>
+                  <PaymentLink code={o.code} />
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
       <section className="mt-2">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h2 className="font-display text-[22px] uppercase">History</h2>
@@ -69,7 +98,15 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
                   <td className="px-4 py-2.5 text-muted">{new Date(o.createdAt).toLocaleString("en-IN", { day: "numeric", month: "short", hour: "numeric", minute: "2-digit", timeZone: "Asia/Kolkata" })}</td>
                   <td className="px-4 py-2.5"><a href={`/admin/customers/${o.customer.id}`} className="font-medium underline-offset-2 hover:underline">{o.customer.name ?? o.customer.phone}</a></td>
                   <td className="px-4 py-2.5 text-muted">{[o.propertyName, o.roomOrLandmark].filter(Boolean).join(", ") || o.stayType}</td>
-                  <td className="px-4 py-2.5">{o.status.replace(/_/g, " ")}</td>
+                  <td className="px-4 py-2.5">
+                    <span className="flex flex-wrap items-center gap-2">
+                      {o.status.replace(/_/g, " ")}
+                      {/* The one row an owner can act on: the guest got as far
+                          as the payment page and stopped. Hand them the link
+                          back rather than writing the order off. */}
+                      {o.status === "pending_payment" && o.paymentSessionId && !o.isDemo && <PaymentLink code={o.code} />}
+                    </span>
+                  </td>
                   <td className="px-4 py-2.5 text-right font-semibold">{formatINR(o.totalPaise)}</td>
                 </tr>
               ))}
