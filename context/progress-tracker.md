@@ -13,6 +13,14 @@ Update this file after every meaningful implementation change.
 
 ## Completed
 
+- 10 Nov (wait game): the catch-the-food game on the order page replaced with
+  "Over the ridge" — one tap to flap, granite stacks to fly through, set on
+  the Mount Abu skyline from the logo. Own art and physics, nothing borrowed.
+  The ceiling is a soft stop rather than a hazard, and each gap sits within
+  92px of the last, so a miss is always the player's and never the game's.
+  The play button is now solid acid rather than a dashed outline — it was
+  invisible against the rest of the page.
+
 - 10 Nov (pay on delivery): Cashfree isn't activated, so the checkout dead-ended
   on "online payment isn't switched on yet". Cash or UPI to the rider at the
   door is now a full payment path: the order is confirmed and cooked at once,

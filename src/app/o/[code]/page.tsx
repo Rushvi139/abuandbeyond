@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { HappyBear } from "@/components/store/happy-bear";
 import { LiveStatus } from "@/components/store/live-status";
-import { RollCatch } from "@/components/store/roll-catch";
+import { RidgeRun } from "@/components/store/ridge-run";
 import { formatINR } from "@/lib/pricing";
 import { getOrderByCode } from "@/lib/orders/queries";
 import { CUSTOMER_STEPS, STATUS_LABEL, stepIndex } from "@/lib/orders/status";
@@ -133,7 +133,7 @@ export default async function OrderPage({ params }: { params: Promise<{ code: st
           the page should be about the order, not a game. */}
       {!done && !dead && (
         <div className="mx-5">
-          <RollCatch />
+          <RidgeRun />
         </div>
       )}
 
