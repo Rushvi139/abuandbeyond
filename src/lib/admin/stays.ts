@@ -17,6 +17,34 @@ import { db } from "@/lib/db";
  * duplicating them — but a row's `note`, `property_id` and `active` flag are
  * ours, set by hand here, and an import never overwrites them.
  */
+
+/**
+ * The sweep has been exported under more than one set of column names, and a
+ * mismatch is silent in the worst way: the file imports, but with no place_id
+ * every later re-sweep duplicates the plateau instead of updating it. So the
+ * obvious synonyms are accepted rather than demanding the file be renamed.
+ */
+const ALIASES: Record<string, string> = {
+  google_place_id: "place_id", placeid: "place_id", place: "place_id",
+  area: "address", formatted_address: "address", vicinity: "address",
+  type: "types", kind: "types", kinds: "types", category: "types",
+  latitude: "lat", longitude: "lng", lon: "lng", long: "lng",
+  km: "km_from_kitchen", distance_km: "km_from_kitchen", km_from_kitchen_road: "km_from_kitchen",
+  phone_number: "phone", contact: "phone", title: "name",
+};
+
+/** Lower-cases headers and maps the synonyms onto the names the schema knows. */
+function normalise(r: Record<string, string>): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const [k, v] of Object.entries(r)) {
+    const key = k.trim().toLowerCase().replace(/\s+/g, "_");
+    const mapped = ALIASES[key] ?? key;
+    // A real column always beats an alias, so a file carrying both keeps the
+    // canonical one.
+    if (out[mapped] === undefined || out[mapped] === "") out[mapped] = v;
+  }
+  return out;
+}
 const Row = z.object({
   name: z.string().trim().min(1).max(200),
   place_id: z.string().trim().max(200).optional().default(""),
@@ -41,6 +69,7 @@ export async function importStays(csvText: string, fileName: string): Promise<Im
     return { rowsInFile: 0, inserted: 0, updated: 0, skipped: 0, problems: ["That file didn't parse as CSV. Export it again from the sweep."] };
   }
   if (raw.length === 0) return { rowsInFile: 0, inserted: 0, updated: 0, skipped: 0, problems: ["The file has no rows."] };
+  raw = raw.map(normalise);
   if (!("name" in raw[0])) return { rowsInFile: raw.length, inserted: 0, updated: 0, skipped: raw.length, problems: [`No "name" column — found: ${Object.keys(raw[0]).slice(0, 8).join(", ")}`] };
 
   const problems: string[] = [];

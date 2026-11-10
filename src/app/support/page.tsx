@@ -4,6 +4,7 @@ import { StoreNav } from "@/components/store/store-nav";
 import { RibbonSlot } from "@/components/store/ribbon-slot";
 import { CateringForm } from "@/components/store/catering-form";
 import { db } from "@/lib/db";
+import { hoursLine } from "@/lib/hours";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Help · Abu & Beyond" };
@@ -29,7 +30,9 @@ export default async function SupportPage() {
       <RibbonSlot />
       <header className="px-5 pt-5">
         <h1 className="font-display text-[34px] uppercase leading-none tracking-tight">Help</h1>
-        <p className="mt-2 text-[15px] text-muted">A real person from the kitchen answers. We&apos;re on from 11am to 11pm.</p>
+        {/* Drawn from the one place the hours live, or this page goes on
+            promising 11am long after the kitchen has settled on noon. */}
+        <p className="mt-2 text-[15px] text-muted">A real person from the kitchen answers, while we&apos;re cooking: {hoursLine()}.</p>
       </header>
 
       <div className="mt-5 flex gap-3 px-5">
@@ -88,7 +91,7 @@ export default async function SupportPage() {
               Email: <a href={`mailto:${email}`} className="font-semibold text-hill">{email}</a>
             </p>
           )}
-          <p className="mt-1 text-muted">Serving 11am to 11pm, every day</p>
+          <p className="mt-1 text-muted">Serving {hoursLine()}, every day</p>
         </div>
         <div className="mt-3 flex flex-wrap gap-x-3 gap-y-1 text-[13px] text-muted">
           <Link href="/terms" className="underline-offset-2 hover:underline">Terms</Link>
