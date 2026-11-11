@@ -510,6 +510,6 @@ insert into settings (key, value) values
   ('kitchen_loading_pct', '15'),
   ('target_gross_margin_pct', '68'),
   ('direct_cost_ceiling_pct', '33'),
-  ('cod_enabled', 'false'),
+  ('cod_enabled', 'false'::jsonb),
   ('delivery_fee_paise', '0'),
   ('social_links', '{"instagram": null, "google_review": null, "whatsapp": null}');

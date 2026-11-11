@@ -8,7 +8,7 @@ export async function setKitchenOverride(on: boolean): Promise<void> {
   await requireRole(["owner", "manager"], "/admin");
   await db()`
     insert into settings (key, value)
-    values ('kitchen_override', ${JSON.stringify(on)})
+    values ('kitchen_override', ${on}::boolean::jsonb)
     on conflict (key) do update set value = excluded.value
   `;
   revalidatePath("/kitchen");
