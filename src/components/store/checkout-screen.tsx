@@ -251,10 +251,6 @@ export function CheckoutScreen({ deliveryFeePaise, sourceRef, paymentsOn = true,
         <WhenPicker value={scheduledFor} onChange={setScheduledFor} />
       </section>
 
-      <section className="mt-5">
-        <CouponField subtotalPaise={cart.subtotalPaise} phone={phone} applied={coupon} onChange={setCoupon} />
-      </section>
-
       <section className="mt-5 flex flex-col gap-2.5 rounded-[18px] bg-surface p-4 text-sm">
         <div className="flex justify-between"><span className="text-muted">Item total</span><span>{formatINR(cart.subtotalPaise, { decimals: true })}</span></div>
         {discount > 0 && (
@@ -269,6 +265,7 @@ export function CheckoutScreen({ deliveryFeePaise, sourceRef, paymentsOn = true,
       {error && <p role="alert" className="mt-3 rounded-xl bg-error/10 px-4 py-3 text-sm font-semibold text-error">{error}</p>}
 
       <div className="fixed inset-x-0 bottom-0 mx-auto max-w-md border-t border-line bg-paper px-3 pb-5 pt-3">
+        <CouponField subtotalPaise={cart.subtotalPaise} phone={phone} applied={coupon} onChange={setCoupon} />
         {/* Scan & Pay is the primary online payment while Cashfree is not live.
             When upiId is set it replaces the Cashfree button entirely. */}
         {upiId && !upiOrderCode && (
