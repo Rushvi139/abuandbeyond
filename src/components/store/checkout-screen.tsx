@@ -11,6 +11,7 @@ import { ClosedNotice, useServiceOpen } from "@/components/store/service-gate";
 import { WhenPicker } from "@/components/store/when-picker";
 import { LocationPin, type Pin } from "./location-pin";
 import { VegMark } from "./veg-mark";
+import { UpiPayButton } from "./upi-pay-button";
 
 type Stay = "hotel" | "villa" | "homestay" | "home";
 const STAYS: { id: Stay; label: string }[] = [
@@ -29,7 +30,7 @@ declare global {
   }
 }
 
-export function CheckoutScreen({ deliveryFeePaise, sourceRef, staffName, paymentsOn = true, codOn = true }: { deliveryFeePaise: number; sourceRef?: string; staffName?: string | null; paymentsOn?: boolean; codOn?: boolean }) {
+export function CheckoutScreen({ deliveryFeePaise, sourceRef, staffName, paymentsOn = true, codOn = true, upiId = "", kitchenOverride = false }: { deliveryFeePaise: number; sourceRef?: string; staffName?: string | null; paymentsOn?: boolean; codOn?: boolean; upiId?: string; kitchenOverride?: boolean }) {
   const cart = useCart();
   const router = useRouter();
   const [name, setName] = useState("");
@@ -46,13 +47,14 @@ export function CheckoutScreen({ deliveryFeePaise, sourceRef, staffName, payment
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [coupon, setCoupon] = useState<Applied>(null);
+  const [upiOrderCode, setUpiOrderCode] = useState<string | null>(null);
 
   // GST is charged on what is actually paid for the food, so the discount comes
   // off first. The server works this out again before taking any money.
   const discount = coupon?.discountPaise ?? 0;
   const gst = gstOn(cart.subtotalPaise - discount);
   const total = cart.subtotalPaise - discount + gst + deliveryFeePaise;
-  const shut = open === false && !scheduledFor;
+  const shut = open === false && !scheduledFor && !kitchenOverride;
   const valid = name.trim().length >= 2 && /^[6-9]\d{9}$/.test(phone) && cart.lines.length > 0 && !shut;
 
   async function pay(demo = false, payOnDelivery = false) {
@@ -111,6 +113,37 @@ export function CheckoutScreen({ deliveryFeePaise, sourceRef, staffName, payment
       }
     } catch (e) {
       setError(e instanceof Error ? e.message : "Something went wrong");
+      setBusy(false);
+    }
+  }
+
+  // Place order as COD then show UPI QR — customer pays the kitchen's UPI.
+  async function payUpi() {
+    if (!valid || busy) return;
+    setBusy(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name, phone, altPhone, stayType: stay, propertyName, roomOrLandmark: room, notes, sourceRef,
+          couponCode: coupon?.code ?? "",
+          scheduledFor,
+          payOnDelivery: true,
+          ...(pin ? { lat: pin.lat, lng: pin.lng } : {}),
+          lat: pin?.lat, lng: pin?.lng,
+          lines: cart.lines.map((l) => ({ itemId: l.itemId, qty: l.qty, optionIds: l.options.map((o) => o.optionId), addonIds: l.addons.map((a) => a.addonId), note: l.note ?? "" })),
+        }),
+      });
+      const json = await res.json();
+      if (!json.ok) throw new Error(json.error?.message ?? "Couldn't place the order");
+      const d = json.data as { code: string };
+      cart.clear();
+      setUpiOrderCode(d.code);  // show QR — stay on this page
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Something went wrong");
+    } finally {
       setBusy(false);
     }
   }
@@ -274,6 +307,33 @@ export function CheckoutScreen({ deliveryFeePaise, sourceRef, staffName, payment
             Cash or UPI to the rider at your door
           </span>
         </button>
+        )}
+
+        {/* UPI scan & pay — places order as COD then shows QR */}
+        {upiId && !codOn && !paymentsOn && !upiOrderCode && (
+          <UpiPayButton
+            upiId={upiId}
+            total={total}
+            onPlace={payUpi}
+            disabled={!valid}
+            busy={busy}
+          />
+        )}
+        {upiOrderCode && (
+          <div className="mt-2 flex flex-col items-center gap-3 rounded-[18px] border-2 border-ink p-4">
+            <p className="font-semibold">Order placed! Scan to pay</p>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={`https://chart.googleapis.com/chart?chs=220x220&cht=qr&chl=${encodeURIComponent(`upi://pay?pa=${encodeURIComponent(upiId)}&pn=Abu%26Beyond&am=${(total/100).toFixed(2)}&cu=INR&tn=Order%20${upiOrderCode}`)}&choe=UTF-8`}
+              alt="Scan to pay via UPI"
+              width={220}
+              height={220}
+              className="rounded-lg"
+            />
+            <a href={`upi://pay?pa=${encodeURIComponent(upiId)}&pn=Abu%26Beyond&am=${(total/100).toFixed(2)}&cu=INR&tn=Order%20${upiOrderCode}`} className="flex h-11 w-full items-center justify-center rounded-[14px] bg-clay text-sm font-bold text-ink">Open UPI App</a>
+            <p className="text-center text-xs text-muted">UPI: <span className="font-mono font-semibold text-ink">{upiId}</span> · ₹{(total/100).toFixed(2)}</p>
+            <button onClick={() => router.push(`/o/${upiOrderCode}`)} className="text-sm font-semibold underline">View order status →</button>
+          </div>
         )}
 
         {/* Staff only, and only visible because someone is signed in on this

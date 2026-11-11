@@ -4,8 +4,11 @@ import { OrderCard } from "@/components/admin/order-card";
 import { StaffLive } from "@/components/admin/live";
 import { Batching } from "@/components/admin/batching";
 import { AutoPrint } from "@/components/kitchen/auto-print";
+import { OverrideToggle } from "@/components/kitchen/override-toggle";
 import { requireRole } from "@/lib/auth";
 import { getLiveOrders } from "@/lib/orders/queries";
+import { getKitchenOverride } from "@/lib/orders/override-actions";
+import { serviceState } from "@/lib/hours";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Kitchen — Abu & Beyond" };
@@ -15,7 +18,12 @@ const STATIONS: Record<string, string> = { pizza_oven: "Pizza & Oven", wok_momos
 export default async function KitchenPage({ searchParams }: { searchParams: Promise<{ station?: string }> }) {
   const staff = await requireRole(["owner", "manager", "kitchen"], "/kitchen");
   const { station } = await searchParams;
-  const all = await getLiveOrders(["paid", "accepted", "preparing", "ready"]);
+  const [all, override] = await Promise.all([
+    getLiveOrders(["paid", "accepted", "preparing", "ready"]),
+    getKitchenOverride(),
+  ]);
+  const svcState = serviceState();
+  const serviceOpen = svcState.open;
   const filtered = station ? all.filter((o) => o.lines.some((l) => l.stationId === station)) : all;
 
   // A 10pm order must not sit on the pass at 7pm — somebody would cook it.
@@ -39,6 +47,9 @@ export default async function KitchenPage({ searchParams }: { searchParams: Prom
         <h1 className="font-display text-[28px] uppercase">Kitchen</h1>
         <span className={`rounded-full px-3 py-1 text-sm font-bold ${fresh ? "bg-acid text-ink" : "bg-paper/15"}`}>{fresh} new</span>
         <AutoPrint orderIds={all.filter((o) => o.status === "paid" && dueNow(o)).map((o) => o.id)} />
+        {(staff.role === "owner" || staff.role === "manager") && (
+          <OverrideToggle on={override} serviceOpen={serviceOpen} />
+        )}
         <nav className="ml-auto flex gap-1.5 overflow-x-auto">
           <Link href="/kitchen" className={`h-9 flex-none rounded-full px-3 text-sm leading-9 ${!station ? "bg-paper text-ink font-semibold" : "bg-paper/15"}`}>All</Link>
           {Object.entries(STATIONS).map(([id, name]) => (

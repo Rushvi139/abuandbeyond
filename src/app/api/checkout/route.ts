@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { currentStaff } from "@/lib/auth";
 import { transition } from "@/lib/orders/transition";
 import { REFUSE_ORDERS_WHEN_CLOSED, hoursLine, serviceState } from "@/lib/hours";
+import { getKitchenOverride } from "@/lib/orders/override-actions";
 import { db } from "@/lib/db";
 import { CheckoutSchema, createOrder } from "@/lib/orders/create";
 import { cashfreeConfigured, cashfreeMode, createCashfreeOrder } from "@/lib/payments/cashfree";
@@ -33,7 +34,8 @@ export async function POST(req: Request) {
   // right now is no reason to turn it away — it is the reason to offer it.
   if (REFUSE_ORDERS_WHEN_CLOSED && !wantsDemo && !parsed.data.scheduledFor) {
     const state = serviceState();
-    if (!state.open) {
+    const kitchenOverride = await getKitchenOverride();
+    if (!state.open && !kitchenOverride) {
       return NextResponse.json(
         {
           ok: false,

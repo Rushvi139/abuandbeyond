@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { OrderCard } from "@/components/admin/order-card";
 import { CodToggle } from "@/components/admin/cod-toggle";
+import { UpiSetting } from "@/components/admin/upi-setting";
 import { PaymentLink } from "@/components/admin/payment-link";
 import { StaffLive } from "@/components/admin/live";
 import { requireRole } from "@/lib/auth";
@@ -9,13 +10,14 @@ import { getAbandonedOrders, getLiveOrders, getRecentOrders } from "@/lib/orders
 import { LIVE } from "@/lib/orders/status";
 import { formatINR } from "@/lib/pricing";
 import { cashfreeConfigured } from "@/lib/payments/cashfree";
+import { getUpiId } from "@/lib/orders/override-actions";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminHome({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
   const staff = await requireRole(["owner", "manager"], "/admin");
   const { q } = await searchParams;
-  const [live, recent, riders, today, cod, dropped] = await Promise.all([
+  const [live, recent, riders, today, cod, dropped, upiId] = await Promise.all([
     getLiveOrders(LIVE),
     getRecentOrders(30, q),
     db()<{ id: string; name: string }[]>`select id, full_name as name from staff_users where role = 'rider' and active order by full_name`,
@@ -23,6 +25,7 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
       from orders where status not in ('pending_payment','payment_failed','cancelled') and not is_demo and (paid_at at time zone 'Asia/Kolkata')::date = (now() at time zone 'Asia/Kolkata')::date`,
     db()<{ value: boolean }[]>`select value::boolean from settings where key = 'cod_enabled'`,
     getAbandonedOrders(),
+    getUpiId(),
   ]);
   const t = today[0];
 
@@ -33,6 +36,7 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
         <h1 className="font-display text-[32px] uppercase">Orders</h1>
         <div className="flex flex-wrap items-center gap-4 text-sm">
           <CodToggle on={cod[0]?.value === true} locked={!cashfreeConfigured()} />
+          <UpiSetting current={upiId} />
           <Stat label="Today" value={String(t?.orders ?? 0)} />
           <Stat label="Net sales" value={formatINR(Number(t?.net ?? 0))} />
           <Stat label="Live" value={String(live.length)} />
