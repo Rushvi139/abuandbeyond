@@ -282,10 +282,10 @@ function ItemRow({ item, sticker, qty, onAdd, onMinus, onCustomise }: { item: Me
       <div className="flex min-w-0 flex-1 flex-col gap-1">
         <div className="flex items-center gap-1.5">
           <VegMark veg={item.isVeg} />
-          <span className="truncate text-[15px] font-semibold">{item.name}</span>
+          <span className="text-[15px] font-semibold leading-snug">{item.name}</span>
         </div>
         {(item.description || hasChoices) && (
-          <span className="truncate text-xs text-muted">{item.description ?? `Choose: ${item.optionGroups[0].choices.map((c) => c.name).join(" or ")}`}</span>
+          <span className="text-xs leading-snug text-muted">{item.description ?? `Choose: ${item.optionGroups[0].choices.map((c) => c.name).join(" or ")}`}</span>
         )}
         <span className="text-[15px] font-bold">{formatINR(item.pricePaise)}</span>
       </div>

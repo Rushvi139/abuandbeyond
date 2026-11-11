@@ -9,7 +9,7 @@ import { PrintButton } from "@/components/kitchen/auto-print";
 import { clockLabel } from "@/lib/hours";
 import { CollectButton } from "@/components/admin/collect-button";
 import { PaymentLink } from "@/components/admin/payment-link";
-import { WhatsAppButton } from "@/components/admin/whatsapp-button";
+import { WhatsAppButton, CopyWhatsAppButton } from "@/components/admin/whatsapp-button";
 import { VegMark } from "@/components/store/veg-mark";
 
 const CUISINE: Record<string, string> = { abu: "ABU", italy: "ABU & ITALY", mexico: "ABU & MEXICO", china: "ABU & CHINA", lebanon: "ABU & LEBANON" };
@@ -102,6 +102,12 @@ export function OrderCard({ order, riders, role, compact = false, dark = false }
               </select>
             </label>
             <button onClick={() => run(() => acceptOrder(order.id, prep))} className="h-10 flex-1 rounded-xl bg-clay px-4 text-sm font-bold text-ink">Accept</button>
+            <CopyWhatsAppButton
+              phone={order.customer.phone}
+              dark={dark}
+              label="Confirm →WA"
+              text={`Hi${order.customer.name ? " " + order.customer.name.split(" ")[0] : ""}! 🙌 Your order #${order.number} from Abu & Beyond is confirmed and we'll start cooking in a bit. Estimated delivery: ${prep} mins. Track here: https://abuandbeyond.in/o/${order.code}`}
+            />
           </>
         )}
         {order.status === "accepted" && canKitchen && <button onClick={() => run(() => setStatus(order.id, "preparing"))} className="h-10 flex-1 rounded-xl bg-clay px-4 text-sm font-bold text-ink">Start cooking</button>}
