@@ -3,7 +3,8 @@
 import Link from "next/link";
 import Script from "next/script";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
+import QRCode from "qrcode";
 import { useCart } from "@/hooks/use-cart";
 import { formatINR, gstOn } from "@/lib/pricing";
 import { CouponField, type Applied } from "@/components/store/coupon-field";
@@ -28,6 +29,49 @@ declare global {
   interface Window {
     Cashfree?: (opts: { mode: "sandbox" | "production" }) => CashfreeInstance;
   }
+}
+
+/** Full-screen UPI QR modal — generated client-side, no external API call. */
+function UpiQrModal({ upiId, totalPaise, orderCode, onClose }: { upiId: string; totalPaise: number; orderCode: string; onClose: () => void }) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const upiUrl = `upi://pay?pa=${encodeURIComponent(upiId)}&pn=Abu%26Beyond&am=${(totalPaise / 100).toFixed(2)}&cu=INR&tn=Order%20${orderCode}`;
+
+  useEffect(() => {
+    if (canvasRef.current) {
+      QRCode.toCanvas(canvasRef.current, upiUrl, { width: 260, margin: 2, color: { dark: "#1a1a1a", light: "#faf8f4" } });
+    }
+  }, [upiUrl]);
+
+  return (
+    <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-paper px-6">
+      <div className="w-full max-w-sm rounded-[24px] border-2 border-ink bg-paper p-6 text-center shadow-xl">
+        <p className="mb-1 font-display text-[22px] uppercase">Order placed!</p>
+        <p className="mb-5 text-sm text-muted">Scan the QR or tap the button to pay</p>
+
+        <canvas ref={canvasRef} className="mx-auto rounded-xl" />
+
+        <div className="mt-4 rounded-xl bg-surface px-4 py-3">
+          <p className="text-[13px] text-muted">Amount to pay</p>
+          <p className="text-[28px] font-bold">₹{(totalPaise / 100).toFixed(2)}</p>
+          <p className="mt-0.5 text-[12px] font-mono text-muted">{upiId}</p>
+        </div>
+
+        <a
+          href={upiUrl}
+          className="mt-4 flex h-12 w-full items-center justify-center rounded-[14px] bg-clay text-[15px] font-bold text-ink"
+        >
+          Open UPI App
+        </a>
+
+        <button
+          onClick={onClose}
+          className="mt-3 text-sm font-semibold text-muted underline-offset-2 hover:underline"
+        >
+          Done — View order status →
+        </button>
+      </div>
+    </div>
+  );
 }
 
 export function CheckoutScreen({ deliveryFeePaise, sourceRef, paymentsOn = true, codOn = true, upiId = "", kitchenOverride = false }: { deliveryFeePaise: number; sourceRef?: string; paymentsOn?: boolean; codOn?: boolean; upiId?: string; kitchenOverride?: boolean }) {
@@ -317,20 +361,12 @@ export function CheckoutScreen({ deliveryFeePaise, sourceRef, paymentsOn = true,
         </button>
         )}
         {upiOrderCode && (
-          <div className="mt-2 flex flex-col items-center gap-3 rounded-[18px] border-2 border-ink p-4">
-            <p className="font-semibold">Order placed! Scan to pay</p>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={`https://chart.googleapis.com/chart?chs=220x220&cht=qr&chl=${encodeURIComponent(`upi://pay?pa=${encodeURIComponent(upiId)}&pn=Abu%26Beyond&am=${(total/100).toFixed(2)}&cu=INR&tn=Order%20${upiOrderCode}`)}&choe=UTF-8`}
-              alt="Scan to pay via UPI"
-              width={220}
-              height={220}
-              className="rounded-lg"
-            />
-            <a href={`upi://pay?pa=${encodeURIComponent(upiId)}&pn=Abu%26Beyond&am=${(total/100).toFixed(2)}&cu=INR&tn=Order%20${upiOrderCode}`} className="flex h-11 w-full items-center justify-center rounded-[14px] bg-clay text-sm font-bold text-ink">Open UPI App</a>
-            <p className="text-center text-xs text-muted">UPI: <span className="font-mono font-semibold text-ink">{upiId}</span> · ₹{(total/100).toFixed(2)}</p>
-            <button onClick={() => router.push(`/o/${upiOrderCode}`)} className="text-sm font-semibold underline">View order status →</button>
-          </div>
+          <UpiQrModal
+            upiId={upiId}
+            totalPaise={total}
+            orderCode={upiOrderCode}
+            onClose={() => router.push(`/o/${upiOrderCode}`)}
+          />
         )}
 
       </div>
