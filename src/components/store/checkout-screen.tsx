@@ -11,7 +11,7 @@ import { ClosedNotice, useServiceOpen } from "@/components/store/service-gate";
 import { WhenPicker } from "@/components/store/when-picker";
 import { LocationPin, type Pin } from "./location-pin";
 import { VegMark } from "./veg-mark";
-import { UpiPayButton } from "./upi-pay-button";
+import { UpiInfoCard } from "./upi-pay-button";
 
 type Stay = "hotel" | "villa" | "homestay" | "home";
 const STAYS: { id: Stay; label: string }[] = [
@@ -111,37 +111,6 @@ export function CheckoutScreen({ deliveryFeePaise, sourceRef, paymentsOn = true,
       }
     } catch (e) {
       setError(e instanceof Error ? e.message : "Something went wrong");
-      setBusy(false);
-    }
-  }
-
-  // Place order as COD then show UPI QR — customer pays the kitchen's UPI.
-  async function payUpi() {
-    if (!valid || busy) return;
-    setBusy(true);
-    setError(null);
-    try {
-      const res = await fetch("/api/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name, phone, altPhone, stayType: stay, propertyName, roomOrLandmark: room, notes, sourceRef,
-          couponCode: coupon?.code ?? "",
-          scheduledFor,
-          payOnDelivery: true,
-          ...(pin ? { lat: pin.lat, lng: pin.lng } : {}),
-          lat: pin?.lat, lng: pin?.lng,
-          lines: cart.lines.map((l) => ({ itemId: l.itemId, qty: l.qty, optionIds: l.options.map((o) => o.optionId), addonIds: l.addons.map((a) => a.addonId), note: l.note ?? "" })),
-        }),
-      });
-      const json = await res.json();
-      if (!json.ok) throw new Error(json.error?.message ?? "Couldn't place the order");
-      const d = json.data as { code: string };
-      cart.clear();
-      router.push(`/o/${d.code}`);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Something went wrong");
-    } finally {
       setBusy(false);
     }
   }
@@ -266,17 +235,9 @@ export function CheckoutScreen({ deliveryFeePaise, sourceRef, paymentsOn = true,
 
       <div className="fixed inset-x-0 bottom-0 mx-auto max-w-md border-t border-line bg-paper px-3 pb-5 pt-3">
         <CouponField subtotalPaise={cart.subtotalPaise} phone={phone} applied={coupon} onChange={setCoupon} />
-        {/* Scan & Pay is the primary online payment while Cashfree is not live.
-            When upiId is set it replaces the Cashfree button entirely. */}
-        {upiId && (
-          <UpiPayButton
-            upiId={upiId}
-            total={total}
-            onPlace={payUpi}
-            disabled={!valid}
-            busy={busy}
-          />
-        )}
+        {/* UPI info card — always visible when a UPI ID is configured.
+            Customer can copy the ID and pay now, or pay the rider on delivery. */}
+        {upiId && <UpiInfoCard upiId={upiId} totalPaise={total} />}
 
         {/* Cashfree online payment — only shown when no UPI id is configured */}
         {paymentsOn && !upiId && (
