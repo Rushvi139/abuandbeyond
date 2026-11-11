@@ -3,8 +3,7 @@
 import Link from "next/link";
 import Script from "next/script";
 import { useRouter } from "next/navigation";
-import { useState, useEffect, useRef } from "react";
-import QRCode from "qrcode";
+import { useState, useEffect } from "react";
 import { useCart } from "@/hooks/use-cart";
 import { formatINR, gstOn } from "@/lib/pricing";
 import { CouponField, type Applied } from "@/components/store/coupon-field";
@@ -31,69 +30,6 @@ declare global {
   }
 }
 
-/** Full-screen UPI QR modal — generated client-side, no external API call. */
-function UpiQrModal({ upiId, totalPaise, orderCode, onClose }: { upiId: string; totalPaise: number; orderCode: string; onClose: () => void }) {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [copied, setCopied] = useState(false);
-  const upiUrl = `upi://pay?pa=${encodeURIComponent(upiId)}&pn=Abu%26Beyond&am=${(totalPaise / 100).toFixed(2)}&cu=INR&tn=Order%20${orderCode}`;
-
-  useEffect(() => {
-    if (canvasRef.current) {
-      QRCode.toCanvas(canvasRef.current, upiUrl, { width: 260, margin: 2, color: { dark: "#1a1a1a", light: "#faf8f4" } });
-    }
-  }, [upiUrl]);
-
-  function copyUpiId() {
-    navigator.clipboard.writeText(upiId).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    }).catch(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    });
-  }
-
-  return (
-    <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-paper px-6">
-      <div className="w-full max-w-sm rounded-[24px] border-2 border-ink bg-paper p-6 text-center shadow-xl">
-        <p className="mb-1 font-display text-[22px] uppercase">Order placed!</p>
-        <p className="mb-5 text-sm text-muted">Scan the QR or tap the button to pay</p>
-
-        <canvas ref={canvasRef} className="mx-auto rounded-xl" />
-
-        <div className="mt-4 rounded-xl bg-surface px-4 py-3">
-          <p className="text-[13px] text-muted">Amount to pay</p>
-          <p className="text-[28px] font-bold">₹{(totalPaise / 100).toFixed(2)}</p>
-        </div>
-
-        {/* Copy UPI ID row */}
-        <div className="mt-3 flex items-center gap-2 rounded-xl bg-surface px-4 py-3">
-          <span className="flex-1 truncate font-mono text-[12px] text-left">{upiId}</span>
-          <button
-            onClick={copyUpiId}
-            className={`flex-shrink-0 rounded-lg border px-3 py-1.5 text-[12px] font-semibold transition-colors ${copied ? "border-green-600 text-green-600" : "border-line text-ink"}`}
-          >
-            {copied ? "Copied!" : "Copy"}
-          </button>
-        </div>
-
-        <a
-          href={upiUrl}
-          className="mt-4 flex h-12 w-full items-center justify-center rounded-[14px] bg-clay text-[15px] font-bold text-ink"
-        >
-          Open UPI App
-        </a>
-
-        <button
-          onClick={onClose}
-          className="mt-3 text-sm font-semibold text-muted underline-offset-2 hover:underline"
-        >
-          Done — View order status →
-        </button>
-      </div>
-    </div>
-  );
-}
 
 export function CheckoutScreen({ deliveryFeePaise, sourceRef, paymentsOn = true, codOn = true, upiId = "", kitchenOverride = false }: { deliveryFeePaise: number; sourceRef?: string; paymentsOn?: boolean; codOn?: boolean; upiId?: string; kitchenOverride?: boolean }) {
   const cart = useCart();
@@ -112,7 +48,6 @@ export function CheckoutScreen({ deliveryFeePaise, sourceRef, paymentsOn = true,
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [coupon, setCoupon] = useState<Applied>(null);
-  const [upiOrderCode, setUpiOrderCode] = useState<string | null>(null);
 
   // GST is charged on what is actually paid for the food, so the discount comes
   // off first. The server works this out again before taking any money.
@@ -203,7 +138,7 @@ export function CheckoutScreen({ deliveryFeePaise, sourceRef, paymentsOn = true,
       if (!json.ok) throw new Error(json.error?.message ?? "Couldn't place the order");
       const d = json.data as { code: string };
       cart.clear();
-      setUpiOrderCode(d.code);  // show QR — stay on this page
+      router.push(`/o/${d.code}`);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Something went wrong");
     } finally {
@@ -333,7 +268,7 @@ export function CheckoutScreen({ deliveryFeePaise, sourceRef, paymentsOn = true,
         <CouponField subtotalPaise={cart.subtotalPaise} phone={phone} applied={coupon} onChange={setCoupon} />
         {/* Scan & Pay is the primary online payment while Cashfree is not live.
             When upiId is set it replaces the Cashfree button entirely. */}
-        {upiId && !upiOrderCode && (
+        {upiId && (
           <UpiPayButton
             upiId={upiId}
             total={total}
@@ -380,14 +315,6 @@ export function CheckoutScreen({ deliveryFeePaise, sourceRef, paymentsOn = true,
             Cash or UPI to the rider at your door
           </span>
         </button>
-        )}
-        {upiOrderCode && (
-          <UpiQrModal
-            upiId={upiId}
-            totalPaise={total}
-            orderCode={upiOrderCode}
-            onClose={() => router.push(`/o/${upiOrderCode}`)}
-          />
         )}
 
       </div>

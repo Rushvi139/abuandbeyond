@@ -4,77 +4,113 @@ import { useState } from "react";
 import { formatINR } from "@/lib/pricing";
 
 /**
- * UPI deep-link / QR fallback when Cashfree is not configured.
+ * UPI payment flow for when Cashfree is not configured.
  *
- * Opens the customer's UPI app via the standard upi:// scheme (works on
- * Android; on iOS it falls back to showing a QR the customer can scan from
- * another device). The order is placed as COD (pay on delivery) so it reaches
- * the kitchen immediately; staff confirm payment receipt from the admin panel.
+ * Flow:
+ *  1. Customer taps "Pay via UPI" → sees amount + UPI ID + "Open UPI App" button
+ *  2. Customer opens their UPI app (GPay / PhonePe / Paytm etc), pays, comes back
+ *  3. Customer taps "I've paid — Place my order" → order is placed as COD
+ *
+ * This keeps the order out of the kitchen until the customer says they've paid,
+ * and fixes the ₹0 bug (cart is never cleared before the amount is shown).
+ * No QR — customers can't scan their own screen.
  */
 export function UpiPayButton({
   upiId,
   total,
-  orderId,
   onPlace,
   disabled,
   busy,
 }: {
   upiId: string;
   total: number;
-  orderId?: string;
   onPlace: () => void;
   disabled: boolean;
   busy: boolean;
 }) {
-  const [showQr, setShowQr] = useState(false);
+  const [step, setStep] = useState<"idle" | "pay">("idle");
+  const [copied, setCopied] = useState(false);
 
   if (!upiId) return null;
 
   const amount = (total / 100).toFixed(2);
-  const tn = orderId ? `Abu%26Beyond%20Order%20${orderId}` : "Abu%26Beyond%20Order";
-  const upiLink = `upi://pay?pa=${encodeURIComponent(upiId)}&pn=Abu%26Beyond&am=${amount}&cu=INR&tn=${tn}`;
+  const upiLink = `upi://pay?pa=${encodeURIComponent(upiId)}&pn=Abu%26Beyond&am=${amount}&cu=INR&tn=Abu%26Beyond%20Order`;
 
+  function copyUpi() {
+    navigator.clipboard.writeText(upiId).catch(() => {});
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }
+
+  if (step === "idle") {
+    return (
+      <button
+        type="button"
+        onClick={() => setStep("pay")}
+        disabled={disabled || busy}
+        className="flex h-[52px] w-full flex-col items-center justify-center rounded-[16px] border-2 border-ink disabled:opacity-50"
+      >
+        <span className="text-[15px] font-bold">
+          Pay via UPI · {formatINR(total, { decimals: true })}
+        </span>
+        <span className="text-[11px] font-medium text-muted">GPay · PhonePe · Paytm · any UPI app</span>
+      </button>
+    );
+  }
+
+  // step === "pay"
   return (
-    <div className="mt-2">
-      {!showQr ? (
+    <div className="rounded-[18px] border-2 border-ink p-4">
+      {/* Amount */}
+      <div className="mb-4 text-center">
+        <p className="text-[13px] text-muted">Pay this amount</p>
+        <p className="text-[32px] font-bold leading-tight">₹{amount}</p>
+      </div>
+
+      {/* UPI ID copy row */}
+      <div className="mb-3 flex items-center gap-2 rounded-xl bg-surface px-4 py-3">
+        <span className="flex-1 truncate font-mono text-[13px]">{upiId}</span>
         <button
           type="button"
-          onClick={() => {
-            onPlace();          // place as COD — kitchen gets the ticket
-            setShowQr(true);    // then show payment QR
-          }}
-          disabled={disabled || busy}
-          className="flex h-[52px] w-full flex-col items-center justify-center rounded-[16px] border-2 border-ink disabled:opacity-50"
+          onClick={copyUpi}
+          className={`flex-shrink-0 rounded-lg border px-3 py-1.5 text-[12px] font-semibold transition-colors ${
+            copied ? "border-green-600 text-green-600" : "border-line text-ink"
+          }`}
         >
-          <span className="text-[15px] font-bold">
-            {busy ? "Placing order…" : `Scan & Pay · ${formatINR(total, { decimals: true })}`}
-          </span>
-          <span className="text-[11px] font-medium text-muted">Pay via any UPI app</span>
+          {copied ? "Copied!" : "Copy"}
         </button>
-      ) : (
-        <div className="flex flex-col items-center gap-3 rounded-[18px] border-2 border-ink p-4">
-          <p className="text-sm font-semibold">Order placed! Now pay via UPI</p>
-          {/* QR via Google Charts API — no server needed */}
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={`https://chart.googleapis.com/chart?chs=200x200&cht=qr&chl=${encodeURIComponent(upiLink)}&choe=UTF-8`}
-            alt="Scan to pay via UPI"
-            width={200}
-            height={200}
-            className="rounded-lg"
-          />
-          <a
-            href={upiLink}
-            className="flex h-11 w-full items-center justify-center rounded-[14px] bg-clay text-sm font-bold text-ink"
-          >
-            Open UPI App
-          </a>
-          <p className="text-center text-xs text-muted">
-            UPI ID: <span className="font-mono font-semibold text-ink">{upiId}</span>
-            <br />Amount: <span className="font-semibold text-ink">₹{amount}</span>
-          </p>
-        </div>
-      )}
+      </div>
+
+      {/* Open UPI App deep link */}
+      <a
+        href={upiLink}
+        className="mb-3 flex h-[48px] w-full items-center justify-center rounded-[14px] bg-clay text-[15px] font-bold text-paper"
+      >
+        Open UPI App
+      </a>
+
+      {/* After paying, place the order */}
+      <button
+        type="button"
+        onClick={onPlace}
+        disabled={busy}
+        className="flex h-[48px] w-full items-center justify-center rounded-[14px] border-2 border-ink text-[14px] font-bold disabled:opacity-50"
+      >
+        {busy ? "Placing order…" : "I've paid — Place my order →"}
+      </button>
+
+      <p className="mt-3 text-center text-[11px] text-muted">
+        Pay first, then tap the button above to confirm your order.
+      </p>
+
+      {/* Go back */}
+      <button
+        type="button"
+        onClick={() => setStep("idle")}
+        className="mt-2 w-full text-center text-[12px] text-muted underline-offset-2 hover:underline"
+      >
+        ← Back
+      </button>
     </div>
   );
 }
