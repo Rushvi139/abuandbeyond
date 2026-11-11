@@ -84,7 +84,6 @@ function OrderRow({
         {/* # */}
         <td className="whitespace-nowrap py-2.5 pl-4 pr-2 font-display text-[18px]">
           #{order.number}
-          {order.isDemo && <span className="ml-1 text-[9px] font-bold uppercase opacity-50">demo</span>}
         </td>
         {/* Customer */}
         <td className="px-2 py-2.5">

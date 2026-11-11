@@ -105,7 +105,7 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
                       {/* The one row an owner can act on: the guest got as far
                           as the payment page and stopped. Hand them the link
                           back rather than writing the order off. */}
-                      {o.status === "pending_payment" && o.paymentSessionId && !o.isDemo && <PaymentLink code={o.code} />}
+                      {o.status === "pending_payment" && o.paymentSessionId && <PaymentLink code={o.code} />}
                     </span>
                   </td>
                   <td className="px-4 py-2.5 text-right font-semibold">{formatINR(o.totalPaise)}</td>

@@ -52,7 +52,6 @@ export default async function KotPage({
         )}
         <div className="muted">
           {o.stayType.toUpperCase()}
-          {o.isDemo && " · DEMO"}
           {reprint && " · REPRINT"}
         </div>
         {where && <div className="where">{where}</div>}

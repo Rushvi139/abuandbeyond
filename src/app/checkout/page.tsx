@@ -1,5 +1,4 @@
 import { CheckoutScreen } from "@/components/store/checkout-screen";
-import { currentStaff } from "@/lib/auth";
 import { cashfreeConfigured } from "@/lib/payments/cashfree";
 import { codAllowed } from "@/lib/orders/cod";
 import { getUpiId, getKitchenOverride } from "@/lib/orders/override-actions";
@@ -15,6 +14,6 @@ export default async function CheckoutPage({ searchParams }: { searchParams: Pro
     const [row] = await db()<{ value: number }[]>`select value from settings where key = 'delivery_fee_paise'`;
     fee = Number(row?.value) || 0;
   } catch {}
-  const [staff, upiId, kitchenOverride] = await Promise.all([currentStaff(), getUpiId(), getKitchenOverride()]);
-  return <CheckoutScreen deliveryFeePaise={fee} sourceRef={src} staffName={staff?.fullName ?? null} paymentsOn={cashfreeConfigured()} codOn={await codAllowed()} upiId={upiId} kitchenOverride={kitchenOverride} />;
+  const [upiId, kitchenOverride] = await Promise.all([getUpiId(), getKitchenOverride()]);
+  return <CheckoutScreen deliveryFeePaise={fee} sourceRef={src} paymentsOn={cashfreeConfigured()} codOn={await codAllowed()} upiId={upiId} kitchenOverride={kitchenOverride} />;
 }

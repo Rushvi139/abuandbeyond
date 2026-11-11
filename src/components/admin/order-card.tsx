@@ -43,9 +43,6 @@ export function OrderCard({ order, riders, role, compact = false, dark = false }
         <div>
           <div className="flex items-center gap-2">
             <span className={`font-display ${compact ? "text-[26px]" : "text-[30px]"}`}>#{order.number}</span>
-            {order.isDemo && (
-              <span className="rounded-full border border-dashed border-current px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider opacity-80">Demo</span>
-            )}
             {/* Taken on test keys. Once we are live these are the only orders
                 Cashfree will not recognise, so the row has to say so itself. */}
             {order.gatewayEnv === "sandbox" && (

@@ -1,6 +1,5 @@
 import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
-import { currentStaff } from "@/lib/auth";
 import { transition } from "@/lib/orders/transition";
 import { REFUSE_ORDERS_WHEN_CLOSED, hoursLine, serviceState } from "@/lib/hours";
 import { getKitchenOverride } from "@/lib/orders/override-actions";
@@ -20,19 +19,11 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: false, error: { code: "invalid", message: first?.message ?? "Check the form" } }, { status: 400 });
   }
 
-  // A staff member can push a real cart through without paying, to walk the
-  // whole path — menu, checkout, kitchen ticket, rider — before the gateway is
-  // live. Gated on a staff session, not on a flag in the request, and the order
-  // is marked is_demo so it never reaches sales, costing or the indent.
-  const wantsDemo = (body as { demo?: unknown } | null)?.demo === true;
-  const staff = wantsDemo ? await currentStaff() : null;
-
   // The real guard is here, not on the button. Taking money for food nobody
-  // is in the kitchen to cook means a refund and a guest who waited. Staff
-  // demos are exempt, so the flow can be tested at any hour.
+  // is in the kitchen to cook means a refund and a guest who waited.
   // A scheduled order is explicitly for a slot we are open, so being shut
   // right now is no reason to turn it away — it is the reason to offer it.
-  if (REFUSE_ORDERS_WHEN_CLOSED && !wantsDemo && !parsed.data.scheduledFor) {
+  if (REFUSE_ORDERS_WHEN_CLOSED && !parsed.data.scheduledFor) {
     const state = serviceState();
     const kitchenOverride = await getKitchenOverride();
     if (!state.open && !kitchenOverride) {
@@ -48,9 +39,6 @@ export async function POST(req: Request) {
       );
     }
   }
-  if (wantsDemo && !staff) {
-    return NextResponse.json({ ok: false, error: { code: "forbidden", message: "Sign in as staff to place a demo order." } }, { status: 403 });
-  }
   // Checked before the order exists, not after. Refusing a created order
   // would leave a row that says it will be paid at the door and never is.
   if (parsed.data.payOnDelivery && !(await codAllowed())) {
@@ -58,24 +46,8 @@ export async function POST(req: Request) {
   }
 
   try {
-    const order = await createOrder(parsed.data, wantsDemo ? { source: "demo" } : {});
+    const order = await createOrder(parsed.data, {});
     await rememberCustomer(order.customerId); // so this device finds its own order history later
-
-    if (wantsDemo && staff) {
-      const sql = db();
-      await sql.begin(async (tx) => {
-        await tx`update orders set status = 'paid', paid_at = now(), is_demo = true where id = ${order.id}`;
-        await tx`insert into order_status_events (order_id, from_status, to_status, actor_id, note)
-          values (${order.id}, 'pending_payment', 'paid', ${staff.id}, 'demo order from checkout')`;
-      });
-      revalidatePath("/admin");
-      revalidatePath("/kitchen");
-      revalidatePath("/rider");
-      return NextResponse.json({
-        ok: true,
-        data: { code: order.code, number: order.number, amountPaise: order.totalPaise, demo: true },
-      });
-    }
 
     // Pay on delivery: no gateway at all. The order is confirmed and goes to
     // the kitchen straight away; the money is a separate fact, recorded when
