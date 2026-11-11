@@ -269,7 +269,20 @@ export function CheckoutScreen({ deliveryFeePaise, sourceRef, paymentsOn = true,
       {error && <p role="alert" className="mt-3 rounded-xl bg-error/10 px-4 py-3 text-sm font-semibold text-error">{error}</p>}
 
       <div className="fixed inset-x-0 bottom-0 mx-auto max-w-md border-t border-line bg-paper px-3 pb-5 pt-3">
-        {paymentsOn && (
+        {/* Scan & Pay is the primary online payment while Cashfree is not live.
+            When upiId is set it replaces the Cashfree button entirely. */}
+        {upiId && !upiOrderCode && (
+          <UpiPayButton
+            upiId={upiId}
+            total={total}
+            onPlace={payUpi}
+            disabled={!valid}
+            busy={busy}
+          />
+        )}
+
+        {/* Cashfree online payment — only shown when no UPI id is configured */}
+        {paymentsOn && !upiId && (
         <button type="button" onClick={() => { setCodBusy(false); pay(); }} disabled={!valid || busy} className="flex h-[60px] w-full flex-col items-center justify-center rounded-[18px] bg-clay text-ink disabled:opacity-50">
           <span className="text-[17px] font-bold">
             {shut ? "Closed right now" : busy ? "Opening payment…" : `Pay ${formatINR(total, { decimals: true })}`}
@@ -293,29 +306,18 @@ export function CheckoutScreen({ deliveryFeePaise, sourceRef, paymentsOn = true,
           onClick={() => { setCodBusy(true); pay(true); }}
           disabled={!valid || busy}
           className={
-            paymentsOn
+            (paymentsOn || upiId)
               ? "mt-2 flex h-[52px] w-full flex-col items-center justify-center rounded-[16px] border-2 border-ink disabled:opacity-50"
               : "flex h-[60px] w-full flex-col items-center justify-center rounded-[18px] bg-clay text-ink disabled:opacity-50"
           }
         >
-          <span className={paymentsOn ? "text-[15px] font-bold" : "text-[17px] font-bold"}>
+          <span className={(paymentsOn || upiId) ? "text-[15px] font-bold" : "text-[17px] font-bold"}>
             {busy && codBusy ? "Placing your order…" : shut ? "Closed right now" : `Pay on delivery · ${formatINR(total, { decimals: true })}`}
           </span>
-          <span className={`text-[11px] font-medium ${paymentsOn ? "text-muted" : ""}`}>
+          <span className={`text-[11px] font-medium ${(paymentsOn || upiId) ? "text-muted" : ""}`}>
             Cash or UPI to the rider at your door
           </span>
         </button>
-        )}
-
-        {/* UPI scan & pay — places order as COD then shows QR */}
-        {upiId && !codOn && !paymentsOn && !upiOrderCode && (
-          <UpiPayButton
-            upiId={upiId}
-            total={total}
-            onPlace={payUpi}
-            disabled={!valid}
-            busy={busy}
-          />
         )}
         {upiOrderCode && (
           <div className="mt-2 flex flex-col items-center gap-3 rounded-[18px] border-2 border-ink p-4">
