@@ -34,6 +34,7 @@ declare global {
 /** Full-screen UPI QR modal — generated client-side, no external API call. */
 function UpiQrModal({ upiId, totalPaise, orderCode, onClose }: { upiId: string; totalPaise: number; orderCode: string; onClose: () => void }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [copied, setCopied] = useState(false);
   const upiUrl = `upi://pay?pa=${encodeURIComponent(upiId)}&pn=Abu%26Beyond&am=${(totalPaise / 100).toFixed(2)}&cu=INR&tn=Order%20${orderCode}`;
 
   useEffect(() => {
@@ -41,6 +42,16 @@ function UpiQrModal({ upiId, totalPaise, orderCode, onClose }: { upiId: string; 
       QRCode.toCanvas(canvasRef.current, upiUrl, { width: 260, margin: 2, color: { dark: "#1a1a1a", light: "#faf8f4" } });
     }
   }, [upiUrl]);
+
+  function copyUpiId() {
+    navigator.clipboard.writeText(upiId).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }).catch(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-paper px-6">
@@ -53,7 +64,17 @@ function UpiQrModal({ upiId, totalPaise, orderCode, onClose }: { upiId: string; 
         <div className="mt-4 rounded-xl bg-surface px-4 py-3">
           <p className="text-[13px] text-muted">Amount to pay</p>
           <p className="text-[28px] font-bold">₹{(totalPaise / 100).toFixed(2)}</p>
-          <p className="mt-0.5 text-[12px] font-mono text-muted">{upiId}</p>
+        </div>
+
+        {/* Copy UPI ID row */}
+        <div className="mt-3 flex items-center gap-2 rounded-xl bg-surface px-4 py-3">
+          <span className="flex-1 truncate font-mono text-[12px] text-left">{upiId}</span>
+          <button
+            onClick={copyUpiId}
+            className={`flex-shrink-0 rounded-lg border px-3 py-1.5 text-[12px] font-semibold transition-colors ${copied ? "border-green-600 text-green-600" : "border-line text-ink"}`}
+          >
+            {copied ? "Copied!" : "Copy"}
+          </button>
         </div>
 
         <a
