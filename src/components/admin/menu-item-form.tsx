@@ -19,7 +19,7 @@ export function MenuItemForm({ item, categories }: { item?: EditableItem; catego
 
   return (
     <form
-      action={(fd) => start(async () => { setErr(null); try { await saveMenuItem(fd); if (item) setOpen(false); else (document.getElementById("mform") as HTMLFormElement | null)?.reset(); } catch (e) { setErr(e instanceof Error ? e.message : "Couldn't save"); } })}
+      action={async (fd) => { setErr(null); start(async () => { try { await saveMenuItem(fd); if (item) setOpen(false); else (document.getElementById("mform") as HTMLFormElement | null)?.reset(); } catch (e) { setErr(e instanceof Error ? e.message : "Couldn't save"); } }); }}
       id={item ? undefined : "mform"}
       className={`grid w-full gap-2 rounded-2xl bg-surface p-4 sm:grid-cols-2 ${item ? "mt-2 border border-line" : ""}`}
     >

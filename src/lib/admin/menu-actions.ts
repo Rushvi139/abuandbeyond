@@ -32,9 +32,22 @@ export async function saveMenuItem(formData: FormData) {
   const imagePath = photo instanceof File && photo.size > 0 ? "/files/" + (await saveUpload(photo, "menu")) : null;
 
   await sql.begin(async (tx) => {
-    const [cat] = await tx<{ id: string }[]>`insert into categories (name, slug, sort_order)
-      values (${d.category}, ${slugify(d.category)}, (select coalesce(max(sort_order), 0) + 1 from categories))
-      on conflict (name) do update set active = true returning id`;
+    // Look up by name first (case-insensitive), then by slug, then insert.
+    // The double-lookup avoids a unique-constraint crash when the same category
+    // was created with slightly different casing or the slug already exists.
+    let [cat] = await tx<{ id: string }[]>`
+      select id from categories where lower(name) = lower(${d.category}) limit 1`;
+    if (!cat) [cat] = await tx<{ id: string }[]>`
+      select id from categories where slug = ${slugify(d.category)} limit 1`;
+    if (!cat) {
+      [cat] = await tx<{ id: string }[]>`
+        insert into categories (name, slug, sort_order)
+        values (${d.category}, ${slugify(d.category)},
+          (select coalesce(max(sort_order), 0) + 1 from categories))
+        on conflict (slug) do update set active = true returning id`;
+    } else {
+      await tx`update categories set active = true where id = ${cat.id}`;
+    }
     let id = d.id || null;
     if (id) {
       await tx`update menu_items set name = ${d.name}, description = ${d.description || null}, category_id = ${cat.id}, station_id = ${d.station},
