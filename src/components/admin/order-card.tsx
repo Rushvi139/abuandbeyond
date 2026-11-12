@@ -66,6 +66,10 @@ export function OrderCard({ order, riders, role, compact = false, dark = false }
             <span className={`font-display ${compact ? "text-[20px]" : "text-[22px]"} leading-none`}>{l.qty}×</span>
             <div className="flex flex-1 flex-col">
               <span className={`flex items-center gap-1.5 ${compact ? "text-[15px]" : "text-base"} font-semibold`}><VegMark veg={l.isVeg} />{l.name}</span>
+              {/* Same as the printed KOT: "Paneer" alone is ambiguous (roll? bowl?). */}
+              {l.category && (
+                <span className={`text-[11px] font-bold uppercase tracking-wider ${dark ? "text-kraft" : "text-muted"}`}>{l.category}</span>
+              )}
               {(l.options.length > 0 || l.addons.length > 0 || l.note) && (
                 <span className={`text-[13px] ${dark ? "text-acid" : "text-clay"} font-semibold`}>{[...l.options, ...l.addons.map((a) => "+ " + a), l.note ? `“${l.note}”` : ""].filter(Boolean).join(" · ")}</span>
               )}
