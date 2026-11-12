@@ -42,6 +42,7 @@ const GROUPS: NavGroup[] = [
     label: "Finance",
     ownerOnly: true,
     items: [
+      { href: "/admin/day-close", label: "Day Close", icon: "🌙" },
       { href: "/admin/accounts", label: "Ledger", icon: "📊" },
       { href: "/admin/accounts/vendors", label: "Vendors", icon: "🏪" },
       { href: "/admin/accounts/expenses", label: "Expenses", icon: "💸" },
