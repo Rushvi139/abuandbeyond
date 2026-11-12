@@ -22,7 +22,30 @@ export function useServiceOpen(): boolean | null {
   return open;
 }
 
-export function ClosedNotice() {
+/**
+ * Whether staff have forced the kitchen open, checked each minute. Starts
+ * from what the server rendered (if it knows) so the page doesn't flicker.
+ */
+export function useForcedOpen(initial = false): boolean {
+  const [on, setOn] = useState(initial);
+  useEffect(() => {
+    let live = true;
+    const check = () =>
+      fetch("/api/service", { cache: "no-store" })
+        .then((r) => r.json())
+        .then((j: { forcedOpen?: boolean }) => live && setOn(Boolean(j.forcedOpen)))
+        .catch(() => {});
+    check();
+    const id = setInterval(check, 60_000);
+    return () => {
+      live = false;
+      clearInterval(id);
+    };
+  }, []);
+  return on;
+}
+
+export function ClosedNotice({ forcedOpen = false }: { forcedOpen?: boolean }) {
   const [state, setState] = useState<ReturnType<typeof serviceState> | null>(null);
   useEffect(() => {
     const tick = () => setState(serviceState());
@@ -31,7 +54,7 @@ export function ClosedNotice() {
     return () => clearInterval(id);
   }, []);
 
-  if (!REFUSE_ORDERS_WHEN_CLOSED || !state || state.open) return null;
+  if (!REFUSE_ORDERS_WHEN_CLOSED || !state || state.open || forcedOpen) return null;
 
   return (
     <div className="mt-5 rounded-[18px] bg-ink p-4 text-reversed">

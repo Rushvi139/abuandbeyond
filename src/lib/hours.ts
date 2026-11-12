@@ -75,6 +75,19 @@ export function serviceState(now: Date = new Date()): ServiceState {
   return { open: false, opensAt: pretty(at.from), closesAt: null };
 }
 
+/**
+ * The moment the next regular shift starts, as a real Date. Used to end a
+ * "kitchen forced open" by itself once the normal hours take over.
+ */
+export function nextOpening(now: Date = new Date()): Date {
+  const t = kolkataMinutes(now);
+  const starts = SERVICE.map((w) => mins(w.from)).sort((a, b) => a - b);
+  const next = starts.find((s) => s > t) ?? starts[0] + DAY;
+  const d = new Date(now.getTime() + (next - t) * 60_000);
+  d.setSeconds(0, 0);
+  return d;
+}
+
 /** How long before a slot we stop offering it — the kitchen needs the lead. */
 export const SLOT_LEAD_MINUTES = 45;
 /** Slot granularity. */

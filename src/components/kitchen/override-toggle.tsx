@@ -3,7 +3,8 @@
 import { useTransition } from "react";
 import { setKitchenOverride } from "@/lib/orders/override-actions";
 
-export function OverrideToggle({ on, serviceOpen }: { on: boolean; serviceOpen: boolean }) {
+/** Switches itself off at the next regular shift (max 6 hours) — see override-actions. */
+export function OverrideToggle({ on, serviceOpen, until = null }: { on: boolean; serviceOpen: boolean; until?: string | null }) {
   const [pending, startTransition] = useTransition();
 
   // Only show when kitchen is naturally closed, or when override is active
@@ -27,7 +28,7 @@ export function OverrideToggle({ on, serviceOpen }: { on: boolean; serviceOpen: 
       }`}
     >
       <span className={`h-2 w-2 rounded-full ${on ? "bg-ink" : "bg-kraft"}`} />
-      {on ? "Kitchen forced open" : "Kitchen closed — tap to open"}
+      {on ? `Kitchen forced open${until ? ` · until ${until}` : ""} — tap to close` : "Kitchen closed — tap to open"}
     </button>
   );
 }

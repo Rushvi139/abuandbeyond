@@ -6,7 +6,7 @@ import { useState, useEffect } from "react";
 import { useCart } from "@/hooks/use-cart";
 import { formatINR, gstOn } from "@/lib/pricing";
 import { CouponField, type Applied } from "@/components/store/coupon-field";
-import { ClosedNotice, useServiceOpen } from "@/components/store/service-gate";
+import { ClosedNotice, useForcedOpen, useServiceOpen } from "@/components/store/service-gate";
 import { WhenPicker } from "@/components/store/when-picker";
 import { LocationPin, type Pin } from "./location-pin";
 import { VegMark } from "./veg-mark";
@@ -28,6 +28,7 @@ export function CheckoutScreen({ deliveryFeePaise, sourceRef, paymentsOn = true,
   const [phone, setPhone] = useState("");
   const [altPhone, setAltPhone] = useState("");
   const open = useServiceOpen();
+  const forcedOpen = useForcedOpen(kitchenOverride);
   const [scheduledFor, setScheduledFor] = useState("");
   const [codBusy, setCodBusy] = useState(false);
   const [stay, setStay] = useState<Stay>("hotel");
@@ -44,7 +45,7 @@ export function CheckoutScreen({ deliveryFeePaise, sourceRef, paymentsOn = true,
   const discount = coupon?.discountPaise ?? 0;
   const gst = gstOn(cart.subtotalPaise - discount);
   const total = cart.subtotalPaise - discount + gst + deliveryFeePaise;
-  const shut = open === false && !scheduledFor && !kitchenOverride;
+  const shut = open === false && !scheduledFor && !forcedOpen;
   const valid = name.trim().length >= 2 && /^[6-9]\d{9}$/.test(phone) && cart.lines.length > 0 && !shut;
 
   async function pay(payOnDelivery = false) {
@@ -186,10 +187,10 @@ export function CheckoutScreen({ deliveryFeePaise, sourceRef, paymentsOn = true,
         </div>
       </section>
 
-      <ClosedNotice />
+      <ClosedNotice forcedOpen={forcedOpen} />
 
       <section className="mt-5">
-        <WhenPicker value={scheduledFor} onChange={setScheduledFor} />
+        <WhenPicker value={scheduledFor} onChange={setScheduledFor} forcedOpen={forcedOpen} />
       </section>
 
       <section className="mt-5 flex flex-col gap-2.5 rounded-[18px] bg-surface p-4 text-sm">

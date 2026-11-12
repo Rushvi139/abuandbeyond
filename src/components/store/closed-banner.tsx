@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { REFUSE_ORDERS_WHEN_CLOSED, serviceState } from "@/lib/hours";
+import { useForcedOpen } from "@/components/store/service-gate";
 
 /**
  * "Closed" on its own reads as "come back later", and the guest leaves. Most
@@ -14,6 +15,7 @@ import { REFUSE_ORDERS_WHEN_CLOSED, serviceState } from "@/lib/hours";
  */
 export function ClosedBanner() {
   const [state, setState] = useState<ReturnType<typeof serviceState> | null>(null);
+  const forcedOpen = useForcedOpen();
 
   useEffect(() => {
     const tick = () => setState(serviceState());
@@ -22,7 +24,7 @@ export function ClosedBanner() {
     return () => clearInterval(id);
   }, []);
 
-  if (!REFUSE_ORDERS_WHEN_CLOSED || !state || state.open) return null;
+  if (!REFUSE_ORDERS_WHEN_CLOSED || !state || state.open || forcedOpen) return null;
 
   return (
     <div className="mx-5 mt-4 flex items-center gap-3 rounded-[18px] bg-ink px-4 py-3 text-reversed">

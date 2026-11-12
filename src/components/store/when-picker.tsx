@@ -14,7 +14,7 @@ import { serviceState, upcomingSlots, type Slot } from "@/lib/hours";
  * When the kitchen is shut this is the only way to order, so it opens on the
  * slot list rather than on "as soon as possible".
  */
-export function WhenPicker({ value, onChange }: { value: string; onChange: (iso: string) => void }) {
+export function WhenPicker({ value, onChange, forcedOpen = false }: { value: string; onChange: (iso: string) => void; forcedOpen?: boolean }) {
   const [now, setNow] = useState<Date | null>(null);
 
   useEffect(() => {
@@ -26,7 +26,7 @@ export function WhenPicker({ value, onChange }: { value: string; onChange: (iso:
     return () => clearInterval(id);
   }, []);
 
-  const open = now ? serviceState(now).open : true;
+  const open = forcedOpen || (now ? serviceState(now).open : true);
   const slots = useMemo(() => (now ? upcomingSlots(now) : []), [now]);
 
   // Once the kitchen shuts, "as soon as possible" is not on offer, so move
