@@ -71,6 +71,7 @@ export default async function KotPage({
                 {l.name}
               </span>
             </div>
+            {l.category && <div className="sub cat">{l.category}</div>}
             {l.options.length > 0 && <div className="sub">{l.options.join(" · ")}</div>}
             {l.addons.length > 0 && <div className="sub">+ {l.addons.join(", ")}</div>}
             {l.note && <div className="note">! {l.note}</div>}
@@ -111,10 +112,12 @@ export default async function KotPage({
           font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
           color: #000; font-size: 12px; line-height: 1.35;
         }
-        .row { display: flex; align-items: flex-start; gap: 6px; }
-        .right { margin-left: auto; text-align: right; }
-        .big { font-size: 30px; font-weight: 700; line-height: 1; }
-        .muted { font-size: 11px; text-transform: uppercase; letter-spacing: .04em; }
+        /* Use block + float instead of flex — thermal printer Chromium
+           sometimes collapses flex children into a single line in print mode. */
+        .row { display: block; overflow: hidden; }
+        .right { float: right; text-align: right; }
+        .big { font-size: 30px; font-weight: 700; line-height: 1; display: inline-block; }
+        .muted { font-size: 11px; text-transform: uppercase; letter-spacing: .04em; clear: both; }
         .where { margin-top: 2px; font-size: 14px; font-weight: 700; }
         /* Inverted, because a cook holding this at the pass must not start a
            scheduled order early. It is the one thing on the ticket that
@@ -126,11 +129,12 @@ export default async function KotPage({
         hr { border: 0; border-top: 1px dashed #000; margin: 6px 0; }
         .items { list-style: none; margin: 0; padding: 0; }
         .items li { margin-bottom: 7px; page-break-inside: avoid; break-inside: avoid; }
-        .qty { font-size: 17px; font-weight: 700; min-width: 30px; }
-        .name { font-size: 17px; font-weight: 700; }
+        .qty { font-size: 17px; font-weight: 700; display: inline-block; min-width: 28px; vertical-align: top; }
+        .name { font-size: 17px; font-weight: 700; display: inline-block; vertical-align: top; width: calc(74mm - 36px); }
         .veg { color: #000; }
         .nonveg { color: #000; }
         .sub { margin-left: 36px; font-size: 12px; }
+        .cat { font-size: 11px; text-transform: uppercase; letter-spacing: .04em; }
         .note {
           margin-top: 2px; margin-left: 36px; padding: 2px 4px;
           font-weight: 700; border: 1px solid #000;

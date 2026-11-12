@@ -5,6 +5,7 @@ import type { OrderStatus } from "./status";
 export type OrderLine = {
   id: string;
   name: string;
+  category: string;
   qty: number;
   unitPaise: number;
   linePaise: number;
@@ -64,11 +65,11 @@ const base = (sql = db()) => sql`
     json_build_object('id', c.id, 'name', c.name, 'phone', c.phone) as customer,
     case when r.id is null then null else json_build_object('id', r.id, 'name', r.full_name) end as rider,
     coalesce((select json_agg(json_build_object(
-        'id', oi.id, 'name', oi.name_snapshot, 'qty', oi.quantity, 'unitPaise', oi.unit_price_paise, 'linePaise', oi.line_total_paise,
+        'id', oi.id, 'name', oi.name_snapshot, 'category', coalesce(cat.name, ''), 'qty', oi.quantity, 'unitPaise', oi.unit_price_paise, 'linePaise', oi.line_total_paise,
         'isVeg', oi.is_veg, 'stationId', oi.station_id, 'cuisine', oi.cuisine, 'note', oi.note,
         'options', coalesce((select json_agg(x.name_snapshot) from order_item_options x where x.order_item_id = oi.id), '[]'::json),
         'addons', coalesce((select json_agg(x.name_snapshot) from order_item_addons x where x.order_item_id = oi.id), '[]'::json)
-      ) order by oi.id) from order_items oi where oi.order_id = o.id), '[]'::json) as lines,
+      ) order by oi.id) from order_items oi join menu_items mi on mi.id = oi.menu_item_id join categories cat on cat.id = mi.category_id where oi.order_id = o.id), '[]'::json) as lines,
     coalesce((select json_agg(json_build_object('to', e.to_status, 'at', e.created_at) order by e.created_at) from order_status_events e where e.order_id = o.id), '[]'::json) as events
   from orders o
   join customers c on c.id = o.customer_id
