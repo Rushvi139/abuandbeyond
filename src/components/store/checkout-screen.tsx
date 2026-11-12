@@ -207,12 +207,13 @@ export function CheckoutScreen({ deliveryFeePaise, sourceRef, paymentsOn = true,
 
       <div className="fixed inset-x-0 bottom-0 mx-auto max-w-md border-t border-line bg-paper px-3 pb-5 pt-3">
         <CouponField subtotalPaise={cart.subtotalPaise} phone={phone} applied={coupon} onChange={setCoupon} />
-        {/* UPI info card — always visible when a UPI ID is configured.
-            Customer can copy the ID and pay now, or pay the rider on delivery. */}
-        {upiId && <UpiInfoCard upiId={upiId} totalPaise={total} />}
+        {/* Manual UPI card — the fallback only when PayU is not switched on.
+            With PayU live, a copied UPI payment can't be matched to an order,
+            so the gateway button takes its place. */}
+        {upiId && !paymentsOn && <UpiInfoCard upiId={upiId} totalPaise={total} />}
 
-        {/* PayU online payment — only shown when no UPI id is configured */}
-        {paymentsOn && !upiId && (
+        {/* PayU online payment */}
+        {paymentsOn && (
         <button type="button" onClick={() => { setCodBusy(false); pay(); }} disabled={!valid || busy} className="flex h-[60px] w-full flex-col items-center justify-center rounded-[18px] bg-clay text-ink disabled:opacity-50">
           <span className="text-[17px] font-bold">
             {shut ? "Closed right now" : busy ? "Opening payment…" : `Pay ${formatINR(total, { decimals: true })}`}
