@@ -11,7 +11,7 @@ export default async function AdminStaysPage() {
   const [stays, zones, imports] = await Promise.all([
     sql<StayRow[]>`
       select s.id, s.name, s.zone, s.km_from_kitchen::float as km, s.lat, s.lng, s.phone, s.address, s.note,
-        (s.property_id is not null) as partner
+        (s.property_id is not null) as partner, (s.source = 'guest') as "fromGuest"
       from stays s where s.active order by s.km_from_kitchen nulls last, s.name`,
     sql<{ zone: string | null; n: number; pinned: number }[]>`
       select zone, count(*)::int as n, count(lat)::int as pinned from stays where active group by zone order by count(*) desc`,
@@ -29,6 +29,12 @@ export default async function AdminStaysPage() {
           Every hotel, villa and homestay on the plateau — what riders search when a guest gives a name instead of an address.
           Separate from Properties, which is the handful we put QR codes in.
         </p>
+        {stays.some((x) => x.fromGuest) && (
+          <p className="mt-2 rounded-xl bg-acid/30 px-3 py-2 text-sm">
+            <b>{stays.filter((x) => x.fromGuest).length} added by guests</b> at checkout (marked &ldquo;From a guest&rdquo;). They show in
+            suggestions straight away — check the spelling, and delete any that aren&apos;t real places.
+          </p>
+        )}
       </div>
 
       <div className="grid gap-4 lg:grid-cols-3">

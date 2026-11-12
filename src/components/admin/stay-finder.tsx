@@ -14,6 +14,8 @@ export type StayRow = {
   address: string | null;
   note: string | null;
   partner: boolean;
+  /** Typed in by a guest at checkout rather than imported — worth a look. */
+  fromGuest?: boolean;
 };
 
 /** One decimal, always. Crow-flies distance to the metre is false precision. */
@@ -150,6 +152,11 @@ export function StayFinder({ stays, canDelete }: { stays: StayRow[]; canDelete?:
                 {s.partner && (
                   <span className="ml-1.5 align-middle rounded-full bg-acid px-1.5 py-0.5 text-[10px] font-bold uppercase text-ink">
                     QR
+                  </span>
+                )}
+                {s.fromGuest && (
+                  <span className="ml-1.5 align-middle rounded-full border border-current px-1.5 py-0.5 text-[10px] font-bold uppercase text-muted" title="Typed in by a guest at checkout. Check the spelling; delete it if it isn't a real place.">
+                    From a guest{s.lat == null ? " · no pin" : ""}
                   </span>
                 )}
               </p>

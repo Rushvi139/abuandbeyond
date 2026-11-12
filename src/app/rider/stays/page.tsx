@@ -10,7 +10,7 @@ export default async function RiderStaysPage() {
   await requireRole(["owner", "manager", "rider"], "/rider/stays");
   const stays = await db()<StayRow[]>`
     select s.id, s.name, s.zone, s.km_from_kitchen::float as km, s.lat, s.lng, s.phone, s.address, s.note,
-      (s.property_id is not null) as partner
+      (s.property_id is not null) as partner, (s.source = 'guest') as "fromGuest"
     from stays s
     where s.active
     order by s.km_from_kitchen nulls last, s.name`;

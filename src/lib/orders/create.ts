@@ -5,6 +5,61 @@ import { db } from "@/lib/db";
 import { checkCoupon } from "@/lib/orders/coupons";
 import { isBookableSlot } from "@/lib/hours";
 import { gstOn } from "@/lib/pricing";
+import { rememberable } from "@/lib/stays-search";
+
+/** Matches PRECISE_M in lib/orders/nav.ts: a pin this good can locate a hotel. */
+const PIN_GOOD_ENOUGH_M = 150;
+
+/**
+ * Which Stay Directory place this order is going to, learning new ones.
+ *
+ *  - A hotel picked from the suggestions is used if it is still active.
+ *  - A typed name that matches one we know (ignoring case) is linked to it.
+ *  - A typed hotel, villa or homestay we have never seen is added as a
+ *    guest-sourced stay, so the next guest finds it. "Home" never is: that
+ *    is a private address, and the list is shown to other people.
+ *
+ * A precise guest pin fills in a place's location only when it has none —
+ * it never moves a Google place.
+ */
+async function resolveStay(tx: Sql, input: z.infer<typeof CheckoutSchema>): Promise<{ id: string; learned: boolean } | null> {
+  const pin =
+    input.lat != null && input.lng != null && input.accuracy != null && input.accuracy <= PIN_GOOD_ENOUGH_M
+      ? { lat: input.lat, lng: input.lng }
+      : null;
+  const fill = async (id: string) => {
+    if (pin) await tx`update stays set lat = ${pin.lat}, lng = ${pin.lng}, updated_at = now() where id = ${id} and lat is null`;
+  };
+
+  if (input.stayId) {
+    const [s] = await tx<{ id: string }[]>`select id from stays where id = ${input.stayId} and active`;
+    if (s) {
+      await fill(s.id);
+      return { id: s.id, learned: false };
+    }
+  }
+
+  const name = (input.propertyName ?? "").replace(/\s+/g, " ").trim();
+  if (input.stayType === "home" || input.stayType === "other" || !rememberable(name)) return null;
+
+  const [known] = await tx<{ id: string }[]>`
+    select id from stays where active and lower(name) = lower(${name})
+    order by (source is distinct from 'guest') desc, (lat is not null) desc limit 1`;
+  if (known) {
+    await fill(known.id);
+    return { id: known.id, learned: false };
+  }
+
+  const [added] = await tx<{ id: string }[]>`
+    insert into stays (name, lat, lng, source, note)
+    values (${name}, ${pin?.lat ?? null}, ${pin?.lng ?? null}, 'guest', ${`Added from a guest order (${input.stayType})`})
+    on conflict (lower(name), coalesce(zone, '')) where place_id is null do nothing
+    returning id`;
+  if (added) return { id: added.id, learned: true };
+  // Someone added the same name a moment ago (or it was switched off): use that row if it is live.
+  const [again] = await tx<{ id: string }[]>`select id from stays where active and lower(name) = lower(${name}) limit 1`;
+  return again ? { id: again.id, learned: false } : null;
+}
 
 export const CheckoutSchema = z.object({
   name: z.string().trim().min(2).max(80),
@@ -128,11 +183,7 @@ export async function createOrder(input: CheckoutInput, opts: { source?: string;
     const [property] = input.sourceRef
       ? await tx<{ id: string }[]>`select id from properties where slug = ${input.sourceRef} and active`
       : [];
-    // Only a real, active stay is kept; a stale id from an old page is dropped
-    // rather than failing the order.
-    const [stay] = input.stayId
-      ? await tx<{ id: string }[]>`select id from stays where id = ${input.stayId} and active`
-      : [];
+    const stay = await resolveStay(tx as unknown as Sql, input);
     const [order] = await tx<{ id: string; order_code: string; order_number: number }[]>`insert into orders
       (customer_id, status, source, source_ref, property_id, stay_id, location_accuracy_m, stay_type, property_name, room_or_landmark, lat, lng, notes,
        alt_phone, scheduled_for, payment_mode, subtotal_paise, discount_paise, promo_code, gst_paise, delivery_fee_paise, total_paise, created_by)
@@ -141,6 +192,7 @@ export async function createOrder(input: CheckoutInput, opts: { source?: string;
         ${input.stayType}, ${input.propertyName || null}, ${input.roomOrLandmark || null}, ${input.lat ?? null}, ${input.lng ?? null},
         ${input.notes || null}, ${input.altPhone ? "+91" + input.altPhone : null}, ${scheduledFor}, ${input.payOnDelivery ? "on_delivery" : "online"}, ${subtotal}, ${discount}, ${coupon?.code ?? null}, ${gst}, ${deliveryFee}, ${total}, ${opts.createdBy ?? null})
       returning id, order_code, order_number`;
+    if (stay?.learned) await tx`update stays set first_order_id = ${order.id} where id = ${stay.id} and first_order_id is null`;
     for (const p of priced) {
       const [oi] = await tx<{ id: string }[]>`insert into order_items
         (order_id, menu_item_id, name_snapshot, station_id, cuisine, is_veg, unit_price_paise, quantity, line_total_paise, note)
