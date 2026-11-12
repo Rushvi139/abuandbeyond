@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import Script from "next/script";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { useCart } from "@/hooks/use-cart";
@@ -12,6 +11,7 @@ import { WhenPicker } from "@/components/store/when-picker";
 import { LocationPin, type Pin } from "./location-pin";
 import { VegMark } from "./veg-mark";
 import { UpiInfoCard } from "./upi-pay-button";
+import { submitPayuForm, type PayuForm } from "@/lib/payments/payu-client";
 
 type Stay = "hotel" | "villa" | "homestay" | "home";
 const STAYS: { id: Stay; label: string }[] = [
@@ -20,16 +20,6 @@ const STAYS: { id: Stay; label: string }[] = [
   { id: "homestay", label: "Homestay" },
   { id: "home", label: "Home" },
 ];
-
-type CashfreeCheckoutResult = { error?: { message?: string }; redirect?: boolean; paymentDetails?: { paymentMessage?: string } };
-type CashfreeInstance = { checkout: (opts: Record<string, unknown>) => Promise<CashfreeCheckoutResult> };
-
-declare global {
-  interface Window {
-    Cashfree?: (opts: { mode: "sandbox" | "production" }) => CashfreeInstance;
-  }
-}
-
 
 export function CheckoutScreen({ deliveryFeePaise, sourceRef, paymentsOn = true, codOn = true, upiId = "", kitchenOverride = false }: { deliveryFeePaise: number; sourceRef?: string; paymentsOn?: boolean; codOn?: boolean; upiId?: string; kitchenOverride?: boolean }) {
   const cart = useCart();
@@ -77,7 +67,7 @@ export function CheckoutScreen({ deliveryFeePaise, sourceRef, paymentsOn = true,
       });
       const json = await res.json();
       if (!json.ok) throw new Error(json.error?.message ?? "Couldn't place the order");
-      const d = json.data as { code: string; number: number; amountPaise: number; paymentSessionId: string; mode: "sandbox" | "production" };
+      const d = json.data as { code: string; number: number; amountPaise: number; payu?: PayuForm };
 
       // Pay-on-delivery orders are already confirmed on the server; no gateway step.
       if ((d as { payOnDelivery?: boolean }).payOnDelivery) {
@@ -85,30 +75,13 @@ export function CheckoutScreen({ deliveryFeePaise, sourceRef, paymentsOn = true,
         router.push(`/o/${d.code}`);
         return;
       }
-      if (!window.Cashfree) throw new Error("Payment page didn't load. Check your connection and try again.");
-      const cashfree = window.Cashfree({ mode: d.mode });
-      const result = await cashfree.checkout({ paymentSessionId: d.paymentSessionId, redirectTarget: "_modal" });
-
-      // Three outcomes: an error or a dismissed modal, a failed payment, or done.
-      // Whatever it says, the money is only real once our server has checked.
-      if (result?.error) {
-        setError("Payment wasn't completed. You can try again.");
-        setBusy(false);
-        return;
-      }
-      const v = await fetch("/api/payments/verify", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ code: d.code }),
-      });
-      const vj = await v.json();
-      if (vj.ok && vj.data?.status === "paid") {
-        cart.clear();
-        router.push(`/o/${d.code}`);
-      } else {
-        cart.clear();
-        router.push(`/o/${d.code}`); // the order page polls and the webhook will land
-      }
+      if (!d.payu) throw new Error("Payment page didn't load. Please try again.");
+      // The order exists and is held for them, so the bag can go now. If the
+      // payment doesn't finish, their order page offers it again.
+      cart.clear();
+      // Leaves the site for PayU; /api/payu/return checks with PayU from our
+      // server and brings the guest back to /o/<code>.
+      submitPayuForm(d.payu);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Something went wrong");
       setBusy(false);
@@ -120,7 +93,6 @@ export function CheckoutScreen({ deliveryFeePaise, sourceRef, paymentsOn = true,
 
   return (
     <div className="mx-auto min-h-dvh max-w-md bg-paper px-5 pb-36 pt-4">
-      <Script src="https://sdk.cashfree.com/js/v3/cashfree.js" strategy="afterInteractive" />
       <div className="flex items-center gap-3">
         <Link href="/" aria-label="Back to menu" className="flex h-11 w-11 items-center justify-center rounded-[14px] bg-surface">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6" /></svg>
@@ -239,7 +211,7 @@ export function CheckoutScreen({ deliveryFeePaise, sourceRef, paymentsOn = true,
             Customer can copy the ID and pay now, or pay the rider on delivery. */}
         {upiId && <UpiInfoCard upiId={upiId} totalPaise={total} />}
 
-        {/* Cashfree online payment — only shown when no UPI id is configured */}
+        {/* PayU online payment — only shown when no UPI id is configured */}
         {paymentsOn && !upiId && (
         <button type="button" onClick={() => { setCodBusy(false); pay(); }} disabled={!valid || busy} className="flex h-[60px] w-full flex-col items-center justify-center rounded-[18px] bg-clay text-ink disabled:opacity-50">
           <span className="text-[17px] font-bold">
@@ -250,7 +222,7 @@ export function CheckoutScreen({ deliveryFeePaise, sourceRef, paymentsOn = true,
               ? "Pick a delivery time above to order ahead"
               : scheduledFor
                 ? "Scheduled delivery · UPI · Card · Netbanking"
-                : "UPI · Card · Netbanking — secured by Cashfree"}
+                : "UPI · Card · Netbanking — secured by PayU"}
           </span>
         </button>
         )}

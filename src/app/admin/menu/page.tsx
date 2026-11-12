@@ -111,7 +111,7 @@ export default async function MenuAdmin() {
       {staff.role === "owner" && (
         <section>
           <h2 className="mb-1 font-display text-[18px] uppercase">Contact &amp; social</h2>
-          <p className="mb-2 text-sm text-muted">The WhatsApp number and email show on the Help page. Cashfree will not whitelist the site unless guests can actually reach us there.</p>
+          <p className="mb-2 text-sm text-muted">The WhatsApp number and email show on the Help page. The payment gateway (PayU) checks that guests can actually reach us there.</p>
           <form action={saveSocialLinks} className="grid max-w-xl gap-2 rounded-2xl bg-surface p-4 sm:grid-cols-3">
             <input name="instagram" defaultValue={social?.value?.instagram ?? ""} placeholder="Instagram handle" className="h-10 rounded-xl border border-line bg-paper px-3 text-sm" />
             <input name="google_review" defaultValue={social?.value?.google_review ?? ""} placeholder="Google review link" className="h-10 rounded-xl border border-line bg-paper px-3 text-sm" />

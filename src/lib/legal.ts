@@ -25,7 +25,7 @@ export const LEGAL = {
   entityType: "sole proprietorship",
 
   operator: {
-    /** Exactly as registered — this must match the Cashfree account,
+    /** Exactly as registered — this must match the PayU account,
      *  character for character, or activation is rejected. */
     name: "Rushvi Pravinsinh Khambhu",
     /** What to call them on the page. */

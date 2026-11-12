@@ -29,8 +29,7 @@ export async function markCollected(orderId: string, method: "cash" | "upi"): Pr
 
     await tx`update orders set collected_at = now(), collected_by = ${staff.id} where id = ${orderId}`;
     // gateway_order_id is not null, and for cash there is no gateway order —
-    // our own order code is the closest true thing, and it is what Cashfree
-    // would have carried anyway.
+    // our own order code is the closest true thing.
     await tx`insert into payments (order_id, gateway, gateway_order_id, gateway_payment_id, status, amount_paise, method)
       values (${orderId}, 'on_delivery', ${o.code}, ${"cod_" + orderId}, 'captured', ${o.total}, ${method})
       on conflict (gateway_payment_id) do nothing`;

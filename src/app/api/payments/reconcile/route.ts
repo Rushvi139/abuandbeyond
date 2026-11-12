@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { cashfreeConfigured, fetchCashfreeOrder, fetchCashfreePayments, toPaise } from "@/lib/payments/cashfree";
-import { markPaid } from "@/lib/payments/mark-paid";
-import { transition } from "@/lib/orders/transition";
+import { payuConfigured } from "@/lib/payments/payu";
+import { settleOrder } from "@/lib/payments/payu-flow";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -12,13 +11,13 @@ export const dynamic = "force-dynamic";
  *
  * Two things normally mark an order paid: the webhook, and the check we run
  * when the guest lands back on the site. Both can miss. The webhook can fail
- * to arrive — wrong URL, our container restarting, Cashfree retrying into a
+ * to arrive — wrong URL, our container restarting, PayU retrying into a
  * 500 — and the return check never runs at all if the guest pays and closes
  * the tab, or loses signal coming back up the hill. Mount Abu makes that
  * last one ordinary rather than rare.
  *
- * When both miss, Cashfree has the money and the kitchen never sees the
- * order. This asks Cashfree about every order still sitting unpaid and
+ * When both miss, PayU has the money and the kitchen never sees the
+ * order. This asks PayU about every order still sitting unpaid and
  * settles it either way.
  *
  * Called every couple of minutes by the `reconcile` service in
@@ -27,7 +26,7 @@ export const dynamic = "force-dynamic";
  */
 const MIN_AGE_MINUTES = 3; // let the normal paths have their turn first
 const MAX_AGE_HOURS = 24; // older than this, a card payment can't still land
-const BATCH = 25; // Cashfree is rate limited; a backlog drains over a few runs
+const BATCH = 25; // PayU is rate limited; a backlog drains over a few runs
 
 function authorised(req: Request): boolean {
   const expected = process.env.INTERNAL_SECRET || process.env.SESSION_SECRET || "";
@@ -39,7 +38,7 @@ function authorised(req: Request): boolean {
 
 export async function POST(req: Request) {
   if (!authorised(req)) return NextResponse.json({ ok: false }, { status: 403 });
-  if (!cashfreeConfigured()) return NextResponse.json({ ok: true, skipped: "payments not configured" });
+  if (!payuConfigured()) return NextResponse.json({ ok: true, skipped: "payments not configured" });
 
   const sql = db();
   const stuck = await sql<{ id: string; code: string; totalPaise: number }[]>`
@@ -47,7 +46,7 @@ export async function POST(req: Request) {
     from orders
     where status = 'pending_payment'
       and not is_demo
-      and gateway_order_id is not null
+      and exists (select 1 from payment_attempts a where a.order_id = orders.id)
       and created_at < now() - ${`${MIN_AGE_MINUTES} minutes`}::interval
       and created_at > now() - ${`${MAX_AGE_HOURS} hours`}::interval
     order by created_at
@@ -60,26 +59,12 @@ export async function POST(req: Request) {
 
   for (const o of stuck) {
     try {
-      const cf = await fetchCashfreeOrder(o.code);
-      if (cf.order_status === "PAID") {
-        const payments = await fetchCashfreePayments(o.code).catch(() => []);
-        const ok = payments.find((p) => p.payment_status === "SUCCESS");
-        await markPaid({
-          gatewayOrderId: o.code,
-          paymentId: String(ok?.cf_payment_id ?? cf.cf_order_id),
-          amountPaise: toPaise(ok?.payment_amount ?? cf.order_amount),
-          method: ok?.payment_group ?? null,
-          raw: { order: cf, payment: ok, via: "reconcile" },
-        });
-        paid += 1;
-      } else if (cf.order_status === "EXPIRED" || cf.order_status === "TERMINATED") {
-        // Only these are final. ACTIVE means the guest may still be on the
-        // payment page, so it is left alone for the next run.
-        await transition(o.id, "payment_failed", { note: `cashfree ${cf.order_status} (reconcile)` });
-        failed += 1;
-      } else {
-        stillPending += 1;
-      }
+      // Every attempt on the order is checked in one call; only a final
+      // answer on all of them closes it as failed.
+      const r = await settleOrder(o.id, "reconcile");
+      if (r === "paid") paid += 1;
+      else if (r === "failed") failed += 1;
+      else stillPending += 1;
     } catch (e) {
       // One bad order must not stop the sweep: the next one might be a
       // payment sitting unclaimed.

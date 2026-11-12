@@ -23,9 +23,13 @@ export default async function OrderPage({ params }: { params: Promise<{ code: st
   const idx = stepIndex(order.status);
   const done = order.status === "delivered";
   const dead = order.status === "cancelled" || order.status === "payment_failed" || order.status === "pending_payment";
-  // Unfinished, not failed — the session is still ours, so the guest can pick
-  // the payment back up instead of building the basket again.
-  const resumable = order.status === "pending_payment" && Boolean(order.paymentSessionId);
+  // An online order whose payment didn't finish (or failed) can be paid
+  // again: each try is a new PayU attempt on the same order, so the guest
+  // never has to build the basket again.
+  const resumable =
+    (order.status === "pending_payment" || order.status === "payment_failed") &&
+    order.paymentMode === "online" &&
+    Boolean(order.gatewayOrderId);
   const eta = order.prepMinutes ? order.prepMinutes + 15 : null;
   const t = (s: string) => new Date(s).toLocaleTimeString("en-IN", { hour: "numeric", minute: "2-digit", timeZone: "Asia/Kolkata" });
 
@@ -64,14 +68,7 @@ export default async function OrderPage({ params }: { params: Promise<{ code: st
         </p>
       </div>
 
-      {resumable && order.paymentSessionId && (
-        <ResumePayment
-          code={order.code}
-          amountPaise={order.totalPaise}
-          paymentSessionId={order.paymentSessionId}
-          mode={order.gatewayEnv === "production" ? "production" : "sandbox"}
-        />
-      )}
+      {resumable && <ResumePayment code={order.code} amountPaise={order.totalPaise} />}
 
       {!dead && (
         <section className="mx-5 mt-5 rounded-[18px] bg-surface p-4">

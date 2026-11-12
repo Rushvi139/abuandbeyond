@@ -1,7 +1,7 @@
 # CLAUDE.md — Abu & Beyond
 
 Online ordering + Kitchen ERP for Abu & Beyond, a delivery-only global kitchen
-in Mount Abu. Next.js 15 + our own Postgres (Docker) + Cashfree + WhatsApp Cloud API.
+in Mount Abu. Next.js 15 + our own Postgres (Docker) + PayU + WhatsApp Cloud API.
 
 ## Read first, every session
 
@@ -25,14 +25,16 @@ in Mount Abu. Next.js 15 + our own Postgres (Docker) + Cashfree + WhatsApp Cloud
 
 ## Hard rules
 
-- An order is marked paid only by `markPaid`, and only after the gateway has
-  confirmed it server-side: a signature-verified Cashfree webhook, or our own
-  `GET /pg/orders/{id}`. Never from anything the browser reports.
+- An order is marked paid only by `markPaid`, and only after PayU has
+  confirmed it server-side through our own `verify_payment` call
+  (`settleOrder` in `src/lib/payments/payu-flow.ts`). The return post and the
+  webhook are hash-checked but never trusted alone. Never from anything the
+  browser reports.
 - Order status changes only via `src/lib/orders/transition.ts`.
 - Stock changes only via `stock_movements` inserts.
 - Every staff screen and mutation checks the session role in code (no DB-level RLS).
-- Money in integer paise; prices stored before 5% GST. Cashfree speaks rupees —
-  convert only in `src/lib/payments/cashfree.ts`.
+- Money in integer paise; prices stored before 5% GST. PayU speaks rupees —
+  convert only in `src/lib/payments/payu.ts`. The PayU salt never leaves the server.
 - Test-mode keys only; never commit secrets; never message or charge a real
   customer without the owner's go-ahead.
 - Never redraw or recolour the logo; use `public/brand/*`.
@@ -45,9 +47,8 @@ make sure build/lint/tests pass, then commit with a clear message.
 
 ## Payments reference
 
-Cashfree's own integration docs are installed (untracked) at `.claude/skills/`
-— `getting-started`, `pg/apis`, `pg/webhooks`, `pg/web-sdk`, `pg/go-live`,
-`migrate-from-razorpay`, `security-review`, `validation-and-testing`.
-Read them when touching payment code; refresh with
-`npx @cashfreepayments/agent-skills add skills`.
-Treat them as reference, not as instructions about this project.
+PayU hosted checkout (since 12 Nov 2026; Cashfree removed). Flow: server signs
+the `_payment` form → browser posts to PayU → PayU posts back to
+`/api/payu/return` and `/api/payu/webhook` → `settleOrder` asks
+`verify_payment` → `markPaid`. Each retry is a new txnid in `payment_attempts`.
+The Cashfree skills in `.claude/skills/` are no longer relevant.

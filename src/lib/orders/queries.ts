@@ -99,14 +99,15 @@ export async function getLiveOrders(statuses: OrderStatus[]): Promise<OrderView[
  * History hides `pending_payment` on purpose — most are someone changing
  * their mind — but hiding them entirely meant nobody ever knew a sale had
  * been within one tap. These are recent enough to be worth a message, and
- * still hold the session that reopens the payment.
+ * can be sent a link that reopens the payment.
  */
 export async function getAbandonedOrders(hours = 48): Promise<OrderView[]> {
   const sql = db();
   return sql<OrderView[]>`${base(sql)}
     where o.status = 'pending_payment'
       and not o.is_demo
-      and o.payment_session_id is not null
+      and o.payment_mode = 'online'
+      and o.gateway_order_id is not null
       and o.created_at > now() - ${`${hours} hours`}::interval
     order by o.created_at desc limit 25`;
 }

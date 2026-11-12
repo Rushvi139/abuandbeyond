@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { ALL_STAFF, MANAGERS, assertRole } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { cashfreeConfigured, refundCashfreeOrder } from "@/lib/payments/cashfree";
+import { newRefundToken, payuConfigured, refundPayment } from "@/lib/payments/payu";
 import { transition } from "./transition";
 import type { OrderStatus } from "./status";
 
@@ -39,20 +39,22 @@ export async function assignRider(orderId: string, riderId: string | null) {
   refreshAll();
 }
 
-/** Cancel + refund (full) through Cashfree when a captured payment exists. */
+/** Cancel + refund (full) through PayU when a captured PayU payment exists. */
 export async function cancelOrder(orderId: string, reason: string) {
   const staff = await assertRole(MANAGERS);
   const id = Id.parse(orderId);
   const sql = db();
-  const [pay] = await sql<{ gateway_payment_id: string; gateway_order_id: string; amount_paise: number }[]>`
-    select gateway_payment_id, gateway_order_id, amount_paise from payments where order_id = ${id} and status = 'captured' limit 1`;
+  const [pay] = await sql<{ gateway: string; gateway_payment_id: string; amount_paise: number }[]>`
+    select gateway, gateway_payment_id, amount_paise from payments where order_id = ${id} and status = 'captured' limit 1`;
   await transition(id, "cancelled", { actorId: staff.id, note: reason.slice(0, 200) });
-  if (pay && cashfreeConfigured()) {
-    // Cashfree refunds are keyed by order and need an id we invent ourselves.
-    const refundId = `rf-${pay.gateway_order_id}-${Date.now().toString(36)}`.slice(0, 40);
-    const r = await refundCashfreeOrder(pay.gateway_order_id, refundId, pay.amount_paise, reason.slice(0, 100));
+  // Only PayU payments can be refunded from here. Old Cashfree rows were all
+  // sandbox, and cash collected at the door goes back by hand.
+  if (pay && pay.gateway === "payu" && payuConfigured()) {
+    // PayU keys refunds by its own payment id (mihpayid) and a token we invent.
+    const token = newRefundToken();
+    const r = await refundPayment(pay.gateway_payment_id, token, Number(pay.amount_paise));
     await sql`insert into refunds (order_id, refund_id, amount_paise, status, reason, raw, created_by)
-      values (${id}, ${refundId}, ${pay.amount_paise}, ${r.refund_status ?? "PENDING"}, ${reason.slice(0, 200)}, ${JSON.stringify(r)}, ${staff.id})
+      values (${id}, ${token}, ${pay.amount_paise}, 'PENDING', ${reason.slice(0, 200)}, ${JSON.stringify(r)}, ${staff.id})
       on conflict (refund_id) do nothing`;
     await sql`update payments set status = 'refunded', refunded_paise = ${pay.amount_paise},
       raw = coalesce(raw, '{}'::jsonb) || ${JSON.stringify({ refund: r })}::jsonb where gateway_payment_id = ${pay.gateway_payment_id}`;

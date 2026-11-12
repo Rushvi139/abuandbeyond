@@ -9,7 +9,7 @@ import { db } from "@/lib/db";
 import { getAbandonedOrders, getLiveOrders, getRecentOrders } from "@/lib/orders/queries";
 import { LIVE } from "@/lib/orders/status";
 import { formatINR } from "@/lib/pricing";
-import { cashfreeConfigured } from "@/lib/payments/cashfree";
+import { payuConfigured } from "@/lib/payments/payu";
 import { getUpiId } from "@/lib/orders/override-actions";
 
 export const dynamic = "force-dynamic";
@@ -35,7 +35,7 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
       <div className="flex flex-wrap items-end justify-between gap-3">
         <h1 className="font-display text-[32px] uppercase">Orders</h1>
         <div className="flex flex-wrap items-center gap-4 text-sm">
-          <CodToggle on={cod[0]?.value === true} locked={!cashfreeConfigured()} />
+          <CodToggle on={cod[0]?.value === true} locked={!payuConfigured()} />
           <UpiSetting current={upiId} />
           <Stat label="Today" value={String(t?.orders ?? 0)} />
           <Stat label="Net sales" value={formatINR(Number(t?.net ?? 0))} />
@@ -105,7 +105,7 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
                       {/* The one row an owner can act on: the guest got as far
                           as the payment page and stopped. Hand them the link
                           back rather than writing the order off. */}
-                      {o.status === "pending_payment" && o.paymentSessionId && <PaymentLink code={o.code} />}
+                      {o.status === "pending_payment" && o.gatewayOrderId && <PaymentLink code={o.code} />}
                     </span>
                   </td>
                   <td className="px-4 py-2.5 text-right font-semibold">{formatINR(o.totalPaise)}</td>

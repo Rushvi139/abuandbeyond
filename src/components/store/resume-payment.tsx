@@ -1,30 +1,18 @@
 "use client";
 
 import { useState } from "react";
-import Script from "next/script";
-import { useRouter } from "next/navigation";
 import { formatINR } from "@/lib/pricing";
+import { payExistingOrder } from "@/lib/payments/payu-client";
 
 /**
  * The way back into a payment someone walked away from.
  *
- * Their order already exists and the session is still ours, so this reopens
- * the same Cashfree checkout rather than making them build the basket again.
- * Nothing here decides whether the money arrived: that is `verify`, server
- * side, as everywhere else.
+ * Their order already exists, so this opens a fresh PayU attempt on it
+ * rather than making them build the basket again. Nothing here decides
+ * whether the money arrived: that is settled server-side when PayU sends
+ * them back, as everywhere else.
  */
-export function ResumePayment({
-  code,
-  amountPaise,
-  paymentSessionId,
-  mode,
-}: {
-  code: string;
-  amountPaise: number;
-  paymentSessionId: string;
-  mode: "sandbox" | "production";
-}) {
-  const router = useRouter();
+export function ResumePayment({ code, amountPaise }: { code: string; amountPaise: number }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -33,24 +21,7 @@ export function ResumePayment({
     setBusy(true);
     setError(null);
     try {
-      if (!window.Cashfree) throw new Error("Payment page didn't load. Check your connection and try again.");
-      const result = await window.Cashfree({ mode }).checkout({ paymentSessionId, redirectTarget: "_modal" });
-      if (result?.error) {
-        setError("Payment wasn't completed. You can try again.");
-        setBusy(false);
-        return;
-      }
-      const v = await fetch("/api/payments/verify", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ code }),
-      });
-      const vj = await v.json();
-      if (vj.ok && vj.data?.status === "paid") router.refresh();
-      else {
-        setError("We haven't seen the payment yet. If money left your account, message us and we'll sort it.");
-        setBusy(false);
-      }
+      await payExistingOrder(code); // navigates away on success
     } catch (e) {
       setError(e instanceof Error ? e.message : "Couldn't open payment.");
       setBusy(false);
@@ -59,7 +30,6 @@ export function ResumePayment({
 
   return (
     <div className="mx-5 mt-4">
-      <Script src="https://sdk.cashfree.com/js/v3/cashfree.js" strategy="afterInteractive" />
       <button
         type="button"
         onClick={go}

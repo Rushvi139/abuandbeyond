@@ -166,7 +166,7 @@ services:
       - caddy_data:/data
       - caddy_config:/config
 
-  # Every couple of minutes, ask Cashfree about any order still sitting
+  # Every couple of minutes, ask PayU about any order still sitting
   # unpaid. The webhook and the return-path check both miss sometimes — a
   # guest who pays and closes the tab, a webhook that never arrives — and
   # without this the money is taken while the kitchen never sees the order.

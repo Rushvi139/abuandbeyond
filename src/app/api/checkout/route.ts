@@ -3,9 +3,9 @@ import { NextResponse } from "next/server";
 import { transition } from "@/lib/orders/transition";
 import { REFUSE_ORDERS_WHEN_CLOSED, hoursLine, serviceState } from "@/lib/hours";
 import { getKitchenOverride } from "@/lib/orders/override-actions";
-import { db } from "@/lib/db";
 import { CheckoutSchema, createOrder } from "@/lib/orders/create";
-import { cashfreeConfigured, cashfreeMode, createCashfreeOrder } from "@/lib/payments/cashfree";
+import { payuConfigured } from "@/lib/payments/payu";
+import { site, startPayuAttempt } from "@/lib/payments/payu-flow";
 import { codAllowed } from "@/lib/orders/cod";
 import { rememberCustomer } from "@/lib/customers/session";
 
@@ -64,43 +64,22 @@ export async function POST(req: Request) {
       });
     }
 
-    if (!cashfreeConfigured()) {
+    if (!payuConfigured()) {
       return NextResponse.json({ ok: false, error: { code: "payments_off", message: "Online payment isn't switched on yet." } }, { status: 503 });
     }
-    const site = process.env.NEXT_PUBLIC_SITE_URL ?? new URL(req.url).origin;
-    const cf = await createCashfreeOrder({
-      orderId: order.code,
-      amountPaise: order.totalPaise,
-      customerId: order.customerId,
-      phone: order.phone,
-      name: order.customerName,
-      returnUrl: `${site}/o/${order.code}`,
-      notifyUrl: `${site}/api/cashfree/webhook`,
-    });
-    if (!cf.payment_session_id) throw new Error("Cashfree did not return a payment session");
-    // The session is kept so a guest who closes the tab can be handed the
-    // payment back, and the env so a later switch to live keys does not leave
-    // us holding order ids we can no longer look up.
-    await db()`update orders set
-        gateway_order_id = ${cf.order_id},
-        payment_session_id = ${cf.payment_session_id},
-        gateway_env = ${cashfreeMode()}
-      where id = ${order.id}`;
+    // The signed form the browser posts to PayU. Amount, txnid and hash are
+    // all made here from the order we just priced; the browser only carries it.
+    const payu = await startPayuAttempt(order.code, site(req));
+    if ("error" in payu) throw new Error(payu.error);
     return NextResponse.json({
       ok: true,
-      data: {
-        code: order.code,
-        number: order.number,
-        amountPaise: order.totalPaise,
-        paymentSessionId: cf.payment_session_id,
-        mode: cashfreeMode(),
-      },
+      data: { code: order.code, number: order.number, amountPaise: order.totalPaise, payu },
     });
   } catch (e) {
     const raw = e instanceof Error ? e.message : "Something went wrong";
     // A dead gateway is our problem, not the guest's — don't show them "fetch failed".
     const unreachable = /fetch failed|ENOTFOUND|ECONNREFUSED|ETIMEDOUT|socket hang up/i.test(raw);
-    if (unreachable) console.error("cashfree unreachable:", raw);
+    if (unreachable) console.error("payu unreachable:", raw);
     return NextResponse.json(
       {
         ok: false,

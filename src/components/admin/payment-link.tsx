@@ -6,8 +6,8 @@ import { useState } from "react";
  * Hand an unfinished payment back to the guest.
  *
  * There is no sender wired up yet, so this copies the link for someone to
- * paste into WhatsApp. The link is the guest's own order page, not the raw
- * Cashfree session: the page survives, knows whether the money has since
+ * paste into WhatsApp. The link is the guest's own order page, not a raw
+ * PayU form: the page survives, knows whether the money has since
  * arrived, and can offer the payment again.
  */
 export function PaymentLink({ code }: { code: string }) {

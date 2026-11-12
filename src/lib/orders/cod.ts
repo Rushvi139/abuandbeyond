@@ -1,6 +1,6 @@
 import "server-only";
 import { db } from "@/lib/db";
-import { cashfreeConfigured } from "@/lib/payments/cashfree";
+import { payuConfigured } from "@/lib/payments/payu";
 
 /**
  * Whether we offer "pay the rider at the door".
@@ -16,7 +16,7 @@ import { cashfreeConfigured } from "@/lib/payments/cashfree";
  * makes it impossible to end up with a menu that takes no orders.
  */
 export async function codAllowed(): Promise<boolean> {
-  if (!cashfreeConfigured()) return true;
+  if (!payuConfigured()) return true;
   const [row] = await db()<{ value: boolean }[]>`select value::boolean as value from settings where key = 'cod_enabled'`;
   return row?.value === true;
 }
