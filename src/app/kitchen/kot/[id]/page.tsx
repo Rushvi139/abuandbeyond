@@ -2,18 +2,27 @@ import { notFound } from "next/navigation";
 import { PrintOnLoad } from "@/components/kitchen/print-on-load";
 import { requireRole } from "@/lib/auth";
 import { clockLabel } from "@/lib/hours";
-import { getOrderById } from "@/lib/orders/queries";
+import { getOrderById, type OrderLine } from "@/lib/orders/queries";
+import { printable as p } from "@/lib/text";
 
 export const dynamic = "force-dynamic";
 
-const time = (s: string) => new Date(s).toLocaleTimeString("en-IN", { hour: "numeric", minute: "2-digit", timeZone: "Asia/Kolkata" });
+const time = (s: string) => clockLabel(new Date(s));
 const date = (s: string) => new Date(s).toLocaleDateString("en-IN", { day: "numeric", month: "short", timeZone: "Asia/Kolkata" });
 
+const RULE = "--------------------------------";
+const DOUBLE = "================================";
+
 /**
- * One kitchen ticket, sized for an 80 mm thermal roll. No prices: the kitchen
- * cooks, it does not take money. Everything here is what someone at the pass
- * needs at arm's length — big order number, big item names, notes impossible
- * to miss.
+ * One kitchen ticket for the thermal roll. No prices: the kitchen cooks, it
+ * does not take money.
+ *
+ * Built for the worst printer, not the best one. The kitchen's printer
+ * prints the page as plain text: it ignores font sizes, pulls anything
+ * floated to the right up to the top, and turns "×", "●" and "·" into "#?"
+ * and "π". So every fact is its own line, in the order a cook reads it,
+ * using only plain keyboard characters (`printable`). The CSS still makes it
+ * bigger and bolder on a printer that honours it, but nothing depends on it.
  */
 export default async function KotPage({
   params,
@@ -28,120 +37,98 @@ export default async function KotPage({
   const o = await getOrderById(id);
   if (!o) notFound();
 
-  const where = [o.propertyName, o.roomOrLandmark].filter(Boolean).join(", ");
+  const where = p([o.propertyName, o.roomOrLandmark].filter(Boolean).join(", "));
   const reprint = o.kotPrintedAt != null;
+  const count = o.lines.reduce((n, l) => n + l.qty, 0);
+
+  // Grouped under their category, in menu order of first appearance, so
+  // "Paneer" is never on its own — it is under ROLLS or BOWLS.
+  const groups: { category: string; lines: OrderLine[] }[] = [];
+  for (const l of o.lines) {
+    const c = p(l.category).toUpperCase() || "OTHER";
+    const g = groups.find((x) => x.category === c);
+    if (g) g.lines.push(l);
+    else groups.push({ category: c, lines: [l] });
+  }
 
   return (
     <div className="kot">
       {auto === "1" && <PrintOnLoad />}
 
-      <header>
-        <div className="row">
-          <span className="big">#{o.number}</span>
-          <span className="right">
-            {time(o.createdAt)}
-            <br />
-            {date(o.createdAt)}
-          </span>
-        </div>
-        {o.paymentMode === "on_delivery" && (
-          <div className="scheduled">COLLECT {(o.totalPaise / 100).toLocaleString("en-IN")} — NOT PAID</div>
-        )}
-        {o.scheduledFor && (
-          <div className="scheduled">DELIVER AT {clockLabel(new Date(o.scheduledFor))}</div>
-        )}
-        <div className="muted">
-          {o.stayType.toUpperCase()}
-          {reprint && " · REPRINT"}
-        </div>
-        {where && <div className="where">{where}</div>}
-      </header>
+      <div>{DOUBLE}</div>
+      <div className="big">ORDER #{o.number}</div>
+      <div>
+        {date(o.createdAt)} {time(o.createdAt)}
+        {reprint ? " - REPRINT" : ""}
+      </div>
+      <div>{RULE}</div>
 
-      <hr />
-
-      <ul className="items">
-        {o.lines.map((l) => (
-          <li key={l.id}>
-            <div className="row">
-              <span className="qty">{l.qty}×</span>
-              <span className="name">
-                <span className={l.isVeg ? "veg" : "nonveg"} aria-hidden="true">
-                  {l.isVeg ? "●" : "▲"}
-                </span>{" "}
-                {l.name}
-              </span>
-            </div>
-            {l.category && <div className="sub cat">{l.category}</div>}
-            {l.options.length > 0 && <div className="sub">{l.options.join(" · ")}</div>}
-            {l.addons.length > 0 && <div className="sub">+ {l.addons.join(", ")}</div>}
-            {l.note && <div className="note">! {l.note}</div>}
-          </li>
-        ))}
-      </ul>
-
-      {(o.notes || o.kitchenNote) && (
-        <>
-          <hr />
-          {o.kitchenNote && <div className="note big-note">!! {o.kitchenNote}</div>}
-          {o.notes && <div className="note">Customer: {o.notes}</div>}
-        </>
+      {o.scheduledFor && <div className="alert">** DELIVER AT {clockLabel(new Date(o.scheduledFor))} **</div>}
+      {o.paymentMode === "on_delivery" && !o.collectedAt && (
+        <div className="alert">** COLLECT Rs {(o.totalPaise / 100).toLocaleString("en-IN")} - NOT PAID **</div>
       )}
+      <div>{o.stayType.toUpperCase()}</div>
+      {where && <div className="where">{where}</div>}
+      {o.customer.name && <div>Guest: {p(o.customer.name)}</div>}
+      <div>{RULE}</div>
 
-      <hr />
-      <footer>
-        <div className="row">
-          <span>{o.lines.reduce((n, l) => n + l.qty, 0)} items</span>
-          <span className="right">{o.customer.name ?? ""}</span>
+      {groups.map((g) => (
+        <div key={g.category} className="group">
+          <div className="cat">[ {g.category} ]</div>
+          {g.lines.map((l) => (
+            <div key={l.id} className="item">
+              <div className="name">
+                {l.qty} x {p(l.name)} {l.isVeg ? "(VEG)" : "(NON-VEG)"}
+              </div>
+              {l.options.map((x, i) => (
+                <div key={`o${i}`} className="sub">
+                  - {p(x)}
+                </div>
+              ))}
+              {l.addons.map((x, i) => (
+                <div key={`a${i}`} className="sub">
+                  + {p(x)}
+                </div>
+              ))}
+              {l.note && <div className="note">! NOTE: {p(l.note)}</div>}
+            </div>
+          ))}
         </div>
-        <div className="muted">Abu &amp; Beyond · {o.code.toUpperCase()}</div>
-      </footer>
+      ))}
 
-      {/* Deliberately plain CSS rather than Tailwind: this page is handed to a
-          thermal printer, where millimetres and monospace matter more than the
-          design system. */}
+      {(o.notes || o.kitchenNote) && <div>{RULE}</div>}
+      {o.kitchenNote && <div className="note">!! KITCHEN: {p(o.kitchenNote)}</div>}
+      {o.notes && <div className="note">! DELIVERY: {p(o.notes)}</div>}
+
+      <div>{RULE}</div>
+      <div>
+        {count} item{count === 1 ? "" : "s"}
+      </div>
+      <div>ABU &amp; BEYOND - REF {o.code.toUpperCase()}</div>
+      <div>{DOUBLE}</div>
+
+      {/* Plain CSS, not Tailwind: this goes to a thermal printer. Only block
+          elements, no flex, no floats — the printer's text mode reorders them. */}
       <style>{`
-        /* auto height, so the roll is cut after the last line instead of
-           feeding a full page of blank paper. */
         @page { size: 80mm auto; margin: 3mm; }
         html, body { margin: 0; padding: 0; height: auto; background: #fff; }
-        /* Browsers drop backgrounds and shading when printing unless told
-           otherwise, which is what turns a boxed note into plain text. */
         * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
         .kot {
           width: 74mm; margin: 0 auto; padding: 2mm 0;
           font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
-          color: #000; font-size: 12px; line-height: 1.35;
+          color: #000; font-size: 13px; line-height: 1.4; white-space: pre-wrap; word-break: break-word;
         }
-        /* Use block + float instead of flex — thermal printer Chromium
-           sometimes collapses flex children into a single line in print mode. */
-        .row { display: block; overflow: hidden; }
-        .right { float: right; text-align: right; }
-        .big { font-size: 30px; font-weight: 700; line-height: 1; display: inline-block; }
-        .muted { font-size: 11px; text-transform: uppercase; letter-spacing: .04em; clear: both; }
-        .where { margin-top: 2px; font-size: 14px; font-weight: 700; }
-        /* Inverted, because a cook holding this at the pass must not start a
-           scheduled order early. It is the one thing on the ticket that
-           changes what they do right now. */
-        .scheduled {
-          margin: 3px 0; padding: 3px 5px; background: #000; color: #fff;
-          font-size: 15px; font-weight: 700; letter-spacing: .02em;
-        }
-        hr { border: 0; border-top: 1px dashed #000; margin: 6px 0; }
-        .items { list-style: none; margin: 0; padding: 0; }
-        .items li { margin-bottom: 7px; page-break-inside: avoid; break-inside: avoid; }
-        .qty { font-size: 17px; font-weight: 700; display: inline-block; min-width: 28px; vertical-align: top; }
-        .name { font-size: 17px; font-weight: 700; display: inline-block; vertical-align: top; width: calc(74mm - 36px); }
-        .veg { color: #000; }
-        .nonveg { color: #000; }
-        .sub { margin-left: 36px; font-size: 12px; }
-        .cat { font-size: 11px; text-transform: uppercase; letter-spacing: .04em; }
-        .note {
-          margin-top: 2px; margin-left: 36px; padding: 2px 4px;
-          font-weight: 700; border: 1px solid #000;
-          page-break-inside: avoid; break-inside: avoid;
-        }
-        .big-note { margin-left: 0; font-size: 14px; }
-        footer .muted { margin-top: 3px; }
+        .kot > div, .kot .group > div, .kot .item > div { display: block; }
+        .big { font-size: 28px; font-weight: 700; line-height: 1.15; }
+        .alert { font-size: 15px; font-weight: 700; }
+        .where { font-size: 15px; font-weight: 700; }
+        .group { margin-top: 4px; }
+        .cat { font-weight: 700; }
+        .item { margin: 2px 0 5px; }
+        .name { font-size: 17px; font-weight: 700; }
+        .sub { padding-left: 4ch; }
+        .note { font-weight: 700; }
+        .item .note { padding-left: 4ch; }
         @media screen {
           html, body { background: #e9e5dd; }
           .kot { margin: 16px auto; padding: 10mm 6mm; background: #fff; box-shadow: 0 2px 14px rgba(0,0,0,.18); }

@@ -26,3 +26,20 @@ describe("sentenceCase", () => {
     expect(sentenceCase("choose: salted or peri peri")).toBe("Choose: salted or peri peri");
   });
 });
+
+import { printable } from "./text";
+
+describe("printable (thermal KOT text)", () => {
+  it("swaps symbols the printer garbles for plain ones", () => {
+    expect(printable("1× ● Paneer · Roll — “spicy”")).toBe('1x - Paneer - Roll - "spicy"');
+  });
+  it("keeps accented dish names readable", () => {
+    expect(printable("Jalapeño Crème")).toBe("Jalapeno Creme");
+  });
+  it("writes rupees as Rs", () => {
+    expect(printable("₹449")).toBe("Rs 449");
+  });
+  it("drops emoji rather than printing junk", () => {
+    expect(printable("Extra cheese 🧀 please")).toBe("Extra cheese please");
+  });
+});

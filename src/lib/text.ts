@@ -38,3 +38,26 @@ export function sentenceCase(input: string | null | undefined): string {
     .replace(/(^|[.!?]\s+)([a-z])/g, (_m, p: string, c: string) => p + c.toUpperCase())
     .replace(/\b(bbq|kfc)\b/g, (m) => FIXED[m]);
 }
+
+/**
+ * Plain keyboard characters only, for the thermal printer. In text mode it
+ * cannot print "×", "●", "·", "₹" or curly quotes: they came out as "#?" and
+ * "π" on a real ticket. Accents are dropped ("Jalapeño" → "Jalapeno") rather
+ * than lost, and anything else unknown becomes nothing.
+ */
+export function printable(input: string | null | undefined): string {
+  if (!input) return "";
+  return input
+    .replace(/[×✕]/g, "x")
+    .replace(/[·•●▲]/g, "-")
+    .replace(/[–—]/g, "-")
+    .replace(/[‘’]/g, "'")
+    .replace(/[“”]/g, '"')
+    .replace(/₹/g, "Rs ")
+    .replace(/…/g, "...")
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/[^\x20-\x7E]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
