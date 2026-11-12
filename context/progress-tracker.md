@@ -13,6 +13,31 @@ Update this file after every meaningful implementation change.
 
 ## Completed
 
+- 12 Nov (payments): **Cashfree replaced with PayU** hosted checkout, live
+  keys on the server (`PAYU_*` in `.env`, never in git). Server signs the
+  `_payment` form; PayU posts back to `/api/payu/return` and
+  `/api/payu/webhook`; every path goes through `settleOrder`, which asks
+  PayU's `verify_payment` before `markPaid`. Each retry is a new txnid in
+  `payment_attempts` (migration 0027). Refunds via `cancel_refund_transaction`.
+  Checkout shows the PayU button whenever PayU is on; the manual UPI card is
+  now only the fallback. Flow tested end to end against a real DB with PayU
+  stubbed; PayU itself is unreachable from the build container.
+- 12 Nov (task-26): **Expenses → Stock link.** An expense can name an
+  ingredient and quantity; saving it inserts a `purchase` stock movement in
+  the same transaction (migration 0026). Fixed the same day: the insert used
+  a non-existent `qty` column, so linked expenses failed to save.
+- 12 Nov (kitchen): **KOT rebuilt for the text-mode thermal printer** — it
+  ignored sizes, pulled floated text to the top and garbled ×/●/·. Now plain
+  block lines in reading order, ASCII only (`printable` in `lib/text.ts`),
+  items grouped under their category. Kitchen display cards show the
+  category too. **Forced open** now ends by itself at the next regular shift
+  (max 6 h) and guest screens no longer say "closed" while it is on
+  (`/api/service`).
+- 12 Nov (finance): **Day Close** (`/admin/day-close`, owner): orders, net
+  sales, average order, GST owed, online vs pay-on-delivery and what is
+  uncollected, recipe-based food + packaging % against the 33% ceiling, top
+  dishes, low stock, money out. Business day runs 5 AM–5 AM.
+
 - 10 Nov (wait game): the catch-the-food game on the order page replaced with
   "Over the ridge" — one tap to flap, granite stacks to fly through, set on
   the Mount Abu skyline from the logo. Own art and physics, nothing borrowed.
@@ -406,6 +431,17 @@ using `public/brand/bear-eating.webp|webm`. Code animation, not AI video
 `prefers-reduced-motion`. Confirm with the owner whether the welcome card stays.
 
 ## Open Questions
+
+- Accounts: the owner mentioned "details on the accounting part" that never
+  reached the build session — get the list.
+- Monthly P&L: count food cost by **consumption** (recipes × dishes sold,
+  as Day Close does) or by **purchases** (vendor bills + ingredient
+  expenses)? Using both double-counts. Also: which vendor bills are not
+  food (gas, equipment) and how to mark them.
+- PayU: receipts go to `PAYU_GUEST_EMAIL` (placeholder
+  orders@abuandbeyond.in) — needs a real inbox. Register the webhook
+  `https://abuandbeyond.in/api/payu/webhook` in the PayU dashboard.
+  PayU fees (MDR) and settlements are not recorded yet.
 
 - WhatsApp go-live (owner): submit the 4 templates in WhatsApp Manager and
   wait for approval; create a system-user permanent token; set
