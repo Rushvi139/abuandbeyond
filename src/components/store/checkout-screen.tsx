@@ -9,6 +9,7 @@ import { CouponField, type Applied } from "@/components/store/coupon-field";
 import { ClosedNotice, useForcedOpen, useServiceOpen } from "@/components/store/service-gate";
 import { WhenPicker } from "@/components/store/when-picker";
 import { LocationPin, type Pin } from "./location-pin";
+import { PropertyField } from "./property-field";
 import { VegMark } from "./veg-mark";
 import { UpiInfoCard } from "./upi-pay-button";
 import { submitPayuForm, type PayuForm } from "@/lib/payments/payu-client";
@@ -33,6 +34,7 @@ export function CheckoutScreen({ deliveryFeePaise, sourceRef, paymentsOn = true,
   const [codBusy, setCodBusy] = useState(false);
   const [stay, setStay] = useState<Stay>("hotel");
   const [propertyName, setPropertyName] = useState("");
+  const [stayId, setStayId] = useState("");
   const [room, setRoom] = useState("");
   const [pin, setPin] = useState<Pin>(null);
   const [notes, setNotes] = useState("");
@@ -61,8 +63,8 @@ export function CheckoutScreen({ deliveryFeePaise, sourceRef, paymentsOn = true,
           couponCode: coupon?.code ?? "",
           scheduledFor,
           ...(payOnDelivery ? { payOnDelivery: true } : {}),
-          ...(pin ? { lat: pin.lat, lng: pin.lng } : {}),
-          lat: pin?.lat, lng: pin?.lng,
+          ...(pin ? { lat: pin.lat, lng: pin.lng, accuracy: pin.accuracy } : {}),
+          stayId,
           lines: cart.lines.map((l) => ({ itemId: l.itemId, qty: l.qty, optionIds: l.options.map((o) => o.optionId), addonIds: l.addons.map((a) => a.addonId), note: l.note ?? "" })),
         }),
       });
@@ -165,7 +167,7 @@ export function CheckoutScreen({ deliveryFeePaise, sourceRef, paymentsOn = true,
           <legend className={`${label} mb-2`}>Staying at</legend>
           <div className="grid grid-cols-4 gap-2">
             {STAYS.map((s) => (
-              <button key={s.id} type="button" onClick={() => setStay(s.id)} aria-pressed={stay === s.id} className={`h-11 rounded-xl text-[13px] font-semibold ${stay === s.id ? "border-2 border-ink bg-ink text-reversed" : "border-[1.5px] border-line bg-surface"}`}>
+              <button key={s.id} type="button" onClick={() => { setStay(s.id); if (s.id === "home") setStayId(""); }} aria-pressed={stay === s.id} className={`h-11 rounded-xl text-[13px] font-semibold ${stay === s.id ? "border-2 border-ink bg-ink text-reversed" : "border-[1.5px] border-line bg-surface"}`}>
                 {s.label}
               </button>
             ))}
@@ -173,7 +175,15 @@ export function CheckoutScreen({ deliveryFeePaise, sourceRef, paymentsOn = true,
         </fieldset>
         <div className="flex flex-col gap-1.5">
           <label htmlFor="prop" className={label}>{stay === "home" ? "Area / society" : "Hotel / property name"}</label>
-          <input id="prop" value={propertyName} onChange={(e) => setPropertyName(e.target.value)} placeholder={stay === "home" ? "e.g. near Nakki Lake" : "the name on your booking"} className={input} />
+          <PropertyField
+            id="prop"
+            value={propertyName}
+            stayId={stayId}
+            onChange={(n, sid) => { setPropertyName(n); setStayId(sid); }}
+            suggest={stay !== "home"}
+            placeholder={stay === "home" ? "e.g. near Nakki Lake" : "start typing — pick your hotel from the list"}
+            className={input}
+          />
         </div>
         <div className="flex flex-col gap-1.5">
           <label htmlFor="room" className={label}>Room no. or landmark</label>

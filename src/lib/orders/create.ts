@@ -13,8 +13,12 @@ export const CheckoutSchema = z.object({
   stayType: z.enum(["hotel", "villa", "homestay", "home", "other"]),
   propertyName: z.string().trim().max(120).optional().or(z.literal("")),
   roomOrLandmark: z.string().trim().max(120).optional().or(z.literal("")),
-  lat: z.number().optional(),
-  lng: z.number().optional(),
+  lat: z.number().min(-90).max(90).optional(),
+  lng: z.number().min(-180).max(180).optional(),
+  /** How accurate the phone said the pin was, in metres. */
+  accuracy: z.number().min(0).max(100_000).optional(),
+  /** A hotel picked from the Stay Directory suggestions. Checked against the table below. */
+  stayId: z.string().uuid().optional().or(z.literal("")),
   notes: z.string().trim().max(300).optional().or(z.literal("")),
   sourceRef: z.string().trim().max(60).optional(),
   couponCode: z.string().trim().max(40).optional().or(z.literal("")),
@@ -124,10 +128,16 @@ export async function createOrder(input: CheckoutInput, opts: { source?: string;
     const [property] = input.sourceRef
       ? await tx<{ id: string }[]>`select id from properties where slug = ${input.sourceRef} and active`
       : [];
+    // Only a real, active stay is kept; a stale id from an old page is dropped
+    // rather than failing the order.
+    const [stay] = input.stayId
+      ? await tx<{ id: string }[]>`select id from stays where id = ${input.stayId} and active`
+      : [];
     const [order] = await tx<{ id: string; order_code: string; order_number: number }[]>`insert into orders
-      (customer_id, status, source, source_ref, property_id, stay_type, property_name, room_or_landmark, lat, lng, notes,
+      (customer_id, status, source, source_ref, property_id, stay_id, location_accuracy_m, stay_type, property_name, room_or_landmark, lat, lng, notes,
        alt_phone, scheduled_for, payment_mode, subtotal_paise, discount_paise, promo_code, gst_paise, delivery_fee_paise, total_paise, created_by)
       values (${customer.id}, 'pending_payment', ${opts.source ?? "web"}, ${input.sourceRef ?? null}, ${property?.id ?? null},
+        ${stay?.id ?? null}, ${input.lat != null && input.accuracy != null ? Math.round(input.accuracy) : null},
         ${input.stayType}, ${input.propertyName || null}, ${input.roomOrLandmark || null}, ${input.lat ?? null}, ${input.lng ?? null},
         ${input.notes || null}, ${input.altPhone ? "+91" + input.altPhone : null}, ${scheduledFor}, ${input.payOnDelivery ? "on_delivery" : "online"}, ${subtotal}, ${discount}, ${coupon?.code ?? null}, ${gst}, ${deliveryFee}, ${total}, ${opts.createdBy ?? null})
       returning id, order_code, order_number`;

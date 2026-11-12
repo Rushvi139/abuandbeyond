@@ -30,6 +30,10 @@ export type OrderView = {
   notes: string | null;
   lat: number | null;
   lng: number | null;
+  /** Metres, as the guest's phone reported. Null on orders before this was kept. */
+  locationAccuracyM: number | null;
+  /** The Stay Directory hotel the guest picked at checkout, if any. */
+  stay: { name: string; placeId: string | null; lat: number | null; lng: number | null } | null;
   subtotalPaise: number;
   discountPaise: number;
   promoCode: string | null;
@@ -57,7 +61,9 @@ export type OrderView = {
 
 const base = (sql = db()) => sql`
   select o.id, o.order_number as "number", o.order_code as code, o.status, o.source, o.stay_type as "stayType",
-    o.property_name as "propertyName", o.room_or_landmark as "roomOrLandmark", o.notes, o.lat, o.lng, o.is_demo as "isDemo",
+    o.property_name as "propertyName", o.room_or_landmark as "roomOrLandmark", o.notes, o.lat, o.lng, o.location_accuracy_m as "locationAccuracyM",
+    (select json_build_object('name', st.name, 'placeId', st.place_id, 'lat', st.lat, 'lng', st.lng) from stays st where st.id = o.stay_id) as stay,
+    o.is_demo as "isDemo",
     o.subtotal_paise as "subtotalPaise", o.gst_paise as "gstPaise", o.delivery_fee_paise as "deliveryFeePaise", o.total_paise as "totalPaise",
     o.prep_minutes as "prepMinutes", o.paid_at as "paidAt", o.delivered_at as "deliveredAt", o.created_at as "createdAt",
     o.gateway_order_id as "gatewayOrderId", o.payment_session_id as "paymentSessionId", o.gateway_env as "gatewayEnv", o.kot_printed_at as "kotPrintedAt",

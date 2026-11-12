@@ -1,37 +1,25 @@
 import type { OrderView } from "@/lib/orders/queries";
+import { navTarget, roundUrl } from "@/lib/orders/nav";
 
 /**
- * One tap to navigate the whole round. Google Maps takes the kitchen as origin,
- * every stop as a waypoint in the order they are listed, and the last stop as
- * the destination — so the rider gets turn-by-turn without typing an address.
+ * One tap to navigate the whole round: every stop as a waypoint in the order
+ * listed, the last one the destination. No origin is given, so Maps starts
+ * from wherever the rider is standing — the kitchen's typed address was
+ * a guess Maps could place wrongly.
  *
- * A stop with a shared pin routes by coordinates; everything else routes by
- * "<property>, <landmark>, Mount Abu", which Maps resolves well enough here.
+ * Each stop goes by the same rule as the single Navigate button
+ * (`lib/orders/nav.ts`): precise pin, then the hotel's Google place, then a
+ * rough pin, then the typed address.
  */
-const stopQuery = (o: OrderView) =>
-  o.lat != null && o.lng != null
-    ? `${o.lat},${o.lng}`
-    : [o.propertyName, o.roomOrLandmark, "Mount Abu, Rajasthan"].filter(Boolean).join(", ");
-
-export function runUrl(kitchen: string, stops: OrderView[]) {
-  if (stops.length === 0) return null;
-  const points = stops.map(stopQuery);
-  const destination = points[points.length - 1];
-  const waypoints = points.slice(0, -1);
-  const params = new URLSearchParams({
-    api: "1",
-    origin: kitchen,
-    destination,
-    travelmode: "two-wheeler",
-  });
-  if (waypoints.length) params.set("waypoints", waypoints.join("|"));
-  return `https://www.google.com/maps/dir/?${params.toString()}`;
+export function runUrl(stops: OrderView[]) {
+  return roundUrl(stops);
 }
 
-export function RunMap({ kitchen, stops }: { kitchen: string; stops: OrderView[] }) {
-  const url = runUrl(kitchen, stops);
+export function RunMap({ stops }: { stops: OrderView[] }) {
+  const url = runUrl(stops);
   if (!url) return null;
-  const pinned = stops.filter((s) => s.lat != null && s.lng != null).length;
+  const targets = stops.map(navTarget);
+  const exact = targets.filter((t) => t.kind !== "text").length;
 
   return (
     <div className="rounded-2xl bg-ink p-3 text-reversed">
@@ -41,7 +29,7 @@ export function RunMap({ kitchen, stops }: { kitchen: string; stops: OrderView[]
             {stops.length} stop{stops.length === 1 ? "" : "s"} on this run
           </p>
           <p className="mt-1 text-[13px] opacity-70">
-            {pinned} with an exact pin{pinned < stops.length ? `, ${stops.length - pinned} by address` : ""}
+            {exact} with an exact location{exact < stops.length ? `, ${stops.length - exact} by typed address` : ""}
           </p>
         </div>
         <a href={url} target="_blank" rel="noreferrer" className="h-11 flex-none rounded-xl bg-acid px-4 text-sm font-bold leading-[2.75rem] text-ink">
@@ -53,9 +41,9 @@ export function RunMap({ kitchen, stops }: { kitchen: string; stops: OrderView[]
           <li key={o.id} className="flex gap-2">
             <span className="font-bold opacity-60">{i + 1}.</span>
             <span className="flex-1">
-              #{o.number} · {[o.propertyName, o.roomOrLandmark].filter(Boolean).join(", ") || o.stayType}
+              #{o.number} · {[o.stay?.name ?? o.propertyName, o.roomOrLandmark].filter(Boolean).join(", ") || o.stayType}
             </span>
-            {o.lat != null && o.lng != null && <span className="opacity-60">pinned</span>}
+            {targets[i].label && <span className="opacity-60">{targets[i].label}</span>}
           </li>
         ))}
       </ol>

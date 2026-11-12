@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { acceptOrder, assignRider, cancelOrder, setStatus } from "@/lib/orders/actions";
 import type { OrderView } from "@/lib/orders/queries";
 import { STATUS_LABEL, type OrderStatus } from "@/lib/orders/status";
+import { directionsUrl, navTarget } from "@/lib/orders/nav";
 import { formatINR } from "@/lib/pricing";
 import { PrintButton } from "@/components/kitchen/auto-print";
 import { clockLabel } from "@/lib/hours";
@@ -154,21 +155,17 @@ export function OrderCard({ order, riders, role, compact = false, dark = false }
             Call 2nd
           </a>
         )}
-        {/* Always offer directions. With a shared pin we route to the exact
-            coordinates; without one, to the property and landmark, which Maps
-            resolves well enough on this plateau. A rider on a bike should
-            never have to retype an address. */}
+        {/* Always offer directions, by the rule in lib/orders/nav.ts:
+            precise pin, then the hotel's Google place, then a rough pin,
+            then the typed address. A rider on a bike should never have to
+            retype an address. */}
         <a
-          href={`https://www.google.com/maps/dir/?api=1&travelmode=two-wheeler&destination=${encodeURIComponent(
-            order.lat != null && order.lng != null
-              ? `${order.lat},${order.lng}`
-              : [order.propertyName, order.roomOrLandmark, "Mount Abu, Rajasthan"].filter(Boolean).join(", "),
-          )}`}
+          href={directionsUrl(order)}
           target="_blank"
           rel="noreferrer"
           className={`h-10 rounded-xl px-3 text-xs font-semibold leading-10 ${dark ? "bg-paper/15" : "bg-paper"}`}
         >
-          {order.lat != null && order.lng != null ? "Navigate · pinned" : "Navigate"}
+          {navTarget(order).label ? `Navigate · ${navTarget(order).label}` : "Navigate"}
         </a>
         <span className={`ml-auto text-sm font-bold ${dark ? "text-kraft" : ""}`}>{formatINR(order.totalPaise)}</span>
       </footer>
