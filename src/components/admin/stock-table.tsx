@@ -1,8 +1,10 @@
 "use client";
 
+import { useTransition, useState } from "react";
 import { Cell } from "@/components/admin/editable-cell";
 import { IngredientForm } from "@/components/admin/stock-forms";
 import { updateIngredientCell } from "@/lib/admin/register-actions";
+import { deleteIngredient } from "@/lib/admin/stock-actions";
 import { formatINR } from "@/lib/pricing";
 
 export type StockRow = {
@@ -28,7 +30,32 @@ const fmtRate = (paisePerUnit: number, unit: string) =>
 
 const COLS = "md:grid-cols-[minmax(8rem,1fr)_6rem_5rem_5.5rem_6.5rem_3.5rem_3.5rem]";
 
-export function StockTable({ rows, canEdit }: { rows: StockRow[]; canEdit: boolean }) {
+function IngredientDelete({ id, name, usedIn }: { id: string; name: string; usedIn: number }) {
+  const [pending, start] = useTransition();
+  const [err, setErr] = useState<string | null>(null);
+  return (
+    <span>
+      {err && <span className="block text-right text-[10px] text-error">{err}</span>}
+      <button
+        type="button"
+        disabled={pending || usedIn > 0}
+        title={usedIn > 0 ? `Used in ${usedIn} recipe${usedIn === 1 ? "" : "s"} — remove from recipes first` : `Delete ${name}`}
+        onClick={() => {
+          if (!confirm(`Delete "${name}"?`)) return;
+          start(async () => {
+            try { await deleteIngredient(id); setErr(null); }
+            catch (e) { setErr(e instanceof Error ? e.message : "Could not delete"); }
+          });
+        }}
+        className="h-7 rounded-lg px-2 text-xs font-semibold text-error/70 hover:bg-error/10 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+      >
+        {pending ? "…" : "Del"}
+      </button>
+    </span>
+  );
+}
+
+export function StockTable({ rows, canEdit, canDelete }: { rows: StockRow[]; canEdit: boolean; canDelete?: boolean }) {
   return (
     <div className="flex flex-col gap-2">
       <div className="overflow-x-auto">
@@ -92,8 +119,9 @@ export function StockTable({ rows, canEdit }: { rows: StockRow[]; canEdit: boole
               <span className="block text-right text-muted">{r.usedIn}</span>
             </Field>
 
-            <div className="flex items-center justify-end">
+            <div className="flex items-center justify-end gap-1">
               <IngredientForm ingredient={r} />
+              {canDelete && <IngredientDelete id={r.id} name={r.name} usedIn={r.usedIn} />}
             </div>
           </div>
         ))}

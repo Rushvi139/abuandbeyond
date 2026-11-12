@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { saveProperty, toggleProperty } from "@/lib/crm/actions";
+import { deleteProperty, saveProperty, toggleProperty } from "@/lib/crm/actions";
 
 type P = { id: string; name: string; kind: string; contactPerson: string | null; phone: string | null; address: string | null; notes: string | null };
 
@@ -41,5 +41,29 @@ export function PropertyToggle({ id, active }: { id: string; active: boolean }) 
     <button type="button" disabled={pending} onClick={() => start(() => toggleProperty(id, !active))} className="h-8 rounded-lg px-3 text-xs font-semibold text-muted">
       {active ? "Deactivate" : "Activate"}
     </button>
+  );
+}
+
+export function PropertyDelete({ id, name }: { id: string; name: string }) {
+  const [pending, start] = useTransition();
+  const [err, setErr] = useState<string | null>(null);
+  return (
+    <span>
+      {err && <span className="mr-2 text-xs text-error">{err}</span>}
+      <button
+        type="button"
+        disabled={pending}
+        onClick={() => {
+          if (!confirm(`Delete "${name}"? This cannot be undone.`)) return;
+          start(async () => {
+            try { await deleteProperty(id); setErr(null); }
+            catch (e) { setErr(e instanceof Error ? e.message : "Could not delete"); }
+          });
+        }}
+        className="h-8 rounded-lg px-3 text-xs font-semibold text-error/80 hover:bg-error/10 transition-colors disabled:opacity-50"
+      >
+        {pending ? "Deleting…" : "Delete"}
+      </button>
+    </span>
   );
 }

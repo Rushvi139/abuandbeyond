@@ -131,3 +131,10 @@ export async function setStayActive(id: string, active: boolean) {
   revalidatePath("/admin/stays");
   revalidatePath("/rider/stays");
 }
+
+export async function deleteStay(id: string) {
+  await assertRole(["owner"]);
+  await db()`delete from stays where id = ${z.string().uuid().parse(id)}`;
+  revalidatePath("/admin/stays");
+  revalidatePath("/rider/stays");
+}

@@ -33,6 +33,16 @@ export async function saveIngredient(formData: FormData) {
   revalidatePath("/admin/menu");
 }
 
+export async function deleteIngredient(id: string) {
+  await assertRole(["owner"]);
+  const sql = db();
+  const [{ n }] = await sql<{ n: number }[]>`select count(*)::int as n from recipe_lines where ingredient_id = ${id}`;
+  if (n > 0) throw new Error(`Cannot delete — this ingredient is used in ${n} recipe${n === 1 ? "" : "s"}. Remove it from those recipes first.`);
+  await sql`update ingredients set active = false where id = ${id}`;
+  revalidatePath("/admin/stock");
+  revalidatePath("/admin/recipes");
+}
+
 /** purchase (+), wastage (−), opening (+) or adjustment (sets the count). Quantities in base units. */
 export async function recordMovement(formData: FormData) {
   const staff = await assertRole(["owner", "manager", "kitchen"]);

@@ -1,4 +1,4 @@
-import { PropertyForm, PropertyToggle } from "@/components/admin/property-form";
+import { PropertyDelete, PropertyForm, PropertyToggle } from "@/components/admin/property-form";
 import QRCode from "qrcode";
 import { requireRole } from "@/lib/auth";
 import { db } from "@/lib/db";
@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 type Row = { id: string; slug: string; name: string; kind: string; contactPerson: string | null; phone: string | null; address: string | null; notes: string | null; active: boolean; orders: number; net: number };
 
 export default async function PropertiesPage() {
-  await requireRole(["owner", "manager"], "/admin/properties");
+  const staff = await requireRole(["owner", "manager"], "/admin/properties");
   const rows = await db()<Row[]>`
     select p.id, p.slug, p.name, p.kind, p.contact_person as "contactPerson", p.phone, p.address, p.notes, p.active,
       coalesce(s.delivered_orders, 0)::int as orders, coalesce(s.net_sales_paise, 0)::bigint as net
@@ -50,6 +50,7 @@ export default async function PropertiesPage() {
                     <a href={qr} download={`qr-${p.slug}.png`} className="h-8 rounded-lg bg-paper px-3 text-xs font-semibold leading-8">Download QR</a>
                     <PropertyForm property={p} />
                     <PropertyToggle id={p.id} active={p.active} />
+                    {staff.role === "owner" && <PropertyDelete id={p.id} name={p.name} />}
                   </div>
                 </div>
               </article>

@@ -57,7 +57,7 @@ export default async function StockPage({ searchParams }: { searchParams: Promis
           </section>
         </div>
         <div className="lg:col-span-2">
-          <StockTable rows={rows} canEdit={MANAGERS.includes(staff.role)} />
+          <StockTable rows={rows} canEdit={MANAGERS.includes(staff.role)} canDelete={staff.role === "owner"} />
         </div>
       </div>
 

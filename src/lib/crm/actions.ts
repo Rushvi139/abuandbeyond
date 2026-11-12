@@ -51,6 +51,15 @@ export async function toggleProperty(id: string, active: boolean) {
   revalidatePath("/admin/properties");
 }
 
+export async function deleteProperty(id: string) {
+  await assertRole(["owner"]);
+  const sql = db();
+  const [{ n }] = await sql<{ n: number }[]>`select count(*)::int as n from orders where property_id = ${Id.parse(id)}`;
+  if (n > 0) throw new Error(`Cannot delete — this property has ${n} order${n === 1 ? "" : "s"} linked to it. Deactivate it instead.`);
+  await sql`delete from properties where id = ${Id.parse(id)}`;
+  revalidatePath("/admin/properties");
+}
+
 export async function setItemAvailability(itemId: string, available: boolean) {
   await assertRole(["owner", "manager", "kitchen"]);
   await db()`update menu_items set available = ${available} where id = ${Id.parse(itemId)}`;

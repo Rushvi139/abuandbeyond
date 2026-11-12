@@ -1,3 +1,4 @@
+import { CateringEdit } from "@/components/admin/catering-edit";
 import { CateringStatus } from "@/components/admin/catering-status";
 import { requireRole } from "@/lib/auth";
 import { db } from "@/lib/db";
@@ -45,6 +46,9 @@ export default async function CateringPage() {
               {[r.occasion, r.guests ? `${r.guests} people` : null, r.eventOn ? `on ${d(r.eventOn)}` : null].filter(Boolean).join(" · ") || "No details given"}
             </p>
             {r.notes && <p className="mt-1.5 text-sm text-muted">{r.notes}</p>}
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              <CateringEdit id={r.id} name={r.name} phone={r.phone} occasion={r.occasion} guests={r.guests} eventOn={r.eventOn} notes={r.notes} />
+            </div>
             <CateringStatus id={r.id} status={r.status} />
           </article>
         ))}

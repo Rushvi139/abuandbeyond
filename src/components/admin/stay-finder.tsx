@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useTransition } from "react";
+import { deleteStay } from "@/lib/admin/stays";
 
 export type StayRow = {
   id: string;
@@ -38,7 +39,31 @@ const fold = (s: string) =>
  * A rider on a bike, one hand, bad light. Type three letters of the hotel name,
  * get the distance and a Directions button. No map tiles, no pinch-zoom.
  */
-export function StayFinder({ stays }: { stays: StayRow[] }) {
+function StayDeleteBtn({ id, name }: { id: string; name: string }) {
+  const [pending, start] = useTransition();
+  const [err, setErr] = useState<string | null>(null);
+  return (
+    <span>
+      {err && <span className="block text-xs text-error">{err}</span>}
+      <button
+        type="button"
+        disabled={pending}
+        onClick={() => {
+          if (!confirm(`Delete "${name}" from the stay directory?`)) return;
+          start(async () => {
+            try { await deleteStay(id); setErr(null); }
+            catch (e) { setErr(e instanceof Error ? e.message : "Could not delete"); }
+          });
+        }}
+        className="h-8 rounded-lg px-2.5 text-xs font-semibold text-error/70 hover:bg-error/10 transition-colors disabled:opacity-50"
+      >
+        {pending ? "…" : "Delete"}
+      </button>
+    </span>
+  );
+}
+
+export function StayFinder({ stays, canDelete }: { stays: StayRow[]; canDelete?: boolean }) {
   const [q, setQ] = useState("");
   const [zone, setZone] = useState<string | null>(null);
 
@@ -165,6 +190,7 @@ export function StayFinder({ stays }: { stays: StayRow[] }) {
             >
               Go
             </a>
+            {canDelete && <StayDeleteBtn id={s.id} name={s.name} />}
           </article>
         ))
       )}

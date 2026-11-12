@@ -6,7 +6,7 @@ import { db } from "@/lib/db";
 export const dynamic = "force-dynamic";
 
 export default async function AdminStaysPage() {
-  await requireRole(["owner", "manager"], "/admin/stays");
+  const staff = await requireRole(["owner", "manager"], "/admin/stays");
   const sql = db();
   const [stays, zones, imports] = await Promise.all([
     sql<StayRow[]>`
@@ -77,7 +77,7 @@ export default async function AdminStaysPage() {
               <h2 className="mb-2 text-xs font-bold uppercase tracking-wide text-muted">
                 {stays.length} stays — this is what the rider sees
               </h2>
-              <StayFinder stays={stays} />
+              <StayFinder stays={stays} canDelete={staff.role === "owner"} />
             </>
           )}
         </div>
