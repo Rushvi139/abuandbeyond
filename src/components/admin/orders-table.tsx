@@ -294,34 +294,64 @@ function OrderRow({
   );
 }
 
+type Filter = "live" | "cash" | "upi" | "unpaid" | "archive";
+
 export function OrdersTable({ orders, riders, role }: { orders: OrderView[]; riders: { id: string; name: string }[]; role: string }) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
-  const [filter, setFilter] = useState<"live" | "all">("live");
+  const [filter, setFilter] = useState<Filter>("live");
 
   const liveStatuses = new Set(["paid", "accepted", "preparing", "ready", "out_for_delivery"]);
-  const shown = filter === "live" ? orders.filter((o) => liveStatuses.has(o.status)) : orders;
+  const archiveStatuses = new Set(["delivered", "cancelled"]);
+
+  function applyFilter(o: OrderView): boolean {
+    if (filter === "live") return liveStatuses.has(o.status);
+    if (filter === "cash") return o.paymentMode === "on_delivery";
+    if (filter === "upi") return o.paymentMode === "online";
+    if (filter === "unpaid") return o.paymentMode === "on_delivery" && o.collectedAt === null && liveStatuses.has(o.status);
+    if (filter === "archive") return archiveStatuses.has(o.status);
+    return true;
+  }
+
+  const shown = orders.filter(applyFilter);
   const newCount = orders.filter((o) => o.status === "paid").length;
+  const unpaidCount = orders.filter((o) => o.paymentMode === "on_delivery" && o.collectedAt === null && liveStatuses.has(o.status)).length;
+
+  const tabs: { key: Filter; label: string; badge?: number }[] = [
+    { key: "live", label: "Live", badge: newCount > 0 ? newCount : undefined },
+    { key: "cash", label: "Cash" },
+    { key: "upi", label: "UPI" },
+    { key: "unpaid", label: "Unpaid COD", badge: unpaidCount > 0 ? unpaidCount : undefined },
+    { key: "archive", label: "Archive" },
+  ];
 
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <h1 className="font-display text-[28px] uppercase">Orders</h1>
-          {newCount > 0 && (
-            <span className="rounded-full bg-acid px-3 py-1 text-sm font-bold text-ink">
-              {newCount} new
-            </span>
-          )}
-        </div>
-        <div className="flex items-center gap-2">
-          <button onClick={() => setFilter("live")} className={`h-9 rounded-xl px-4 text-sm font-semibold transition-colors ${filter === "live" ? "bg-ink text-reversed" : "bg-paper text-muted"}`}>Live</button>
-          <button onClick={() => setFilter("all")} className={`h-9 rounded-xl px-4 text-sm font-semibold transition-colors ${filter === "all" ? "bg-ink text-reversed" : "bg-paper text-muted"}`}>All recent</button>
+        <h1 className="font-display text-[28px] uppercase">Orders</h1>
+        <div className="flex flex-wrap items-center gap-1.5">
+          {tabs.map(({ key, label, badge }) => (
+            <button
+              key={key}
+              onClick={() => setFilter(key)}
+              className={`relative h-9 rounded-xl px-3.5 text-sm font-semibold transition-colors ${filter === key ? "bg-ink text-reversed" : "bg-paper text-muted hover:text-ink"}`}
+            >
+              {label}
+              {badge !== undefined && (
+                <span className={`ml-1.5 inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded-full px-1 text-[10px] font-bold ${filter === key ? "bg-acid text-ink" : "bg-acid text-ink"}`}>
+                  {badge}
+                </span>
+              )}
+            </button>
+          ))}
         </div>
       </div>
 
       {shown.length === 0 ? (
         <p className="rounded-2xl bg-surface p-6 text-center text-muted">
-          {filter === "live" ? "No live orders right now." : "No orders found."}
+          {filter === "live" ? "No live orders right now." :
+           filter === "unpaid" ? "No unpaid COD orders right now." :
+           filter === "archive" ? "No delivered or cancelled orders in this batch." :
+           "No orders found."}
         </p>
       ) : (
         <div className="overflow-x-auto rounded-2xl border border-line">

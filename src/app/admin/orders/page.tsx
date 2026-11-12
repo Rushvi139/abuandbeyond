@@ -11,7 +11,7 @@ export default async function OrdersPage() {
   const staff = await requireRole(["owner", "manager"], "/admin");
   const [live, recent, riders] = await Promise.all([
     getLiveOrders(LIVE),
-    getRecentOrders(100),
+    getRecentOrders(300),
     db()<{ id: string; name: string }[]>`select id, full_name as name from staff_users where role = 'rider' and active order by full_name`,
   ]);
 
