@@ -7,7 +7,7 @@ import { spendByHead, uncollected, vendorLedger } from "@/lib/admin/accounts-que
 
 export const dynamic = "force-dynamic";
 
-type Day = { day: string; orders: number; net: number; gst: number; gross: number; expenses: number; bills: number };
+type Day = { day: string; orders: number; net: number; gst: number; gross: number; expenses: number; bills: number; cash: number; upi: number };
 type Bill = { id: string; vendorId: string; vendor: string; billNumber: string | null; billDate: string; amount: number; gst: number; dueOn: string | null; filePath: string | null; paid: number };
 type Expense = { id: string; spentOn: string; category: string; description: string; amount: number; mode: string | null; vendor: string | null; vendorId: string | null; filePath: string | null };
 
@@ -24,16 +24,26 @@ export default async function AccountsPage({ searchParams }: { searchParams: Pro
 
   const days = await sql<Day[]>`
     with sales as (
-      select day, orders::int, net_sales_paise::bigint as net, gst_paise::bigint as gst, gross_paise::bigint as gross from daily_sales
+      select (paid_at at time zone 'Asia/Kolkata')::date as day,
+             count(*)::int as orders,
+             sum(subtotal_paise - discount_paise)::bigint as net,
+             sum(gst_paise)::bigint as gst,
+             sum(total_paise)::bigint as gross,
+             sum(total_paise) filter (where payment_mode = 'on_delivery')::bigint as cash,
+             sum(total_paise) filter (where payment_mode = 'online')::bigint as upi
+      from orders
+      where status not in ('pending_payment', 'payment_failed', 'cancelled')
+      group by 1
     ), ex as (select spent_on as day, sum(amount_paise)::bigint as expenses from expenses group by 1),
        bi as (select bill_date as day, sum(amount_paise)::bigint as bills from vendor_bills group by 1),
        alld as (select day from sales union select day from ex union select day from bi)
     select alld.day, coalesce(s.orders, 0) as orders, coalesce(s.net, 0) as net, coalesce(s.gst, 0) as gst, coalesce(s.gross, 0) as gross,
-      coalesce(ex.expenses, 0) as expenses, coalesce(bi.bills, 0) as bills
+      coalesce(ex.expenses, 0) as expenses, coalesce(bi.bills, 0) as bills,
+      coalesce(s.cash, 0) as cash, coalesce(s.upi, 0) as upi
     from alld left join sales s on s.day = alld.day left join ex on ex.day = alld.day left join bi on bi.day = alld.day
     where alld.day >= ${start}::date and alld.day < (${start}::date + interval '1 month')
     order by alld.day desc`;
-  const tot = days.reduce((a, x) => ({ net: a.net + x.net, gst: a.gst + x.gst, expenses: a.expenses + x.expenses, bills: a.bills + x.bills, orders: a.orders + x.orders }), { net: 0, gst: 0, expenses: 0, bills: 0, orders: 0 });
+  const tot = days.reduce((a, x) => ({ net: a.net + x.net, gst: a.gst + x.gst, expenses: a.expenses + x.expenses, bills: a.bills + x.bills, orders: a.orders + x.orders, cash: a.cash + x.cash, upi: a.upi + x.upi }), { net: 0, gst: 0, expenses: 0, bills: 0, orders: 0, cash: 0, upi: 0 });
   const directPct = tot.net ? Math.round((tot.bills / tot.net) * 100) : null;
 
   const bills = await sql<Bill[]>`
@@ -73,6 +83,8 @@ export default async function AccountsPage({ searchParams }: { searchParams: Pro
 
       <div className="grid grid-cols-2 gap-3 md:grid-cols-6">
         <Stat label="Net sales" value={formatINR(tot.net)} sub={`${tot.orders} orders`} />
+        <Stat label="Cash (COD)" value={formatINR(tot.cash)} sub="pay-on-delivery orders" />
+        <Stat label="UPI / online" value={formatINR(tot.upi)} sub="paid via gateway" />
         <Stat label="Vendor bills" value={formatINR(tot.bills)} sub={directPct !== null ? `${directPct}% of sales (ceiling 33%)` : ""} tone={directPct !== null && directPct > 33 ? "bad" : ""} />
         <Stat label="Expenses" value={formatINR(tot.expenses)} />
         <Stat label="Left over" value={formatINR(tot.net - tot.bills - tot.expenses)} sub="sales − bills − expenses" tone={tot.net - tot.bills - tot.expenses < 0 ? "bad" : "good"} />
@@ -97,20 +109,22 @@ export default async function AccountsPage({ searchParams }: { searchParams: Pro
         <h2 className="mb-2 font-display text-[18px] uppercase">Daily ledger</h2>
         <div className="overflow-x-auto rounded-2xl bg-surface">
           <table className="w-full min-w-[640px] text-sm">
-            <thead className="text-left text-xs uppercase tracking-wide text-muted"><tr><th className="px-4 py-3">Day</th><th className="px-4 py-3 text-right">Orders</th><th className="px-4 py-3 text-right">Net sales</th><th className="px-4 py-3 text-right">GST</th><th className="px-4 py-3 text-right">Bills</th><th className="px-4 py-3 text-right">Expenses</th><th className="px-4 py-3 text-right">Left over</th></tr></thead>
+            <thead className="text-left text-xs uppercase tracking-wide text-muted"><tr><th className="px-4 py-3">Day</th><th className="px-4 py-3 text-right">Orders</th><th className="px-4 py-3 text-right">Net sales</th><th className="px-4 py-3 text-right">Cash</th><th className="px-4 py-3 text-right">UPI</th><th className="px-4 py-3 text-right">GST</th><th className="px-4 py-3 text-right">Bills</th><th className="px-4 py-3 text-right">Expenses</th><th className="px-4 py-3 text-right">Left over</th></tr></thead>
             <tbody>
               {days.map((x) => (
                 <tr key={x.day} className="border-t border-line">
                   <td className="px-4 py-2.5 font-semibold">{d(x.day)}</td>
                   <td className="px-4 py-2.5 text-right">{x.orders}</td>
                   <td className="px-4 py-2.5 text-right">{formatINR(x.net)}</td>
+                  <td className="px-4 py-2.5 text-right text-muted">{x.cash ? formatINR(x.cash) : <span className="text-line">—</span>}</td>
+                  <td className="px-4 py-2.5 text-right text-muted">{x.upi ? formatINR(x.upi) : <span className="text-line">—</span>}</td>
                   <td className="px-4 py-2.5 text-right text-muted">{formatINR(x.gst)}</td>
                   <td className="px-4 py-2.5 text-right">{formatINR(x.bills)}</td>
                   <td className="px-4 py-2.5 text-right">{formatINR(x.expenses)}</td>
                   <td className={`px-4 py-2.5 text-right font-semibold ${x.net - x.bills - x.expenses < 0 ? "text-error" : ""}`}>{formatINR(x.net - x.bills - x.expenses)}</td>
                 </tr>
               ))}
-              {days.length === 0 && <tr><td colSpan={7} className="px-4 py-6 text-center text-muted">Nothing in this month yet.</td></tr>}
+              {days.length === 0 && <tr><td colSpan={9} className="px-4 py-6 text-center text-muted">Nothing in this month yet.</td></tr>}
             </tbody>
           </table>
         </div>
