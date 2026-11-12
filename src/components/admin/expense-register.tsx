@@ -20,6 +20,11 @@ export type ExpenseRow = {
   note: string | null;
   filePath: string | null;
   updatedBy: string | null;
+  // Stock link (may be null for non-ingredient expenses)
+  ingredientId: string | null;
+  ingredientName: string | null;
+  ingredientUnit: string | null;
+  quantity: number | null;
 };
 
 const COLS = "md:grid-cols-[6rem_minmax(9rem,1fr)_7.5rem_7.5rem_5rem_6rem_6.5rem_4.5rem]";
@@ -229,6 +234,14 @@ function Row({ row: r, categories, canEdit, canDelete }: { row: ExpenseRow; cate
           />
         </div>
         {r.updatedBy && <p className="col-span-2 text-[11px] text-muted md:col-span-8 md:-mt-1">edited by {r.updatedBy}</p>}
+        {r.ingredientName && (
+          <p className="col-span-2 text-[11px] text-muted md:col-span-8 md:-mt-1">
+            <span className="inline-flex items-center gap-1 rounded-md bg-paper px-1.5 py-0.5 font-semibold text-hill ring-1 ring-inset ring-hill/20">
+              📦 stock
+            </span>{" "}
+            {r.quantity} {r.ingredientUnit} of {r.ingredientName} credited to stock
+          </p>
+        )}
       </div>
     </div>
   );

@@ -30,6 +30,9 @@ export async function addExpense(formData: FormData): Promise<{ error?: string }
     category: z.string().min(1), spentOn: z.string().date(), description: z.string().trim().min(2).max(200),
     amountInr: z.coerce.number().min(0.01), mode: z.string().trim().max(20).optional().or(z.literal("")),
     reference: z.string().trim().max(60).optional().or(z.literal("")), vendor: z.string().trim().max(80).optional().or(z.literal("")),
+    // Stock link: if this expense is for an ingredient, record which one and how much was bought.
+    ingredientId: z.string().uuid().optional().or(z.literal("")),
+    quantity: z.coerce.number().positive().optional().or(z.literal("")),
   }).parse(Object.fromEntries(formData));
   const file = formData.get("attachment");
   let filePath: string | null = null;
@@ -39,12 +42,30 @@ export async function addExpense(formData: FormData): Promise<{ error?: string }
     if (e instanceof UploadError) return { error: e.message };
     throw e;
   }
+
+  const iid = d.ingredientId || null;
+  const qty = (d.quantity && typeof d.quantity === "number") ? d.quantity : null;
+  if (iid && !qty) return { error: "Enter the quantity bought when you link an ingredient." };
+  if (qty && !iid) return { error: "Select which ingredient this quantity is for." };
+
   const sql = db();
-  const vid = d.vendor ? await vendorId(sql as unknown as Q, d.vendor) : null;
-  await sql`insert into expenses (category_id, spent_on, description, amount_paise, vendor_id, mode, reference, file_path, created_by)
-    values (${d.category}, ${d.spentOn}, ${d.description}, ${paise(d.amountInr)}, ${vid}, ${d.mode || null}, ${d.reference || null}, ${filePath}, ${staff.id})`;
+  await sql.begin(async (tx) => {
+    const vid = d.vendor ? await vendorId(tx as unknown as Q, d.vendor) : null;
+    const [exp] = await (tx as unknown as Q)<{ id: string }[]>`
+      insert into expenses (category_id, spent_on, description, amount_paise, vendor_id, mode, reference, file_path, created_by, ingredient_id, quantity)
+      values (${d.category}, ${d.spentOn}, ${d.description}, ${paise(d.amountInr)}, ${vid}, ${d.mode || null}, ${d.reference || null}, ${filePath}, ${staff.id}, ${iid}, ${qty})
+      returning id`;
+    // Honour the architecture invariant: stock changes only via stock_movements inserts.
+    if (iid && qty) {
+      await (tx as unknown as Q)<object[]>`
+        insert into stock_movements (ingredient_id, kind, qty, note, actor_id)
+        values (${iid}, 'purchase', ${qty}, ${"Expense #" + exp.id}, ${staff.id})`;
+    }
+  });
+
   revalidatePath("/admin/accounts");
-  if (vid) revalidatePath(`/admin/accounts/vendors/${vid}`);
+  revalidatePath("/admin/accounts/expenses");
+  revalidatePath("/admin/stock");
   return {};
 }
 

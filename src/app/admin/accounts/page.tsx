@@ -56,6 +56,7 @@ export default async function AccountsPage({ searchParams }: { searchParams: Pro
     where e.spent_on >= ${start}::date and e.spent_on < (${start}::date + interval '1 month') order by e.spent_on desc, e.created_at desc limit 100`;
   const categories = await sql<{ id: string; name: string }[]>`select id, name from expense_categories order by name`;
   const vendors = await sql<{ name: string }[]>`select name from vendors where active order by name`;
+  const ingredients = await sql<{ id: string; name: string; unit: string }[]>`select id, name, unit::text from ingredients where active order by name`;
   const [ledger, spend, toCollect] = await Promise.all([vendorLedger(start), spendByHead(start), uncollected()]);
 
   // Outstanding is every unpaid bill, whenever it was raised — an October bill
@@ -256,7 +257,7 @@ export default async function AccountsPage({ searchParams }: { searchParams: Pro
             <h2 className="font-display text-[18px] uppercase">Expenses</h2>
             <Link href="/admin/accounts/expenses" className="text-xs font-semibold text-hill underline-offset-2 hover:underline">week by week, filter &amp; edit →</Link>
           </div>
-          <ExpenseForm categories={categories} vendors={vendors.map((v) => v.name)} />
+          <ExpenseForm categories={categories} vendors={vendors.map((v) => v.name)} ingredients={ingredients} />
           <div className="mt-3 overflow-hidden rounded-2xl bg-surface text-sm">
             {expenses.map((e) => (
               <div key={e.id} className="flex items-center gap-3 border-b border-line px-4 py-2.5 last:border-0">

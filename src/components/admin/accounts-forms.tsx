@@ -7,6 +7,8 @@ const inp = "h-10 rounded-xl border border-line bg-paper px-3 text-sm";
 const today = () => new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" });
 const MODES = ["UPI", "Cash", "Bank", "Card"];
 
+export type IngredientOption = { id: string; name: string; unit: string };
+
 /**
  * Handles a complaint returned as data as well as one thrown. Production Next
  * swallows a thrown message, so anything the person needs to read — which
@@ -32,8 +34,18 @@ function useSubmit(action: (fd: FormData) => Promise<{ error?: string } | void>,
   return { pending, err, ok, act };
 }
 
-export function ExpenseForm({ categories, vendors }: { categories: { id: string; name: string }[]; vendors: string[] }) {
+export function ExpenseForm({
+  categories,
+  vendors,
+  ingredients = [],
+}: {
+  categories: { id: string; name: string }[];
+  vendors: string[];
+  ingredients?: IngredientOption[];
+}) {
   const { pending, err, ok, act } = useSubmit(addExpense, "eform");
+  const [ingredientId, setIngredientId] = useState("");
+  const selectedIngredient = ingredients.find((i) => i.id === ingredientId);
   return (
     <form id="eform" action={act} className="grid gap-2 rounded-2xl bg-surface p-4 sm:grid-cols-2">
       <input name="spentOn" type="date" required defaultValue={today()} className={inp} />
@@ -44,6 +56,51 @@ export function ExpenseForm({ categories, vendors }: { categories: { id: string;
       <input name="vendor" list="vendors" placeholder="Paid to (optional)" className={inp} />
       <datalist id="vendors">{vendors.map((v) => <option key={v} value={v} />)}</datalist>
       <input name="reference" placeholder="UTR / ref (optional)" className={inp} />
+
+      {/* Stock link — optional. If this expense brought in an ingredient, pick it here
+          and the system auto-creates a stock_movement so the balance stays accurate. */}
+      {ingredients.length > 0 && (
+        <div className="sm:col-span-2 rounded-xl border border-line bg-paper p-3 flex flex-col gap-2">
+          <p className="text-[11px] uppercase tracking-wide text-muted font-semibold">Stock update (optional)</p>
+          <div className="grid gap-2 sm:grid-cols-2">
+            <div>
+              <input type="hidden" name="ingredientId" value={ingredientId} />
+              <select
+                className={inp + " w-full"}
+                value={ingredientId}
+                onChange={(e) => setIngredientId(e.target.value)}
+              >
+                <option value="">Not a stock item</option>
+                {ingredients.map((i) => (
+                  <option key={i.id} value={i.id}>{i.name}</option>
+                ))}
+              </select>
+            </div>
+            <div className="relative">
+              <input
+                name="quantity"
+                type="number"
+                step="0.001"
+                min="0.001"
+                placeholder={selectedIngredient ? `Qty in ${selectedIngredient.unit}` : "Quantity"}
+                disabled={!ingredientId}
+                className={inp + " w-full pr-14 disabled:opacity-40"}
+              />
+              {selectedIngredient && (
+                <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted">
+                  {selectedIngredient.unit}
+                </span>
+              )}
+            </div>
+          </div>
+          {ingredientId && (
+            <p className="text-[11px] text-muted">
+              Stock will be credited automatically when you save.
+            </p>
+          )}
+        </div>
+      )}
+
       <label className="flex items-center gap-2 text-xs text-muted sm:col-span-2">
         Slip or receipt
         <input name="attachment" type="file" accept="image/*,application/pdf" className="min-w-0 flex-1 text-xs" />

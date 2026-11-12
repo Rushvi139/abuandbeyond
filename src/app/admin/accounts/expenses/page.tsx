@@ -35,11 +35,14 @@ export default async function ExpenseRegisterPage({ searchParams }: { searchPara
     sql<ExpenseRow[]>`
       select e.id, e.spent_on::text as "spentOn", e.description, e.category_id as "categoryId", c.name as category,
         v.name as vendor, e.vendor_id as "vendorId", e.amount_paise::bigint as amount, e.mode, e.reference, e.note,
-        e.file_path as "filePath", u.full_name as "updatedBy"
+        e.file_path as "filePath", u.full_name as "updatedBy",
+        e.ingredient_id as "ingredientId", i.name as "ingredientName", i.unit::text as "ingredientUnit",
+        e.quantity::float as quantity
       from expenses e
       join expense_categories c on c.id = e.category_id
       left join vendors v on v.id = e.vendor_id
       left join staff_users u on u.id = e.updated_by
+      left join ingredients i on i.id = e.ingredient_id
       where e.spent_on >= ${from}::date and e.spent_on <= ${to}::date
         and (${category} = '' or e.category_id = ${category})
         and (${vendor} = '' or v.name = ${vendor})
