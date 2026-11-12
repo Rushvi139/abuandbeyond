@@ -51,15 +51,14 @@ export async function addExpense(formData: FormData): Promise<{ error?: string }
   const sql = db();
   await sql.begin(async (tx) => {
     const vid = d.vendor ? await vendorId(tx as unknown as Q, d.vendor) : null;
-    const [exp] = await (tx as unknown as Q)<{ id: string }[]>`
+    await (tx as unknown as Q)<object[]>`
       insert into expenses (category_id, spent_on, description, amount_paise, vendor_id, mode, reference, file_path, created_by, ingredient_id, quantity)
-      values (${d.category}, ${d.spentOn}, ${d.description}, ${paise(d.amountInr)}, ${vid}, ${d.mode || null}, ${d.reference || null}, ${filePath}, ${staff.id}, ${iid}, ${qty})
-      returning id`;
+      values (${d.category}, ${d.spentOn}, ${d.description}, ${paise(d.amountInr)}, ${vid}, ${d.mode || null}, ${d.reference || null}, ${filePath}, ${staff.id}, ${iid}, ${qty})`;
     // Honour the architecture invariant: stock changes only via stock_movements inserts.
     if (iid && qty) {
       await (tx as unknown as Q)<object[]>`
-        insert into stock_movements (ingredient_id, kind, qty, note, actor_id)
-        values (${iid}, 'purchase', ${qty}, ${"Expense #" + exp.id}, ${staff.id})`;
+        insert into stock_movements (ingredient_id, kind, quantity, unit_cost_paise, note, actor_id)
+        values (${iid}, 'purchase', ${qty}, ${(paise(d.amountInr) / qty).toFixed(4)}, ${"Expense: " + d.description.slice(0, 80)}, ${staff.id})`;
     }
   });
 
