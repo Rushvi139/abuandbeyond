@@ -21,9 +21,27 @@ const PILL: Record<string, string> = {
   payment_failed: "bg-error text-reversed",
 };
 
-// Compact summary: "2× Veg Burger, 1× Pesto Pasta"
+// Group lines by category, return [{category, lines}] in original order
+function groupByCategory(lines: OrderView["lines"]) {
+  const order: string[] = [];
+  const map: Record<string, OrderView["lines"]> = {};
+  for (const l of lines) {
+    const cat = l.category || "Other";
+    if (!map[cat]) { map[cat] = []; order.push(cat); }
+    map[cat].push(l);
+  }
+  return order.map((cat) => ({ cat, lines: map[cat] }));
+}
+
+// Compact summary grouped by category: "Rolls: 2× Paneer · Sandwiches: 1× Veg Club"
 function itemsSummary(lines: OrderView["lines"]) {
-  return lines.map((l) => `${l.qty}× ${l.name}`).join(", ");
+  const groups = groupByCategory(lines);
+  if (groups.length === 1 && !groups[0].cat) {
+    return groups[0].lines.map((l) => `${l.qty}× ${l.name}`).join(", ");
+  }
+  return groups.map(({ cat, lines }) =>
+    `${cat}: ${lines.map((l) => `${l.qty}× ${l.name}`).join(", ")}`
+  ).join(" · ");
 }
 
 function StatusPill({ status }: { status: string }) {
@@ -184,20 +202,34 @@ function OrderRow({
         <tr className="border-b border-line bg-surface/40">
           <td colSpan={10} className="px-4 py-3">
             <div className="flex flex-wrap gap-6">
-              {/* Items detail */}
+              {/* Items detail — grouped by category */}
               <div className="min-w-[200px] flex-1">
-                <p className="mb-1.5 text-[11px] font-bold uppercase tracking-wider text-muted">Items</p>
-                <ul className="flex flex-col gap-1">
-                  {order.lines.map((l) => (
-                    <li key={l.id} className="flex items-start gap-2 text-sm">
-                      <VegMark veg={l.isVeg} />
-                      <span className="font-semibold">{l.qty}× {l.name}</span>
-                      {(l.options.length > 0 || l.addons.length > 0) && (
-                        <span className="text-[12px] text-clay font-semibold">{[...l.options, ...l.addons.map((a) => `+${a}`)].join(" · ")}</span>
-                      )}
-                    </li>
+                <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-muted">Items</p>
+                <div className="flex flex-col gap-3">
+                  {groupByCategory(order.lines).map(({ cat, lines }) => (
+                    <div key={cat}>
+                      <p className="mb-1 text-[10px] font-bold uppercase tracking-widest text-muted/70">{cat}</p>
+                      <ul className="flex flex-col gap-1.5">
+                        {lines.map((l) => (
+                          <li key={l.id} className="flex flex-wrap items-start gap-x-2 gap-y-0.5">
+                            <div className="flex items-center gap-1.5">
+                              <VegMark veg={l.isVeg} />
+                              <span className="text-sm font-semibold">{l.qty}× {l.name}</span>
+                            </div>
+                            {(l.options.length > 0 || l.addons.length > 0) && (
+                              <span className="text-[11px] font-medium text-clay">
+                                {[...l.options, ...l.addons.map((a) => `+${a}`)].join(" · ")}
+                              </span>
+                            )}
+                            {l.note && (
+                              <span className="text-[11px] font-semibold text-error">! {l.note}</span>
+                            )}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
                   ))}
-                </ul>
+                </div>
               </div>
               {/* Status timeline */}
               <div className="min-w-[180px]">
