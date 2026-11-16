@@ -27,19 +27,53 @@ function prefersImageSequence() {
  * as a whole, so the leopard and the logo can never drift apart.
  */
 export function LeopardIntro({ logoWidth, reducedMotion = false }: { logoWidth: number; reducedMotion?: boolean }) {
-  const [useImage, setUseImage] = useState(false);
+  const [useImage, setUseImage] = useState<boolean | null>(null);
+  const [imageSrc, setImageSrc] = useState<string | null>(null);
   const [resting, setResting] = useState(reducedMotion);
   const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => setUseImage(prefersImageSequence()), []);
+
+  /*
+   * The animated WebP plays once (loop = 1). iPhone Safari keeps the decoded
+   * image in memory, so on a second visit the same URL comes back already
+   * finished and the leopard slides in frozen on its last frame. A fresh
+   * object URL for each entrance makes Safari decode it again from frame
+   * one, while `fetch` still serves the bytes from the HTTP cache — no
+   * second download.
+   */
+  useEffect(() => {
+    if (!useImage || reducedMotion) return;
+    let url: string | null = null;
+    let live = true;
+    const fallback = setTimeout(() => live && setImageSrc((s) => s ?? `/brand/leopard/walk-settle.webp?play=${Date.now()}`), 2500);
+    fetch("/brand/leopard/walk-settle.webp")
+      .then((r) => (r.ok ? r.blob() : Promise.reject(new Error(String(r.status)))))
+      .then((b) => {
+        if (!live) return;
+        url = URL.createObjectURL(b);
+        setImageSrc((s) => s ?? url);
+      })
+      .catch(() => live && setImageSrc(`/brand/leopard/walk-settle.webp?play=${Date.now()}`));
+    return () => {
+      live = false;
+      clearTimeout(fallback);
+      if (url) URL.revokeObjectURL(url);
+    };
+  }, [useImage, reducedMotion]);
+
+  // The walk starts when the film can actually play: at once for the video,
+  // once the fresh image is ready on Safari.
+  const ready = reducedMotion || useImage === false || (useImage === true && imageSrc !== null);
   useEffect(() => {
     if (reducedMotion) return setResting(true);
+    if (!ready) return;
     setResting(false);
     const t = setTimeout(() => setResting(true), SETTLED_MS);
     return () => clearTimeout(t);
-  }, [reducedMotion]);
+  }, [reducedMotion, ready]);
 
-  if (!logoWidth) return null;
+  if (!logoWidth || !ready) return null;
 
   const k = logoWidth / FILM.slabWidth;
   const width = FILM.w * k;
@@ -60,7 +94,7 @@ export function LeopardIntro({ logoWidth, reducedMotion = false }: { logoWidth: 
       {!resting &&
         (useImage ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src="/brand/leopard/walk-settle.webp" alt="" width={FILM.w} height={FILM.h} className="w-full" />
+          <img src={imageSrc ?? "/brand/leopard/walk-settle.webp"} alt="" width={FILM.w} height={FILM.h} className="w-full" />
         ) : (
           <video
             ref={videoRef}
