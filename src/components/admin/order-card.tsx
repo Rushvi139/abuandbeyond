@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { acceptOrder, assignRider, cancelOrder, setStatus } from "@/lib/orders/actions";
 import type { OrderView } from "@/lib/orders/queries";
-import { STATUS_LABEL, type OrderStatus } from "@/lib/orders/status";
+import { STAFF_STATUS_LABEL as STATUS_LABEL, type OrderStatus } from "@/lib/orders/status";
 import { directionsUrl, navTarget } from "@/lib/orders/nav";
 import { formatINR } from "@/lib/pricing";
 import { PrintButton } from "@/components/kitchen/auto-print";
@@ -86,7 +86,7 @@ export function OrderCard({ order, riders, role, compact = false, dark = false }
           </li>
         ))}
       </ul>
-      {order.notes && <p className={`rounded-xl px-3 py-2 text-[13px] ${dark ? "bg-paper/10" : "bg-paper"}`}>Delivery: {order.notes}</p>}
+      {order.notes && <p className={`rounded-xl px-3 py-2 text-[13px] ${dark ? "bg-paper/10" : "bg-paper"}`}>Guest note: {order.notes}</p>}
       {order.paymentMode === "on_delivery" && !order.collectedAt && (
         <p className="rounded-xl bg-acid px-3 py-2 text-[13px] font-bold uppercase tracking-wide text-ink">
           Not paid · collect {formatINR(order.totalPaise)} at the door
@@ -166,14 +166,16 @@ export function OrderCard({ order, riders, role, compact = false, dark = false }
             precise pin, then the hotel's Google place, then a rough pin,
             then the typed address. A rider on a bike should never have to
             retype an address. */}
-        <a
-          href={directionsUrl(order)}
-          target="_blank"
-          rel="noreferrer"
-          className={`h-10 rounded-xl px-3 text-xs font-semibold leading-10 ${dark ? "bg-paper/15" : "bg-paper"}`}
-        >
-          {navTarget(order).label ? `Navigate · ${navTarget(order).label}` : "Navigate"}
-        </a>
+        {order.stayType !== "other" && (
+          <a
+            href={directionsUrl(order)}
+            target="_blank"
+            rel="noreferrer"
+            className={`h-10 rounded-xl px-3 text-xs font-semibold leading-10 ${dark ? "bg-paper/15" : "bg-paper"}`}
+          >
+            {navTarget(order).label ? `Navigate · ${navTarget(order).label}` : "Navigate"}
+          </a>
+        )}
         <span className={`ml-auto text-sm font-bold ${dark ? "text-kraft" : ""}`}>{formatINR(order.totalPaise)}</span>
       </footer>
       {err && <p className="text-xs font-semibold text-error">{err}</p>}

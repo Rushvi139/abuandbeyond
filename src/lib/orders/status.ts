@@ -40,6 +40,14 @@ export const STATUS_LABEL: Record<OrderStatus, string> = {
   cancelled: "Cancelled",
 };
 
+/**
+ * What staff screens call each stage. "paid" is the stage a new order sits in
+ * before the kitchen accepts it; next to a payment badge, "Paid" read as a
+ * second, contradictory payment label, so staff see "New". Whether money
+ * has arrived is `paymentState`, never the stage.
+ */
+export const STAFF_STATUS_LABEL: Record<OrderStatus, string> = { ...STATUS_LABEL, paid: "New" };
+
 /** Customer-facing steps for the status page. */
 export const CUSTOMER_STEPS: { status: OrderStatus; label: string; sub: string }[] = [
   { status: "paid", label: "Payment received", sub: "We've got your order" },

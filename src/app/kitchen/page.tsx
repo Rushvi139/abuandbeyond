@@ -48,6 +48,7 @@ export default async function KitchenPage({ searchParams }: { searchParams: Prom
         <Image src="/brand/patch-mono-white.png" alt="Abu & Beyond" width={66} height={47} />
         <h1 className="font-display text-[28px] uppercase">Kitchen</h1>
         <span className={`rounded-full px-3 py-1 text-sm font-bold ${fresh ? "bg-acid text-ink" : "bg-paper/15"}`}>{fresh} new</span>
+        <Link href="/kitchen/new-order" className="h-9 flex-none rounded-full bg-clay px-3 text-sm font-bold leading-9 text-ink">+ New order</Link>
         <AutoPrint orderIds={all.filter((o) => o.status === "paid" && dueNow(o)).map((o) => o.id)} />
         {(staff.role === "owner" || staff.role === "manager") && (
           <OverrideToggle on={override} serviceOpen={serviceOpen} until={untilLabel} />

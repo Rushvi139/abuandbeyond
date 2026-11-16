@@ -100,7 +100,7 @@ type OptRow = { id: string; name: string; price_delta_paise: number; group_name:
 type AddonRow = { id: string; name: string; price_paise: number; menu_item_id: string };
 
 /** Prices the cart from the database and creates customer + order (pending_payment). */
-export async function createOrder(input: CheckoutInput, opts: { source?: string; createdBy?: string | null } = {}) {
+export async function createOrder(input: CheckoutInput, opts: { source?: string; createdBy?: string | null; noDeliveryFee?: boolean } = {}) {
   const itemIds = [...new Set(input.lines.map((l) => l.itemId))];
   const sql = db();
   const items = await sql<ItemRow[]>`select id, name, station_id, cuisine, is_veg, price_paise, available, active from menu_items where id in ${sql(itemIds)}`;
@@ -145,7 +145,8 @@ export async function createOrder(input: CheckoutInput, opts: { source?: string;
 
   const subtotal = priced.reduce((n, p) => n + p.unit * p.qty, 0);
   const [{ value: feeJson }] = await sql<{ value: number }[]>`select value from settings where key = 'delivery_fee_paise'`;
-  const deliveryFee = Number(feeJson) || 0;
+  // A pickup from the counter has no delivery to charge for.
+  const deliveryFee = opts.noDeliveryFee ? 0 : Number(feeJson) || 0;
   const phone = "+91" + input.phone;
 
   // Re-checked here against the kitchen's own clock. A slot the browser

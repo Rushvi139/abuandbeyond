@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { acceptOrder, cancelOrder, setStatus } from "@/lib/orders/actions";
 import type { OrderView } from "@/lib/orders/queries";
-import { STATUS_LABEL, type OrderStatus } from "@/lib/orders/status";
+import { STAFF_STATUS_LABEL as STATUS_LABEL, type OrderStatus } from "@/lib/orders/status";
 import { formatINR } from "@/lib/pricing";
 import { VegMark } from "@/components/store/veg-mark";
 import { orderClock } from "@/lib/orders/clock";
