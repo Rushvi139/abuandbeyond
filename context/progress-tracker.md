@@ -13,6 +13,16 @@ Update this file after every meaningful implementation change.
 
 ## Completed
 
+- 17 Nov (one spend form): vendor bills and expenses merged into **Add spend**
+  (`/admin/expenses/new`, also the rider's Bills screen). Category first
+  (Kitchen, Disposables, Staff + name, Marketing, IT, Maintenance, Gas…,
+  Rent, Delivery, Others, One-time setup), then items or a description, then
+  Cash now / UPI now / On credit. Paid now is stored as an expense, on credit
+  as a vendor bill; the form says which before saving. Kitchen/Disposables
+  take item lines (`spend_lines`, migration 0030) that raise stock and update
+  the ingredient's rate; "Repeat last list" for daily market runs. Accounts
+  shows Purchases (stock) vs Running costs by category, not by form used.
+
 - 17 Nov (back office rework, from the owner's 9-point review):
   - **Dashboard is "Today"** (`/admin`): live orders, today's sales, cash to
     collect, spend, low stock, shortcuts (+ New order, + Expense, Kitchen,

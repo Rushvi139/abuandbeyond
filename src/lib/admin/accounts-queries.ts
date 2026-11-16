@@ -74,17 +74,19 @@ export async function vendorLedger(from: string, to: string): Promise<VendorLedg
 export type SpendSlice = { label: string; kind: "stock" | "expense"; amount: number; entries: number };
 
 export async function spendByHead(from: string, to: string): Promise<SpendSlice[]> {
+  // By category, paid and owed together: "Kitchen" is the same money whether
+  // the vegetables were paid in cash or the cheese is on credit.
   return db()<SpendSlice[]>`
-    with span as (select ${from}::date as a, (${to}::date + 1) as b)
-    select 'Stock — ' || v.name as label, 'stock' as kind, sum(b.amount_paise)::bigint as amount, count(*)::int as entries
-      from vendor_bills b join vendors v on v.id = b.vendor_id, span
-      where b.bill_date >= span.a and b.bill_date < span.b
-      group by v.name
-    union all
-    select c.name as label, 'expense' as kind, sum(e.amount_paise)::bigint as amount, count(*)::int as entries
-      from expenses e join expense_categories c on c.id = e.category_id, span
-      where e.spent_on >= span.a and e.spent_on < span.b
-      group by c.name
+    with span as (select ${from}::date as a, (${to}::date + 1) as b),
+    spend as (
+      select e.category_id, e.amount_paise from expenses e, span where e.spent_on >= span.a and e.spent_on < span.b
+      union all
+      select coalesce(b.category_id, 'raw_material'), b.amount_paise from vendor_bills b, span where b.bill_date >= span.a and b.bill_date < span.b
+    )
+    select c.name as label, case when c.has_items then 'stock' else 'expense' end as kind,
+      sum(s.amount_paise)::bigint as amount, count(*)::int as entries
+    from spend s join expense_categories c on c.id = s.category_id
+    group by c.name, c.has_items
     order by amount desc`;
 }
 

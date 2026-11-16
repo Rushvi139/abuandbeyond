@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { BillRegister, type BillRow } from "@/components/admin/bill-register";
-import { BillForm } from "@/components/admin/accounts-forms";
 import { BOOKKEEPERS, requireRole } from "@/lib/auth";
 import { db } from "@/lib/db";
 
@@ -85,10 +84,9 @@ export default async function VendorBillsPage({ searchParams }: { searchParams: 
         </div>
       </div>
 
-      <details className="rounded-2xl bg-surface p-3">
-        <summary className="cursor-pointer text-sm font-bold">+ Add a vendor bill</summary>
-        <div className="mt-3 max-w-xl"><BillForm vendors={vendorNames.map((v) => v.name)} /></div>
-      </details>
+      <p className="text-sm text-muted">
+        Bills are what we owe. Add one with <Link href="/admin/expenses/new?pay=credit" className="font-semibold text-ink underline underline-offset-2">+ Add spend → On credit</Link>.
+      </p>
 
       <form className="grid grid-cols-2 gap-2 rounded-2xl bg-surface p-3 sm:grid-cols-3 lg:grid-cols-6">
         <Labelled label="Status">

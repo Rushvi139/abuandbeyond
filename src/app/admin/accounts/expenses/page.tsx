@@ -65,7 +65,7 @@ export default async function ExpenseRegisterPage({ searchParams }: { searchPara
           <p className="text-sm text-muted">Grouped by week, newest first. {rows.length === 500 && "Showing the most recent 500 — narrow the dates to see further back."}</p>
         </div>
         <div className="flex items-center gap-2">
-          <Link href="/admin/expenses/new" className="h-10 rounded-xl bg-clay px-3 text-sm font-bold leading-10 text-ink">+ Add expense</Link>
+          <Link href="/admin/expenses/new" className="h-10 rounded-xl bg-clay px-3 text-sm font-bold leading-10 text-ink">+ Add spend</Link>
           <a href={`/admin/export/expenses?from=${from}&to=${to}`} className="h-10 rounded-xl bg-ink px-3 text-sm font-semibold leading-10 text-reversed">
             Excel
           </a>

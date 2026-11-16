@@ -33,8 +33,19 @@ export default async function AccountsPage({ searchParams }: { searchParams: Pro
           sum(total_paise) filter (where payment_mode = 'on_delivery')::bigint as cash,
           sum(total_paise) filter (where payment_mode = 'online')::bigint as upi
         from orders where status not in ('pending_payment', 'payment_failed', 'cancelled') and not is_demo group by 1
-      ), ex as (select spent_on as day, sum(amount_paise)::bigint as expenses from expenses group by 1),
-         bi as (select bill_date as day, sum(amount_paise)::bigint as bills from vendor_bills group by 1),
+      ),
+      -- "bills" here means stock bought (Kitchen, Disposables), whether paid
+      -- on the spot or on credit; "expenses" means running costs. How it was
+      -- paid doesn't change which it is.
+      spend as (
+        select e.spent_on as day, e.amount_paise, coalesce(c.has_items, false) as stock
+          from expenses e left join expense_categories c on c.id = e.category_id
+        union all
+        select b.bill_date, b.amount_paise, coalesce(c.has_items, true)
+          from vendor_bills b left join expense_categories c on c.id = b.category_id
+      ),
+      ex as (select day, sum(amount_paise) filter (where not stock)::bigint as expenses from spend group by 1),
+      bi as (select day, sum(amount_paise) filter (where stock)::bigint as bills from spend group by 1),
          alld as (select day from sales union select day from ex union select day from bi)
       select alld.day::text as day, coalesce(s.orders, 0) as orders, coalesce(s.net, 0) as net, coalesce(s.gst, 0) as gst,
         coalesce(ex.expenses, 0) as expenses, coalesce(bi.bills, 0) as bills, coalesce(s.cash, 0) as cash, coalesce(s.upi, 0) as upi
@@ -75,9 +86,9 @@ export default async function AccountsPage({ searchParams }: { searchParams: Pro
 
       <section className="grid grid-cols-2 gap-2 md:grid-cols-4">
         <Stat label="Net sales" value={formatINR(tot.net)} sub={`${tot.orders} orders`} href={`/admin/accounts/sales?${q}`} />
-        <Stat label="Vendor bills" value={formatINR(tot.bills)} sub={billPct !== null ? `${billPct}% of sales · ceiling 33%` : ""} tone={billPct !== null && billPct > 33 ? "bad" : ""} href={`/admin/accounts/vendors?${q}&status=all`} />
-        <Stat label="Expenses" value={formatINR(tot.expenses)} href={`/admin/accounts/expenses?${q}`} />
-        <Stat label="Left over" value={formatINR(left)} sub="sales − bills − expenses" tone={left < 0 ? "bad" : "good"} />
+        <Stat label="Purchases (stock)" value={formatINR(tot.bills)} sub={billPct !== null ? `${billPct}% of sales · ceiling 33%` : "Kitchen + Disposables"} tone={billPct !== null && billPct > 33 ? "bad" : ""} href={`/admin/accounts/vendors?${q}&status=all`} />
+        <Stat label="Running costs" value={formatINR(tot.expenses)} sub="staff, rent, gas, marketing…" href={`/admin/accounts/expenses?${q}`} />
+        <Stat label="Left over" value={formatINR(left)} sub="sales − purchases − running costs" tone={left < 0 ? "bad" : "good"} />
         <Stat label="Online (PayU)" value={formatINR(tot.upi)} />
         <Stat label="Pay on delivery" value={formatINR(tot.cash)} href={`/admin/accounts/cash?${q}`} />
         <Stat label="To collect now" value={formatINR(toCollect.amountPaise)} sub={toCollect.count ? `${toCollect.count} order${toCollect.count === 1 ? "" : "s"} not handed in` : "all in"} tone={toCollect.count ? "warn" : ""} href="/admin/accounts/cash" />
@@ -90,7 +101,7 @@ export default async function AccountsPage({ searchParams }: { searchParams: Pro
           <div className="overflow-x-auto rounded-2xl bg-surface">
             <table className="w-full min-w-[560px] text-sm">
               <thead className="text-left text-[11px] uppercase tracking-wide text-muted">
-                <tr><th className="px-4 py-2.5">Day</th><th className="px-2 py-2.5 text-right">Orders</th><th className="px-2 py-2.5 text-right">Sales</th><th className="px-2 py-2.5 text-right">Bills</th><th className="px-2 py-2.5 text-right">Expenses</th><th className="px-4 py-2.5 text-right">Left over</th></tr>
+                <tr><th className="px-4 py-2.5">Day</th><th className="px-2 py-2.5 text-right">Orders</th><th className="px-2 py-2.5 text-right">Sales</th><th className="px-2 py-2.5 text-right">Purchases</th><th className="px-2 py-2.5 text-right">Running</th><th className="px-4 py-2.5 text-right">Left over</th></tr>
               </thead>
               <tbody>
                 {days.map((x) => {

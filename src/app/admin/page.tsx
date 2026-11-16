@@ -55,7 +55,7 @@ export default async function AdminHome() {
         </div>
         <nav className="flex flex-wrap gap-2" aria-label="Shortcuts">
           <Shortcut href="/admin/pos" primary>+ New order</Shortcut>
-          <Shortcut href="/admin/expenses/new">+ Expense</Shortcut>
+          <Shortcut href="/admin/expenses/new">+ Add spend</Shortcut>
           <Shortcut href="/kitchen">Kitchen screen</Shortcut>
           {isOwner && <Shortcut href="/admin/day-close">Close the day</Shortcut>}
         </nav>
