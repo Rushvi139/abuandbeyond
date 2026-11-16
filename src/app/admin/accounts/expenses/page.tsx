@@ -56,21 +56,17 @@ export default async function ExpenseRegisterPage({ searchParams }: { searchPara
   ]);
 
   const total = rows.reduce((n, r) => n + Number(r.amount), 0);
-  const qs = new URLSearchParams(Object.entries({ from, to, category, vendor, mode, q }).filter(([, v]) => v) as [string, string][]);
 
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <Link href="/admin/accounts" className="text-sm font-semibold text-muted underline-offset-2 hover:underline">← Accounts</Link>
           <h1 className="mt-1 font-display text-[32px] uppercase">Expense register</h1>
           <p className="text-sm text-muted">Grouped by week, newest first. {rows.length === 500 && "Showing the most recent 500 — narrow the dates to see further back."}</p>
         </div>
         <div className="flex items-center gap-2">
-          <Link href={`/admin/accounts/vendors?${qs}`} className="h-10 rounded-xl border-[1.5px] border-ink px-3 text-sm font-semibold leading-10">
-            Vendor bills
-          </Link>
-          <a href={`/admin/export/expenses?month=${to.slice(0, 7)}`} className="h-10 rounded-xl bg-ink px-3 text-sm font-semibold leading-10 text-reversed">
+          <Link href="/admin/expenses/new" className="h-10 rounded-xl bg-clay px-3 text-sm font-bold leading-10 text-ink">+ Add expense</Link>
+          <a href={`/admin/export/expenses?from=${from}&to=${to}`} className="h-10 rounded-xl bg-ink px-3 text-sm font-semibold leading-10 text-reversed">
             Excel
           </a>
         </div>

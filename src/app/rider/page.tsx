@@ -3,7 +3,7 @@ import Link from "next/link";
 import { OrderCard } from "@/components/admin/order-card";
 import { StaffLive } from "@/components/admin/live";
 import { requireRole } from "@/lib/auth";
-import { getLiveOrders } from "@/lib/orders/queries";
+import { getLiveOrders, getUncollectedDelivered } from "@/lib/orders/queries";
 import { RunMap } from "@/components/admin/run-map";
 
 export const dynamic = "force-dynamic";
@@ -11,7 +11,10 @@ export const metadata = { title: "Deliveries — Abu & Beyond" };
 
 export default async function RiderPage() {
   const staff = await requireRole(["owner", "manager", "rider"], "/rider");
-  const all = await getLiveOrders(["preparing", "ready", "out_for_delivery"]);
+  const [all, unpaid] = await Promise.all([
+    getLiveOrders(["preparing", "ready", "out_for_delivery"]),
+    getUncollectedDelivered(staff.role === "rider" ? staff.id : undefined),
+  ]);
   const mine = staff.role === "rider" ? all.filter((o) => !o.rider || o.rider.id === staff.id) : all;
   const ready = mine.filter((o) => o.status === "ready" || o.status === "out_for_delivery");
   const soon = mine.filter((o) => o.status === "preparing");
@@ -26,6 +29,15 @@ export default async function RiderPage() {
         <Link href="/rider/bills" className="h-10 rounded-xl border-[1.5px] border-ink px-3 text-sm font-semibold leading-10">Bills</Link>
       </header>
       <div className="flex flex-col gap-3">
+        {unpaid.length > 0 && (
+          <section className="rounded-2xl border-2 border-error p-3">
+            <h2 className="font-display text-[18px] uppercase text-error">Delivered — payment not marked</h2>
+            <p className="mb-2 text-[13px] text-muted">Did you take the money? Tap Collect and choose cash or UPI, or tell the owner.</p>
+            <div className="flex flex-col gap-2">
+              {unpaid.map((o) => <OrderCard key={o.id} order={o} role={staff.role} compact />)}
+            </div>
+          </section>
+        )}
         {ready.length > 0 && <RunMap stops={ready} />}
         {ready.map((o) => <OrderCard key={o.id} order={o} role={staff.role} compact />)}
         {ready.length === 0 && <p className="rounded-2xl bg-surface p-6 text-center text-muted">Nothing to pick up right now.</p>}

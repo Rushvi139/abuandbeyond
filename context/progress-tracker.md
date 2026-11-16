@@ -13,6 +13,24 @@ Update this file after every meaningful implementation change.
 
 ## Completed
 
+- 17 Nov (back office rework, from the owner's 9-point review):
+  - **Dashboard is "Today"** (`/admin`): live orders, today's sales, cash to
+    collect, spend, low stock, shortcuts (+ New order, + Expense, Kitchen,
+    Close the day). History moved to Orders.
+  - **Offline orders**: POS-style billing at `/admin/pos` and
+    `/kitchen/new-order` (`createManualOrder`, source = 'manual'), delivery
+    or pickup, cash/UPI paid or collect at door. Same `createOrder` pricing.
+  - **Cash book** (`/admin/accounts/cash`): every hand-taken payment order by
+    order, who holds what, and what is still to collect. Riders keep seeing a
+    delivered order until its payment is marked.
+  - **Accounts split into tabs** (Overview, Sales, Cash book, Expenses,
+    Vendor bills, Vendors) with one date-range control (`lib/date-range.ts`)
+    instead of month; a day opens its orders, expenses and bills; exports
+    follow the range; Sales is paged.
+  - One payment badge everywhere (`lib/orders/payment-state.ts`); "Age"
+    replaced by `orderClock` (waiting / due / took); staff see stage "New"
+    not "Paid"; Properties removed from the menu (Stay Directory covers it).
+
 - 12 Nov (payments): **Cashfree replaced with PayU** hosted checkout, live
   keys on the server (`PAYU_*` in `.env`, never in git). Server signs the
   `_payment` form; PayU posts back to `/api/payu/return` and

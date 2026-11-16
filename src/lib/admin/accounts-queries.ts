@@ -5,7 +5,7 @@ import { db } from "@/lib/db";
  * Two different questions get mixed up in a vendor list, so this answers both
  * separately:
  *
- *  - what we bought from them *this month* (billed, paid, cash expenses), and
+ *  - what we bought from them *in the chosen dates* (billed, paid, cash expenses), and
  *  - what we still owe them *at all*, which does not reset on the 1st.
  *
  * A bill from October that is still unpaid is money owed today, so
@@ -22,9 +22,10 @@ export type VendorLedgerRow = {
   openBills: number;
 };
 
-export async function vendorLedger(monthStart: string): Promise<VendorLedgerRow[]> {
+/** `from` and `to` are inclusive IST dates. Outstanding ignores them (see above). */
+export async function vendorLedger(from: string, to: string): Promise<VendorLedgerRow[]> {
   return db()<VendorLedgerRow[]>`
-    with span as (select ${monthStart}::date as a, (${monthStart}::date + interval '1 month')::date as b),
+    with span as (select ${from}::date as a, (${to}::date + 1) as b),
     billed as (
       select b.vendor_id, sum(b.amount_paise)::bigint as amt
       from vendor_bills b, span where b.bill_date >= span.a and b.bill_date < span.b group by 1
@@ -65,16 +66,16 @@ export async function vendorLedger(monthStart: string): Promise<VendorLedgerRow[
 }
 
 /**
- * Where the month's money actually went, as one list rather than two. Vendor
+ * Where the money actually went in the chosen dates, as one list rather than two. Vendor
  * bills (the food) and expense categories (gas, rent, wages) are different
  * kinds of thing, but they come out of the same till, so the owner wants to
  * see them against each other.
  */
 export type SpendSlice = { label: string; kind: "stock" | "expense"; amount: number; entries: number };
 
-export async function spendByHead(monthStart: string): Promise<SpendSlice[]> {
+export async function spendByHead(from: string, to: string): Promise<SpendSlice[]> {
   return db()<SpendSlice[]>`
-    with span as (select ${monthStart}::date as a, (${monthStart}::date + interval '1 month')::date as b)
+    with span as (select ${from}::date as a, (${to}::date + 1) as b)
     select 'Stock — ' || v.name as label, 'stock' as kind, sum(b.amount_paise)::bigint as amount, count(*)::int as entries
       from vendor_bills b join vendors v on v.id = b.vendor_id, span
       where b.bill_date >= span.a and b.bill_date < span.b

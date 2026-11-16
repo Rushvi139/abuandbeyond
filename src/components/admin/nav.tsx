@@ -12,6 +12,7 @@ const GROUPS: NavGroup[] = [
     items: [
       { href: "/admin", label: "Dashboard", icon: "◼" },
       { href: "/admin/orders", label: "Orders", icon: "🧾" },
+      { href: "/admin/pos", label: "New Order", icon: "➕" },
       { href: "/admin/catering", label: "Catering", icon: "🍽" },
     ],
   },
@@ -42,9 +43,7 @@ const GROUPS: NavGroup[] = [
     ownerOnly: true,
     items: [
       { href: "/admin/day-close", label: "Day Close", icon: "🌙" },
-      { href: "/admin/accounts", label: "Ledger", icon: "📊" },
-      { href: "/admin/accounts/vendors", label: "Vendors", icon: "🏪" },
-      { href: "/admin/accounts/expenses", label: "Expenses", icon: "💸" },
+      { href: "/admin/accounts", label: "Accounts", icon: "📊" },
     ],
   },
   {

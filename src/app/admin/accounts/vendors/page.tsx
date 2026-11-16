@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { BillRegister, type BillRow } from "@/components/admin/bill-register";
+import { BillForm } from "@/components/admin/accounts-forms";
 import { BOOKKEEPERS, requireRole } from "@/lib/auth";
 import { db } from "@/lib/db";
 
@@ -69,7 +70,6 @@ export default async function VendorBillsPage({ searchParams }: { searchParams: 
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <Link href="/admin/accounts" className="text-sm font-semibold text-muted underline-offset-2 hover:underline">← Accounts</Link>
           <h1 className="mt-1 font-display text-[32px] uppercase">Vendor bills</h1>
           <p className="text-sm text-muted">
             {open} open{overdue > 0 && <span className="font-semibold text-error"> · {overdue} overdue</span>}. Unpaid first, soonest due at the top.
@@ -79,11 +79,16 @@ export default async function VendorBillsPage({ searchParams }: { searchParams: 
           <Link href="/admin/accounts/expenses" className="h-10 rounded-xl border-[1.5px] border-ink px-3 text-sm font-semibold leading-10">
             Expenses
           </Link>
-          <a href={`/admin/export/bills?month=${(to || today).slice(0, 7)}`} className="h-10 rounded-xl bg-ink px-3 text-sm font-semibold leading-10 text-reversed">
+          <a href={`/admin/export/bills?${from || to ? `from=${from || to}&to=${to || from}` : "range=month"}`} className="h-10 rounded-xl bg-ink px-3 text-sm font-semibold leading-10 text-reversed">
             Excel
           </a>
         </div>
       </div>
+
+      <details className="rounded-2xl bg-surface p-3">
+        <summary className="cursor-pointer text-sm font-bold">+ Add a vendor bill</summary>
+        <div className="mt-3 max-w-xl"><BillForm vendors={vendorNames.map((v) => v.name)} /></div>
+      </details>
 
       <form className="grid grid-cols-2 gap-2 rounded-2xl bg-surface p-3 sm:grid-cols-3 lg:grid-cols-6">
         <Labelled label="Status">

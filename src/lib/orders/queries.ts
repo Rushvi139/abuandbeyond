@@ -132,3 +132,16 @@ export async function getRecentOrders(limit = 50, q?: string): Promise<OrderView
       and (${like}::text is null or c.phone like ${like} or c.name ilike ${like} or o.order_number::text = ${q ?? ""})
     order by o.created_at desc limit ${limit}`;
 }
+
+/**
+ * Pay-on-delivery orders handed over without the money marked as collected.
+ * The rider's screen keeps them until they are, so a forgotten tap at the
+ * door shows up the same night instead of in next month's books.
+ */
+export async function getUncollectedDelivered(riderId?: string): Promise<OrderView[]> {
+  const sql = db();
+  return sql<OrderView[]>`${base(sql)}
+    where o.status = 'delivered' and o.payment_mode = 'on_delivery' and o.collected_at is null and not o.is_demo
+      and (${riderId ?? null}::uuid is null or o.rider_id = ${riderId ?? null}::uuid or o.rider_id is null)
+    order by o.delivered_at desc nulls last limit 20`;
+}
