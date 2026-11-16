@@ -8,14 +8,14 @@ export type SpendCategory = { id: string; name: string; hasItems: boolean };
 export type SpendIngredient = { id: string; name: string; unit: string; ratePaisePerUnit: number };
 export type RecentList = { paidTo: string; on: string; lines: { ingredientId: string | null; name: string; qty: number; amountInr: number }[] };
 
-type Line = { key: number; ingredientId: string; name: string; qty: string; amount: string };
+type Line = { key: number; ingredientId: string; name: string; qty: string; amount: string; newUnit: "g" | "ml" | "pc" | "" };
 type Pay = "cash" | "upi" | "credit";
 
 /** What a person types the quantity in: kg for gram items, L for ml items. */
 const SHOW_UNIT: Record<string, string> = { g: "kg", ml: "L", pc: "pc" };
 const today = () => new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" });
 let seq = 1;
-const blank = (): Line => ({ key: seq++, ingredientId: "", name: "", qty: "", amount: "" });
+const blank = (): Line => ({ key: seq++, ingredientId: "", name: "", qty: "", amount: "", newUnit: "g" });
 
 /**
  * One form for every rupee that goes out. Category first, then what was
@@ -83,7 +83,7 @@ export function SpendForm({
   function repeat(r: RecentList) {
     setPaidTo(r.paidTo);
     setLines([
-      ...r.lines.map((l) => ({ key: seq++, ingredientId: l.ingredientId ?? "", name: l.name, qty: String(l.qty), amount: String(l.amountInr) })),
+      ...r.lines.map((l) => ({ key: seq++, ingredientId: l.ingredientId ?? "", name: l.name, qty: String(l.qty), amount: String(l.amountInr), newUnit: "" as const })),
       blank(),
     ]);
   }
@@ -100,7 +100,7 @@ export function SpendForm({
     const payload = {
       spentOn, category, staffName: isStaff ? staffName : "", paidTo, description,
       amountInr: itemised && filled.length ? undefined : Number(amount || 0),
-      lines: itemised ? filled.map((l) => ({ ingredientId: l.ingredientId, name: l.name.trim(), qty: Number(l.qty) || 1, amountInr: Number(l.amount) })) : [],
+      lines: itemised ? filled.map((l) => ({ ingredientId: l.ingredientId, name: l.name.trim(), qty: Number(l.qty) || 1, amountInr: Number(l.amount), ...(!l.ingredientId && l.newUnit ? { newUnit: l.newUnit } : {}) })) : [],
       pay, billNumber, dueOn, note,
     };
     const fd = new FormData();
@@ -162,7 +162,7 @@ export function SpendForm({
             <div className="flex flex-col gap-1.5">
               {lines.map((l) => {
                 const ing = l.ingredientId ? ingredients.find((i) => i.id === l.ingredientId) : null;
-                const unit = ing ? SHOW_UNIT[ing.unit] : "";
+                const unit = ing ? SHOW_UNIT[ing.unit] : l.newUnit ? SHOW_UNIT[l.newUnit] : "";
                 const rate = ing && Number(l.qty) > 0 && Number(l.amount) > 0 ? Number(l.amount) / Number(l.qty) : null;
                 return (
                   <div key={l.key}>
@@ -176,7 +176,20 @@ export function SpendForm({
                     </div>
                     {l.name && (
                       <p className="mt-0.5 text-[11px] text-muted">
-                        {ing ? `Stock +${l.qty || "?"} ${unit}${rate ? ` · ₹${rate.toFixed(rate < 10 ? 2 : 0)}/${unit}` : ""}` : "Not an inventory item — recorded, but stock won't change."}
+                        {ing ? `Stock +${l.qty || "?"} ${unit}${rate ? ` · ₹${rate.toFixed(rate < 10 ? 2 : 0)}/${unit}` : ""}` : null}
+                      </p>
+                    )}
+                    {l.name && !ing && (
+                      <p className="mt-0.5 flex flex-wrap items-center gap-1.5 text-[11px] text-muted">
+                        New item.
+                        {(["g", "ml", "pc"] as const).map((u) => (
+                          <button key={u} type="button" onClick={() => setLine(l.key, { newUnit: u })} className={`rounded-md px-1.5 py-0.5 font-semibold ${l.newUnit === u ? "bg-ink text-reversed" : "bg-paper"}`}>
+                            add to inventory in {SHOW_UNIT[u]}
+                          </button>
+                        ))}
+                        <button type="button" onClick={() => setLine(l.key, { newUnit: "" })} className={`rounded-md px-1.5 py-0.5 font-semibold ${!l.newUnit ? "bg-ink text-reversed" : "bg-paper"}`}>
+                          don&apos;t track stock
+                        </button>
                       </p>
                     )}
                   </div>
@@ -219,7 +232,7 @@ export function SpendForm({
             ? <>Saves as <b>{formatINR(total)} owed to {paidTo || "the vendor"}</b> — under Vendor bills until you pay it.</>
             : <>Saves as <b>{formatINR(total)} paid by {pay === "upi" ? "UPI" : "cash"}</b> — under Expenses ({cat?.name}).</>
         ) : "Fill in the amount to save."}
-        {itemised && filled.some((l) => l.ingredientId) && " Stock goes up for the inventory items."}
+        {itemised && filled.some((l) => l.ingredientId || l.newUnit) && " Stock goes up for the inventory items; new ones are added to Inventory."}
       </p>
       {err && <p role="alert" className="rounded-xl bg-error/10 px-3 py-2 text-sm font-semibold text-error">{err}</p>}
       {done && <p className="rounded-xl bg-success/15 px-3 py-2 text-sm font-semibold text-success">{done}</p>}

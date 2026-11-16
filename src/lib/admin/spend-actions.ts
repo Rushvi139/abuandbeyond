@@ -30,6 +30,8 @@ const Line = z.object({
   /** In the unit the person typed: kg, L or pc. Converted to g/ml/pc below. */
   qty: z.number().positive().max(100_000),
   amountInr: z.number().min(0).max(10_000_000),
+  /** Not in Inventory yet: add it, counted in this unit. */
+  newUnit: z.enum(["g", "ml", "pc"]).optional(),
 });
 
 const Spend = z
@@ -92,6 +94,23 @@ export async function addSpend(formData: FormData): Promise<{ error?: string; sa
   const sql = db();
   const [cat] = await sql<{ id: string; name: string }[]>`select id, name from expense_categories where id = ${d.category}`;
   if (!cat) return { error: "Pick a category." };
+
+  // Items typed that aren't in Inventory yet, ticked to add: create them first,
+  // so the team can build the list from their own purchases.
+  if (d.lines.some((l) => !l.ingredientId && l.newUnit)) {
+    const [c] = await sql<{ hasItems: boolean }[]>`select has_items as "hasItems" from expense_categories where id = ${d.category}`;
+    if (c?.hasItems) {
+      for (const l of d.lines) {
+        if (l.ingredientId || !l.newUnit) continue;
+        const [ing] = await sql<{ id: string }[]>`
+          insert into ingredients (name, unit, procurement_group, rate_paise_per_unit, reorder_level)
+          values (${l.name}, ${l.newUnit}, ${cat.name}, 0, 0)
+          on conflict (name) do update set active = true
+          returning id`;
+        l.ingredientId = ing.id;
+      }
+    }
+  }
 
   const ids = [...new Set(d.lines.map((l) => l.ingredientId).filter(Boolean))] as string[];
   const ings = ids.length ? await sql<{ id: string; unit: string }[]>`select id, unit::text from ingredients where id in ${sql(ids)}` : [];
