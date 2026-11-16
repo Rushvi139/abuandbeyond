@@ -26,8 +26,7 @@ export default async function AdminStaysPage() {
       <div>
         <h1 className="font-display text-[32px] uppercase">Stays</h1>
         <p className="text-sm text-muted">
-          Every hotel, villa and homestay on the plateau — what riders search when a guest gives a name instead of an address.
-          Separate from Properties, which is the handful we put QR codes in.
+          Every hotel, villa and homestay on the plateau. Guests pick from this list at checkout, and riders navigate by it.
         </p>
         {stays.some((x) => x.fromGuest) && (
           <p className="mt-2 rounded-xl bg-acid/30 px-3 py-2 text-sm">

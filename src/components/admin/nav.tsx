@@ -27,7 +27,6 @@ const GROUPS: NavGroup[] = [
     label: "Guests & Places",
     items: [
       { href: "/admin/customers", label: "Customers", icon: "👤" },
-      { href: "/admin/properties", label: "Properties", icon: "🏨" },
       { href: "/admin/stays", label: "Stay Directory", icon: "📍" },
     ],
   },

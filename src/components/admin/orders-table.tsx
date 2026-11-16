@@ -6,7 +6,8 @@ import type { OrderView } from "@/lib/orders/queries";
 import { STATUS_LABEL, type OrderStatus } from "@/lib/orders/status";
 import { formatINR } from "@/lib/pricing";
 import { VegMark } from "@/components/store/veg-mark";
-import { minutesSince } from "@/components/admin/order-card";
+import { orderClock } from "@/lib/orders/clock";
+import { PAYMENT_TONE, paymentState } from "@/lib/orders/payment-state";
 
 // Status colour pills — same palette as OrderCard
 const PILL: Record<string, string> = {
@@ -89,8 +90,10 @@ function OrderRow({
   const canKitchen = ["owner", "manager", "kitchen"].includes(role);
   const canRider = ["owner", "manager", "rider"].includes(role);
   const canManage = ["owner", "manager"].includes(role);
-  const age = minutesSince(order.paidAt ?? order.createdAt);
-  const ageTone = age >= 20 ? "text-error font-bold" : age >= 10 ? "text-clay font-semibold" : "text-muted";
+  const clock = orderClock(order);
+  const clockTone = clock.tone === "late" ? "text-error font-bold" : clock.tone === "warn" ? "text-clay font-semibold" : "text-muted";
+  const pay = paymentState(order);
+  const placed = new Date(order.createdAt).toLocaleString("en-IN", { day: "numeric", month: "short", hour: "numeric", minute: "2-digit", timeZone: "Asia/Kolkata" });
   const isNew = order.status === "paid";
 
   return (
@@ -100,8 +103,9 @@ function OrderRow({
         className={`cursor-pointer border-b border-line transition-colors hover:bg-surface/60 ${isNew ? "bg-acid/10" : ""} ${pending ? "opacity-50" : ""}`}
       >
         {/* # */}
-        <td className="whitespace-nowrap py-2.5 pl-4 pr-2 font-display text-[18px]">
-          #{order.number}
+        <td className="whitespace-nowrap py-2.5 pl-4 pr-2">
+          <div className="font-display text-[18px] leading-none">#{order.number}</div>
+          <div className="mt-0.5 text-[10px] text-muted">{placed}</div>
         </td>
         {/* Customer */}
         <td className="px-2 py-2.5">
@@ -124,8 +128,12 @@ function OrderRow({
         <td className="px-2 py-2.5">
           <StatusPill status={order.status} />
         </td>
-        {/* Age */}
-        <td className={`whitespace-nowrap px-2 py-2.5 text-right text-sm ${ageTone}`}>{age}m</td>
+        {/* Payment */}
+        <td className="whitespace-nowrap px-2 py-2.5">
+          <span className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${PAYMENT_TONE[pay.kind]}`}>{pay.label}</span>
+        </td>
+        {/* Time: waiting while live, how long it took once delivered */}
+        <td className={`whitespace-nowrap px-2 py-2.5 text-right text-sm ${clockTone}`}>{clock.text}</td>
         {/* Amount */}
         <td className="whitespace-nowrap px-2 py-2.5 pr-4 text-right text-sm font-semibold">{formatINR(order.totalPaise)}</td>
         {/* Quick actions (icons only) */}
@@ -200,7 +208,7 @@ function OrderRow({
       {/* Expanded detail row */}
       {expanded && (
         <tr className="border-b border-line bg-surface/40">
-          <td colSpan={10} className="px-4 py-3">
+          <td colSpan={14} className="px-4 py-3">
             <div className="flex flex-wrap gap-6">
               {/* Items detail — grouped by category */}
               <div className="min-w-[200px] flex-1">
@@ -253,9 +261,7 @@ function OrderRow({
                     Scheduled · {new Date(order.scheduledFor).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Kolkata" })}
                   </p>
                 )}
-                {order.paymentMode === "on_delivery" && (
-                  <p className="mt-1 text-[12px] font-bold uppercase text-clay">Pay at door · {formatINR(order.totalPaise)}</p>
-                )}
+                <p className={`mt-2 inline-block rounded-full px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide ${PAYMENT_TONE[pay.kind]}`}>{pay.label}</p>
               </div>
               {/* Rider assign */}
               {canManage && riders.length > 0 && ["paid", "accepted", "preparing", "ready"].includes(order.status) && (
@@ -365,7 +371,8 @@ export function OrdersTable({ orders, riders, role }: { orders: OrderView[]; rid
                   <th key={key} className="px-1 py-2.5 text-center text-[9px]">{label}</th>
                 ))}
                 <th className="px-2 py-2.5">Status</th>
-                <th className="px-2 py-2.5 text-right">Age</th>
+                <th className="px-2 py-2.5">Payment</th>
+                <th className="px-2 py-2.5 text-right" title="Live: minutes waiting. Delivered: how long it took.">Time</th>
                 <th className="px-2 py-2.5 pr-4 text-right">Total</th>
                 <th className="px-2 py-2.5 pr-4 text-right">Action</th>
               </tr>

@@ -10,6 +10,8 @@ import { PrintButton } from "@/components/kitchen/auto-print";
 import { clockLabel } from "@/lib/hours";
 import { CollectButton } from "@/components/admin/collect-button";
 import { PaymentLink } from "@/components/admin/payment-link";
+import { orderClock } from "@/lib/orders/clock";
+import { PAYMENT_TONE, paymentState } from "@/lib/orders/payment-state";
 import { WhatsAppButton, CopyWhatsAppButton } from "@/components/admin/whatsapp-button";
 import { VegMark } from "@/components/store/veg-mark";
 
@@ -27,8 +29,9 @@ export function OrderCard({ order, riders, role, compact = false, dark = false }
   const [pending, start] = useTransition();
   const [prep, setPrep] = useState(20);
   const [err, setErr] = useState<string | null>(null);
-  const age = minutesSince(order.paidAt ?? order.createdAt);
-  const ageTone = age >= 20 ? "text-error" : age >= 10 ? "text-clay" : dark ? "text-kraft" : "text-muted";
+  const clock = orderClock(order);
+  const ageTone = clock.tone === "late" ? "text-error" : clock.tone === "warn" ? "text-clay" : dark ? "text-kraft" : "text-muted";
+  const pay = paymentState(order);
   const run = (fn: () => Promise<void>) => start(async () => { setErr(null); try { await fn(); } catch (e) { setErr(e instanceof Error ? e.message : "failed"); } });
   const canKitchen = ["owner", "manager", "kitchen"].includes(role);
   const canRider = ["owner", "manager", "rider"].includes(role);
@@ -50,13 +53,17 @@ export function OrderCard({ order, riders, role, compact = false, dark = false }
               <span className="rounded-full border border-dashed border-current px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider opacity-80">Sandbox</span>
             )}
             <span className={`rounded-full px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide ${STATUS_TONE[order.status]}`}>{STATUS_LABEL[order.status as OrderStatus]}</span>
+            {/* Paid or not, on every card: the kitchen and rider must never have to guess. */}
+            {pay.kind !== "collect" && (
+              <span className={`rounded-full px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide ${PAYMENT_TONE[pay.kind]}`}>{pay.label}</span>
+            )}
           </div>
           <div className={`text-[13px] ${dark ? "text-kraft" : "text-muted"}`}>
             {order.customer.name ?? "Guest"} · {[order.propertyName, order.roomOrLandmark].filter(Boolean).join(", ") || order.stayType}
           </div>
         </div>
         <div className="text-right">
-          <div className={`font-display text-[22px] ${ageTone}`}>{age}m</div>
+          <div className={`font-display ${clock.minutes === null ? "text-[15px]" : "text-[22px]"} ${ageTone}`}>{clock.text}</div>
           {order.prepMinutes && <div className={`text-[11px] ${dark ? "text-kraft" : "text-muted"}`}>prep {order.prepMinutes}m</div>}
         </div>
       </header>
