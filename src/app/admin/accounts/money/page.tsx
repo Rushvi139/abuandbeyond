@@ -16,9 +16,8 @@ const d = (s: string) => new Date(`${s}T00:00:00Z`).toLocaleDateString("en-IN", 
 
 /**
  * Money in and out of each of our three accounts: cash from orders, Saraspur
- * (where UPI and the QR scanner pay in) and HDFC. Money in counts what was
- * taken at the door; online PayU orders are shown apart, because which bank
- * PayU settles into isn't recorded yet.
+ * (where UPI, the QR scanner and PayU all pay in) and HDFC. Online orders
+ * count at their order total; PayU's fee comes off before it lands.
  *
  * Under it, every spend in the range with no account yet, one tap to tag it.
  */
@@ -61,6 +60,8 @@ export default async function MoneyPage({ searchParams }: { searchParams: Promis
 
   const moneyIn: Record<PaidFrom, number> = { cash: 0, saraspur: 0, hdfc: 0 };
   for (const r of inHand) moneyIn[r.method === "upi" ? "saraspur" : "cash"] += Number(r.paise);
+  const onlinePaise = Number(online[0]?.paise ?? 0);
+  moneyIn.saraspur += onlinePaise;
   const moneyOut: Record<PaidFrom, number> = { cash: 0, saraspur: 0, hdfc: 0 };
   let notTagged = 0;
   for (const r of out) {
@@ -72,7 +73,7 @@ export default async function MoneyPage({ searchParams }: { searchParams: Promis
     <div className="flex flex-col gap-5">
       <div>
         <h1 className="font-display text-[32px] uppercase leading-none">Bank &amp; cash</h1>
-        <p className="mt-1 text-sm text-muted">What came into and went out of each account. Saraspur is where UPI and the QR scanner pay in.</p>
+        <p className="mt-1 text-sm text-muted">What came into and went out of each account. Saraspur is where UPI, the QR scanner and PayU pay in.</p>
       </div>
       <DateRangeBar path="/admin/accounts/money" range={range} />
 
@@ -101,7 +102,7 @@ export default async function MoneyPage({ searchParams }: { searchParams: Promis
           </tbody>
         </table>
         <p className="border-t border-line px-4 py-2 text-[12px] text-muted">
-          Online (PayU): {formatINR(Number(online[0]?.paise ?? 0))} from {online[0]?.n ?? 0} orders, paid out by PayU to your bank after its fee. Not counted in an account above.
+          Saraspur in includes online (PayU) orders: {formatINR(onlinePaise)} from {online[0]?.n ?? 0} orders, at order total. PayU pays this out after its fee, so the bank will show a little less.
         </p>
       </section>
 
