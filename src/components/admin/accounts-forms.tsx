@@ -2,10 +2,11 @@
 
 import { useState, useTransition } from "react";
 import { addExpense, addVendorBill, addVendorPayment } from "@/lib/admin/accounts-actions";
+import { PAID_FROM, PAID_FROM_LABEL } from "@/lib/admin/paid-from";
 
 const inp = "h-10 rounded-xl border border-line bg-paper px-3 text-sm";
 const today = () => new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" });
-const MODES = ["UPI", "Cash", "Bank", "Card"];
+const FROM = PAID_FROM.map((v) => [v, PAID_FROM_LABEL[v]] as const);
 
 export type IngredientOption = { id: string; name: string; unit: string };
 
@@ -52,7 +53,7 @@ export function ExpenseForm({
       <select name="category" required className={inp}>{categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select>
       <input name="description" required placeholder="What was it for" className={`${inp} sm:col-span-2`} />
       <input name="amountInr" type="number" step="0.01" min="0.01" required placeholder="Amount ₹" className={inp} />
-      <select name="mode" className={inp}><option value="">Paid by…</option>{MODES.map((m) => <option key={m}>{m}</option>)}</select>
+      <select name="paidFrom" required className={inp}><option value="">Paid from…</option>{FROM.map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select>
       <input name="vendor" list="vendors" placeholder="Paid to (optional)" className={inp} />
       <datalist id="vendors">{vendors.map((v) => <option key={v} value={v} />)}</datalist>
       <input name="reference" placeholder="UTR / ref (optional)" className={inp} />
@@ -130,7 +131,7 @@ export function BillForm({ vendors }: { vendors: string[] }) {
       <label className="flex items-center gap-2 text-sm sm:col-span-2"><input type="checkbox" name="paidNow" value="1" checked={paidNow} onChange={(e) => setPaidNow(e.target.checked)} className="accent-clay" /> Paid in full now</label>
       {paidNow && (
         <>
-          <select name="mode" className={inp}><option value="">Paid by…</option>{MODES.map((m) => <option key={m}>{m}</option>)}</select>
+          <select name="paidFrom" required className={inp}><option value="">Paid from…</option>{FROM.map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select>
           <input name="reference" placeholder="UTR / ref" className={inp} />
         </>
       )}
@@ -164,7 +165,7 @@ export function PayBill({ billId, dueInr }: { billId: string; dueInr: number }) 
       <input type="hidden" name="billId" value={billId} />
       <input name="paidOn" type="date" required defaultValue={today()} className="h-8 rounded-lg border border-line bg-paper px-2 text-xs" />
       <input name="amountInr" type="number" step="0.01" min="0.01" required defaultValue={dueInr} className="h-8 w-24 rounded-lg border border-line bg-paper px-2 text-xs" />
-      <select name="mode" className="h-8 rounded-lg border border-line bg-paper px-1 text-xs"><option value="">Mode</option>{MODES.map((m) => <option key={m}>{m}</option>)}</select>
+      <select name="paidFrom" required className="h-8 rounded-lg border border-line bg-paper px-1 text-xs"><option value="">Paid from</option>{FROM.map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select>
       <input name="reference" placeholder="UTR" className="h-8 w-24 rounded-lg border border-line bg-paper px-2 text-xs" />
       <button type="submit" disabled={pending} className="h-8 rounded-lg bg-success px-2.5 text-xs font-semibold text-reversed disabled:opacity-50">{pending ? "Saving…" : "Save"}</button>
       <button type="button" onClick={() => { setOpen(false); setErr(null); }} className="h-8 px-2 text-xs text-muted">Cancel</button>

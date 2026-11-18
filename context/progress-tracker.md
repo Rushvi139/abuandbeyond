@@ -460,6 +460,16 @@ using `public/brand/bear-eating.webp|webm`. Code animation, not AI video
 
 ## Open Questions
 
+- PayU settles into which bank — HDFC or Saraspur? Until known, Bank & cash
+  shows online PayU sales on their own line, not in an account.
+- Spend entries since 10 Nov: owner will send `spend-since-10nov.csv`
+  (`scripts/one-off/export-spend.sql`); then move any purchase entered as an
+  expense into stock and tag each with its account.
+- Standard Recipes sheet (claude.ai artifact SkaUTwVAFw9cypZ6KW5ZTo): pack
+  weights for Dharamdas noodles, ketchup, chicken & biryani masala, and
+  prices for the new Indian / egg / Chinese dishes. Load into recipe_lines
+  once the owner marks dishes checked.
+
 - Accounts: the owner mentioned "details on the accounting part" that never
   reached the build session — get the list.
 - Monthly P&L: count food cost by **consumption** (recipes × dishes sold,
@@ -544,6 +554,12 @@ using `public/brand/bear-eating.webp|webm`. Code animation, not AI video
   accounts.
 
 ## Session Notes
+
+- 18 Nov: "Paid from" on every spend and bill payment — Cash from orders,
+  Saraspur (UPI / QR lands here), HDFC (migration 0031, `src/lib/admin/paid-from.ts`).
+  New Finance tab Bank & cash (`/admin/accounts/money`): in/out/net per
+  account, plus untagged spends with one-tap tagging. Door UPI counts as
+  money into Saraspur, door cash as cash in hand.
 
 - Server: Hostinger VPS 93.127.166.70 (Traefik, `root_default` network);
   domain abuandbeyond.in; repo github.com/Rushvi139/abuandbeyond; app in

@@ -5,10 +5,14 @@ import { z } from "zod";
 import { BOOKKEEPERS, assertRole } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { UploadError, saveUpload } from "@/lib/files";
+import { PAID_FROM, PAID_FROM_MODE } from "@/lib/admin/paid-from";
 
 // Recording a bill or an expense is data entry, not reading the books: riders who
 // also do the market run can file them, but only the owner sees the ledger.
 const paise = (inr: number) => Math.round(inr * 100);
+const PaidFromField = z.enum(PAID_FROM).optional().or(z.literal("")).transform((v) => v || null);
+/** The account decides what the old free-text `mode` shows. */
+const modeFor = (from: (typeof PAID_FROM)[number] | null, mode?: string) => (from ? PAID_FROM_MODE[from] : mode || null);
 
 type Q = { <T extends readonly object[]>(s: TemplateStringsArray, ...v: unknown[]): Promise<T> };
 async function vendorId(tx: Q, name: string) {
@@ -30,6 +34,7 @@ export async function addExpense(formData: FormData): Promise<{ error?: string }
     category: z.string().min(1), spentOn: z.string().date(), description: z.string().trim().min(2).max(200),
     amountInr: z.coerce.number().min(0.01), mode: z.string().trim().max(20).optional().or(z.literal("")),
     reference: z.string().trim().max(60).optional().or(z.literal("")), vendor: z.string().trim().max(80).optional().or(z.literal("")),
+    paidFrom: PaidFromField,
     // Stock link: if this expense is for an ingredient, record which one and how much was bought.
     ingredientId: z.string().uuid().optional().or(z.literal("")),
     quantity: z.coerce.number().positive().optional().or(z.literal("")),
@@ -52,8 +57,8 @@ export async function addExpense(formData: FormData): Promise<{ error?: string }
   await sql.begin(async (tx) => {
     const vid = d.vendor ? await vendorId(tx as unknown as Q, d.vendor) : null;
     await (tx as unknown as Q)<object[]>`
-      insert into expenses (category_id, spent_on, description, amount_paise, vendor_id, mode, reference, file_path, created_by, ingredient_id, quantity)
-      values (${d.category}, ${d.spentOn}, ${d.description}, ${paise(d.amountInr)}, ${vid}, ${d.mode || null}, ${d.reference || null}, ${filePath}, ${staff.id}, ${iid}, ${qty})`;
+      insert into expenses (category_id, spent_on, description, amount_paise, vendor_id, mode, paid_from, reference, file_path, created_by, ingredient_id, quantity)
+      values (${d.category}, ${d.spentOn}, ${d.description}, ${paise(d.amountInr)}, ${vid}, ${modeFor(d.paidFrom, d.mode)}, ${d.paidFrom}, ${d.reference || null}, ${filePath}, ${staff.id}, ${iid}, ${qty})`;
     // Honour the architecture invariant: stock changes only via stock_movements inserts.
     if (iid && qty) {
       await (tx as unknown as Q)<object[]>`
@@ -75,6 +80,7 @@ export async function addVendorBill(formData: FormData): Promise<{ error?: strin
     vendor: z.string().trim().min(2).max(80), billNumber: z.string().trim().max(60).optional().or(z.literal("")),
     billDate: z.string().date(), amountInr: z.coerce.number().min(0.01), gstInr: z.coerce.number().min(0).default(0), dueOn: z.string().optional().or(z.literal("")),
     paidNow: z.string().optional(), mode: z.string().trim().max(20).optional().or(z.literal("")), reference: z.string().trim().max(60).optional().or(z.literal("")),
+    paidFrom: PaidFromField,
   }).parse(Object.fromEntries(formData));
   const file = formData.get("attachment");
   let filePath: string | null = null;
@@ -90,7 +96,8 @@ export async function addVendorBill(formData: FormData): Promise<{ error?: strin
     const [bill] = await tx<{ id: string }[]>`insert into vendor_bills (vendor_id, bill_number, bill_date, amount_paise, gst_paise, due_on, file_path, created_by)
       values (${vid}, ${d.billNumber || null}, ${d.billDate}, ${paise(d.amountInr)}, ${paise(d.gstInr)}, ${d.dueOn || null}, ${filePath}, ${staff.id}) returning id`;
     if (d.paidNow) {
-      await tx`insert into vendor_payments (vendor_id, vendor_bill_id, paid_on, amount_paise, mode, reference) values (${vid}, ${bill.id}, ${d.billDate}, ${paise(d.amountInr)}, ${d.mode || null}, ${d.reference || null})`;
+      await tx`insert into vendor_payments (vendor_id, vendor_bill_id, paid_on, amount_paise, mode, paid_from, reference)
+        values (${vid}, ${bill.id}, ${d.billDate}, ${paise(d.amountInr)}, ${modeFor(d.paidFrom, d.mode)}, ${d.paidFrom}, ${d.reference || null})`;
     }
   });
   revalidatePath("/admin/accounts");
@@ -109,6 +116,7 @@ export async function addVendorPayment(formData: FormData): Promise<{ error?: st
   const parsed = z.object({
     billId: z.string().uuid(), paidOn: z.string().date(), amountInr: z.coerce.number().min(0.01),
     mode: z.string().trim().max(20).optional().or(z.literal("")), reference: z.string().trim().max(60).optional().or(z.literal("")),
+    paidFrom: PaidFromField,
   }).safeParse(Object.fromEntries(formData));
   if (!parsed.success) return { error: "Check the date and the amount." };
   const d = parsed.data;
@@ -124,8 +132,8 @@ export async function addVendorPayment(formData: FormData): Promise<{ error?: st
     const due = Number(bill.amount) - Number(bill.paid);
     if (due <= 0) return { error: "This bill is already settled." };
     if (paise(d.amountInr) > due) return { error: `That's more than the ₹${(due / 100).toLocaleString("en-IN")} still due on this bill.` };
-    await tx`insert into vendor_payments (vendor_id, vendor_bill_id, paid_on, amount_paise, mode, reference)
-      values (${bill.vendorId}, ${d.billId}, ${d.paidOn}, ${paise(d.amountInr)}, ${d.mode || null}, ${d.reference || null})`;
+    await tx`insert into vendor_payments (vendor_id, vendor_bill_id, paid_on, amount_paise, mode, paid_from, reference)
+      values (${bill.vendorId}, ${d.billId}, ${d.paidOn}, ${paise(d.amountInr)}, ${modeFor(d.paidFrom, d.mode)}, ${d.paidFrom}, ${d.reference || null})`;
     return { vendorId: bill.vendorId };
   });
 

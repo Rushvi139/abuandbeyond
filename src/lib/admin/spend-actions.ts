@@ -5,13 +5,15 @@ import { z } from "zod";
 import { BOOKKEEPERS, assertRole } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { UploadError, saveUpload } from "@/lib/files";
+import { PAID_FROM_MODE, type PaidFrom } from "@/lib/admin/paid-from";
 
 /**
  * The one form for money going out.
  *
  * Two questions decide everything, and the form asks them in this order:
  *   1. What was it for? — a category (Kitchen, Staff, Marketing, …).
- *   2. Was it paid now, or is it owed? — cash/UPI now, or on credit.
+ *   2. Was it paid now, and from which account (cash from orders, Saraspur,
+ *      HDFC), or is it owed? — on credit.
  *
  * Paid now is stored as an expense; on credit as a vendor bill that stays
  * "owed" until paid. The team never has to choose between "expense" and
@@ -43,7 +45,8 @@ const Spend = z
     description: z.string().trim().max(200).optional().default(""),
     amountInr: z.number().min(0).max(10_000_000).optional(),
     lines: z.array(Line).max(60).default([]),
-    pay: z.enum(["cash", "upi", "credit"]),
+    // "upi" is what the form sent before accounts were named; UPI goes out of Saraspur.
+    pay: z.enum(["cash", "saraspur", "hdfc", "upi", "credit"]).transform((p) => (p === "upi" ? "saraspur" : p)),
     billNumber: z.string().trim().max(60).optional().default(""),
     dueOn: z.string().date().optional().or(z.literal("")),
     reference: z.string().trim().max(60).optional().default(""),
@@ -140,9 +143,10 @@ export async function addSpend(formData: FormData): Promise<{ error?: string; sa
         returning id`;
       billId = b.id;
     } else {
+      const from = d.pay as PaidFrom;
       const [e] = await tx<{ id: string }[]>`
-        insert into expenses (category_id, spent_on, description, amount_paise, vendor_id, mode, reference, file_path, created_by, staff_name, note)
-        values (${cat.id}, ${d.spentOn}, ${summary}, ${totalPaise}, ${vid}, ${d.pay === "upi" ? "UPI" : "Cash"}, ${d.reference || null}, ${filePath}, ${staff.id}, ${d.staffName || null}, ${d.note || null})
+        insert into expenses (category_id, spent_on, description, amount_paise, vendor_id, mode, paid_from, reference, file_path, created_by, staff_name, note)
+        values (${cat.id}, ${d.spentOn}, ${summary}, ${totalPaise}, ${vid}, ${PAID_FROM_MODE[from]}, ${from}, ${d.reference || null}, ${filePath}, ${staff.id}, ${d.staffName || null}, ${d.note || null})
         returning id`;
       expenseId = e.id;
     }
@@ -160,6 +164,6 @@ export async function addSpend(formData: FormData): Promise<{ error?: string; sa
     }
   });
 
-  for (const p of ["/admin", "/admin/accounts", "/admin/accounts/expenses", "/admin/accounts/vendors", "/admin/accounts/vendor-list", "/admin/stock", "/rider/bills"]) revalidatePath(p);
+  for (const p of ["/admin", "/admin/accounts", "/admin/accounts/expenses", "/admin/accounts/vendors", "/admin/accounts/vendor-list", "/admin/stock", "/admin/accounts/money", "/rider/bills"]) revalidatePath(p);
   return { saved: d.pay === "credit" ? "bill" : "expense" };
 }

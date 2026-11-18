@@ -9,7 +9,8 @@ export type SpendIngredient = { id: string; name: string; unit: string; ratePais
 export type RecentList = { paidTo: string; on: string; lines: { ingredientId: string | null; name: string; qty: number; amountInr: number }[] };
 
 type Line = { key: number; ingredientId: string; name: string; qty: string; amount: string; newUnit: "g" | "ml" | "pc" | "" };
-type Pay = "cash" | "upi" | "credit";
+type Pay = "cash" | "saraspur" | "hdfc" | "credit";
+const PAY_LABEL: Record<Exclude<Pay, "credit">, string> = { cash: "cash from orders", saraspur: "Saraspur", hdfc: "HDFC" };
 
 /** What a person types the quantity in: kg for gram items, L for ml items. */
 const SHOW_UNIT: Record<string, string> = { g: "kg", ml: "L", pc: "pc" };
@@ -113,7 +114,7 @@ export function SpendForm({
       setDone(
         pay === "credit"
           ? `Saved: ${formatINR(total)} owed to ${paidTo}. It's under Vendor bills until it's paid.`
-          : `Saved: ${formatINR(total)} paid by ${pay === "upi" ? "UPI" : "cash"}, under Expenses.`,
+          : `Saved: ${formatINR(total)} paid from ${PAY_LABEL[pay]}, under Expenses.`,
       );
       reset();
     });
@@ -207,10 +208,11 @@ export function SpendForm({
 
       {/* 3. How it was paid */}
       <section className="rounded-2xl bg-surface p-3">
-        <p className="mb-1.5 text-[11px] font-bold uppercase tracking-wide text-muted">3 · Paid how</p>
-        <div className="grid grid-cols-3 gap-1.5">
-          <button type="button" onClick={() => setPay("cash")} className={chip(pay === "cash")}>Cash now</button>
-          <button type="button" onClick={() => setPay("upi")} className={chip(pay === "upi")}>UPI now</button>
+        <p className="mb-1.5 text-[11px] font-bold uppercase tracking-wide text-muted">3 · Paid from</p>
+        <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-4">
+          <button type="button" onClick={() => setPay("cash")} className={chip(pay === "cash")}>Cash from orders</button>
+          <button type="button" onClick={() => setPay("saraspur")} className={chip(pay === "saraspur")}>Saraspur (UPI)</button>
+          <button type="button" onClick={() => setPay("hdfc")} className={chip(pay === "hdfc")}>HDFC</button>
           <button type="button" onClick={() => setPay("credit")} className={chip(pay === "credit")}>On credit</button>
         </div>
         {pay === "credit" && (
@@ -230,7 +232,7 @@ export function SpendForm({
         {total > 0 ? (
           pay === "credit"
             ? <>Saves as <b>{formatINR(total)} owed to {paidTo || "the vendor"}</b> — under Vendor bills until you pay it.</>
-            : <>Saves as <b>{formatINR(total)} paid by {pay === "upi" ? "UPI" : "cash"}</b> — under Expenses ({cat?.name}).</>
+            : <>Saves as <b>{formatINR(total)} paid from {PAY_LABEL[pay]}</b> — under Expenses ({cat?.name}).</>
         ) : "Fill in the amount to save."}
         {itemised && filled.some((l) => l.ingredientId || l.newUnit) && " Stock goes up for the inventory items; new ones are added to Inventory."}
       </p>
