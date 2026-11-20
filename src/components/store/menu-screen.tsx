@@ -318,6 +318,9 @@ function startPrice(item: MenuItem): { paise: number; from: boolean } {
     .reduce((n, g) => n + Math.min(...g.choices.map((c) => c.priceDeltaPaise)), 0);
   return { paise: item.pricePaise + extra, from: extra > 0 };
 }
+/** The empty choice of an optional group, in words that fit it. */
+const noneLabel = (group: string) => (/half/i.test(group) ? "Whole pizza, one flavour" : "None");
+
 const priceLabel = (item: MenuItem) => {
   const p = startPrice(item);
   return `${p.from ? "from " : ""}${formatINR(p.paise)}`;
@@ -406,13 +409,22 @@ function ItemSheet({ item, sticker, onClose, onAdd }: { item: MenuItem; sticker:
               {g.required && <span className="rounded-full bg-acid px-2 py-0.5 text-[11px] font-bold tracking-wider">REQUIRED</span>}
             </legend>
             <div className="flex flex-col gap-2.5">
+              {/* An optional choice can be left empty: say so, and let the guest go back to it. */}
+              {!g.required && (
+                <label className={`flex h-14 cursor-pointer items-center justify-between rounded-[14px] border px-4 ${!choice[g.id] ? "border-2 border-clay" : "border-[1.5px] border-line"}`}>
+                  <span className="text-[15px] font-semibold">{noneLabel(g.name)}</span>
+                  <input type="radio" name={g.id} checked={!choice[g.id]} onChange={() => setChoice((p) => ({ ...p, [g.id]: "" }))} className="h-[22px] w-[22px] accent-clay" />
+                </label>
+              )}
               {g.choices.map((c) => {
                 const on = choice[g.id] === c.id;
                 return (
                   <label key={c.id} className={`flex h-14 cursor-pointer items-center justify-between rounded-[14px] border px-4 ${on ? "border-2 border-clay" : "border-[1.5px] border-line"}`}>
                     <span className="text-[15px] font-semibold">
                       {c.name}
-                      {c.priceDeltaPaise > 0 && <span className="ml-2 text-sm font-normal text-muted">+{formatINR(c.priceDeltaPaise)}</span>}
+                      {c.priceDeltaPaise !== 0 && (
+                        <span className="ml-2 text-sm font-normal text-muted">{c.priceDeltaPaise > 0 ? "+" : "−"}{formatINR(Math.abs(c.priceDeltaPaise))}</span>
+                      )}
                     </span>
                     <input type="radio" name={g.id} checked={on} onChange={() => setChoice((p) => ({ ...p, [g.id]: c.id }))} className="h-[22px] w-[22px] accent-clay" />
                   </label>

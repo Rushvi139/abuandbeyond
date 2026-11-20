@@ -1,5 +1,6 @@
 -- The new pizza and burger menu (20 Nov 2026), with add-ons, half-and-half
--- pizzas, the category lines, and the three offer banners.
+-- (inside each pizza, the way Zomato does it), the category lines, and the
+-- three offer banners.
 --
 --  * New items are added (or updated, if this has run before) by SKU.
 --  * Older pizzas and burgers not on the new list are hidden, not deleted:
@@ -21,18 +22,12 @@ do $$ begin
   if not exists (select 1 from categories where slug = 'burgers') then raise exception 'No category with slug "burgers"'; end if;
 end $$;
 
-update categories set blurb = E'Slow-fermented for 72 hours. Handcrafted. Freshly baked. Always delicious.\nOnion-free, garlic-free marinara. Jain pizzas on request. 10-inch, 8 slices.', active = true where slug = 'pizza';
+update categories set blurb = E'Slow-fermented for 72 hours. Handcrafted. Freshly baked. Always delicious.\nOnion-free, garlic-free marinara. Jain pizzas on request. 10-inch, 8 slices.\nHalf & half: pick any two flavours on one pizza; each half at half its price, plus ₹99. Veg with veg, non-veg with non-veg. The Chicken Dominator is whole only.', active = true where slug = 'pizza';
 update categories set blurb = 'Fresh homemade brioche buns. Fresh lettuce. Stacked to order. Every burger is served with a side of fries.', active = true where slug = 'burgers';
 
--- Half & half sits right after Pizza.
-do $$ declare p int; begin
-  if not exists (select 1 from categories where slug = 'half-and-half-pizza') then
-    select sort_order into p from categories where slug = 'pizza';
-    update categories set sort_order = sort_order + 1 where sort_order > p;
-    insert into categories (name, slug, sort_order, blurb) values ('Half & Half Pizza', 'half-and-half-pizza', p + 1,
-      E'Can\'t decide? Pick any two flavours on one pizza. Each half is charged at half the menu price of that pizza, plus ₹99 extra.\nVeg with veg, non-veg with non-veg. The Chicken Dominator is whole only.');
-  end if;
-end $$;
+-- An earlier draft had half & half as its own category; it lives inside each pizza now.
+update categories set active = false where slug = 'half-and-half-pizza';
+update menu_items set active = false where sku in ('PZHHV', 'PZHHN');
 
 -- ---------------------------------------------------------------- items
 create temp table new_items (sku text, cat text, name text, slug text, veg boolean, price int, descr text,
@@ -50,8 +45,6 @@ insert into new_items values
  ('PZ10','pizza','Smokehouse BBQ Chicken','smokehouse-bbq-chicken-pizza',false,549,'Fresh homemade marinara, BBQ-marinated chicken, bell peppers, onions, mozzarella.','pizza_oven','italy','pizza',10),
  ('PZ11','pizza','The Chicken Dominator','the-chicken-dominator',false,699,'Fresh homemade marinara, BBQ chicken, crispy katsu chicken, chicken meatballs, tandoori chicken, onions, bell peppers.','pizza_oven','italy','pizza',11),
  ('PZ12','pizza','Rosemary Chicken Verde','rosemary-chicken-verde',false,599,'Basil pesto base, rosemary-marinated chicken, cherry tomatoes, sun-dried tomatoes, mozzarella, parmesan.','pizza_oven','italy','pizza',12),
- ('PZHHV','half-and-half-pizza','Half & Half Pizza (Veg)','half-and-half-pizza-veg',true,99,'Any two veg pizzas on one. Each half at half its menu price, plus ₹99.','pizza_oven','italy','pizza',1),
- ('PZHHN','half-and-half-pizza','Half & Half Pizza (Non-Veg)','half-and-half-pizza-non-veg',false,99,'Any two non-veg pizzas on one. Each half at half its menu price, plus ₹99.','pizza_oven','italy','pizza',2),
  ('BG01','burgers','Golden Aloo Crunch','golden-aloo-crunch',true,249,'Crispy aloo patty, thousand island sauce, fresh lettuce, caramelised onion, fresh tomato, jalapeños, cheese. With fries.','grill_rolls','abu','box_wrap',1),
  ('BG02','burgers','Cheesy Shroom Stack','cheesy-shroom-stack',true,299,'Crispy aloo patty, thousand island sauce, fresh lettuce, caramelised onion, fresh tomato, jalapeños, cheese, topped with a creamy sautéed mushroom mix. With fries.','grill_rolls','abu','box_wrap',2),
  ('BG03','burgers','Southern Fried Chicken','southern-fried-chicken',false,349,'Mint mayo and garlic sauce base, fresh lettuce, crispy chicken breast, jalapeños, tomato slice, liquid cheese. With fries.','grill_rolls','abu','box_wrap',3),
@@ -78,22 +71,29 @@ update menu_items m set active = false, updated_at = now() from categories c
 where c.id = m.category_id and c.slug in ('pizza', 'burgers') and m.active and m.sku not in (select sku from new_items);
 
 -- ---------------------------------------------------------------- half & half choices
+-- On every pizza but the Dominator: an optional "Make it half & half" choice
+-- listing the other pizzas of the same kind. A half costs half its menu price,
+-- rounded up to the rupee, plus ₹99 for the pizza, so the choice is priced as
+-- (half this + half other + 99) - this.
 create temp table halves on commit drop as
-select case when n.veg then 'PZHHV' else 'PZHHN' end as hh, n.name, n.price, n.sort
-from new_items n where n.cat = 'pizza' and n.sku <> 'PZ11';
+select p.sku as pizza, o.name as other, o.sort,
+  (ceil(p.price / 2.0) + ceil(o.price / 2.0) + 99 - p.price)::int * 100 as delta
+from new_items p join new_items o on o.cat = 'pizza' and o.veg = p.veg and o.sku <> p.sku and o.sku <> 'PZ11'
+where p.cat = 'pizza' and p.sku <> 'PZ11';
 
 insert into option_groups (menu_item_id, name, required, max_choices, sort_order)
-select m.id, g.name, true, 1, g.s from menu_items m cross join (values ('First half', 1), ('Second half', 2)) g(name, s)
-where m.sku in ('PZHHV', 'PZHHN') and not exists (select 1 from option_groups x where x.menu_item_id = m.id and x.name = g.name);
+select m.id, 'Make it half & half', false, 1, 1 from menu_items m
+where m.sku in (select pizza from halves)
+  and not exists (select 1 from option_groups g where g.menu_item_id = m.id and g.name = 'Make it half & half');
 
 insert into options (option_group_id, name, price_delta_paise, sort_order)
-select g.id, h.name, ceil(h.price / 2.0)::int * 100, h.sort
-from halves h join menu_items m on m.sku = h.hh join option_groups g on g.menu_item_id = m.id and g.name in ('First half', 'Second half')
-where not exists (select 1 from options o where o.option_group_id = g.id and o.name = h.name);
+select g.id, h.other, h.delta, h.sort from halves h
+join menu_items m on m.sku = h.pizza join option_groups g on g.menu_item_id = m.id and g.name = 'Make it half & half'
+where not exists (select 1 from options o where o.option_group_id = g.id and o.name = h.other);
 
-update options o set price_delta_paise = ceil(h.price / 2.0)::int * 100, active = true
-from halves h join menu_items m on m.sku = h.hh join option_groups g on g.menu_item_id = m.id
-where o.option_group_id = g.id and o.name = h.name;
+update options o set price_delta_paise = h.delta, active = true
+from halves h join menu_items m on m.sku = h.pizza join option_groups g on g.menu_item_id = m.id and g.name = 'Make it half & half'
+where o.option_group_id = g.id and o.name = h.other;
 
 -- ---------------------------------------------------------------- add-ons
 create temp table new_addons (name text, price int, veg boolean, scope text) on commit drop;
@@ -116,7 +116,7 @@ on conflict (name) do update set price_paise = excluded.price_paise, is_veg = ex
 delete from menu_item_addons where menu_item_id in (select m.id from menu_items m join new_items n on n.sku = m.sku);
 insert into menu_item_addons (menu_item_id, addon_id)
 select m.id, a.id from new_items n join menu_items m on m.sku = n.sku
-join new_addons na on (n.cat in ('pizza', 'half-and-half-pizza') and (na.scope = 'pizza' or (na.scope = 'pizza_nv' and not n.veg)))
+join new_addons na on (n.cat = 'pizza' and (na.scope = 'pizza' or (na.scope = 'pizza_nv' and not n.veg)))
                    or (n.cat = 'burgers' and (na.scope = 'burger' or (na.scope = 'burger_nv' and not n.veg)))
 join addons a on a.name = na.name
 on conflict do nothing;
