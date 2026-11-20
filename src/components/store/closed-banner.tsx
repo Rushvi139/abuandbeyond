@@ -27,15 +27,21 @@ export function ClosedBanner() {
   if (!REFUSE_ORDERS_WHEN_CLOSED || !state || state.open || forcedOpen) return null;
 
   return (
-    <div className="mx-5 mt-4 flex items-center gap-3 rounded-[18px] bg-ink px-4 py-3 text-reversed">
-      <span className="flex h-9 w-9 flex-none items-center justify-center rounded-full bg-acid text-[17px]" aria-hidden="true">
-        ⏰
-      </span>
-      <p className="text-[14px] leading-snug">
-        <b>Closed right now — but you can still order.</b>
+    <section role="status" className="mx-5 mt-4 overflow-hidden rounded-[22px] bg-ink px-5 py-5 text-reversed">
+      <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-kraft">Kitchen closed right now</p>
+      <h2 className="mt-1.5 font-display text-[34px] uppercase leading-[0.92]">
+        Orders for now
         <br />
-        <span className="opacity-80">Add what you want and pick a delivery time from {state.opensAt}.</span>
+        <span className="text-acid">are paused</span>
+      </h2>
+      <p className="mt-3 text-[15px] leading-snug">
+        You can&apos;t place an order for right now. You <b>can</b> schedule one: add what you want and pick a delivery time{state.opensAt ? <> from <b>{state.opensAt}</b></> : null}.
       </p>
-    </div>
+      {state.opensAt && (
+        <span className="mt-3.5 inline-flex h-9 items-center gap-2 rounded-full bg-acid px-3.5 text-[13px] font-bold text-ink">
+          <span aria-hidden="true">⏰</span> Opens {state.opensAt}
+        </span>
+      )}
+    </section>
   );
 }

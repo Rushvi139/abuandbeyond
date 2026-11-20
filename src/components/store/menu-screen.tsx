@@ -11,6 +11,8 @@ import { CUISINE_LABEL, type Category, type MenuItem } from "@/lib/menu/types";
 import { VegMark } from "./veg-mark";
 import { StoreNav } from "./store-nav";
 import { BannerStrip, type Banner } from "./banner-strip";
+import { useForcedOpen, useServiceOpen } from "./service-gate";
+import { REFUSE_ORDERS_WHEN_CLOSED } from "@/lib/hours";
 
 // Sticker artwork from the brand sticker sheet, by category slug (or item slug), else a coloured cuisine tile.
 /**
@@ -90,6 +92,10 @@ const TILE: Record<MenuItem["cuisine"], string> = {
 
 export function MenuScreen({ categories, closingLabel, banners = [] }: { categories: Category[]; closingLabel: string | null; banners?: Banner[] }) {
   const cart = useCart();
+  const serviceOpen = useServiceOpen();
+  const forcedOpen = useForcedOpen();
+  // Closed means the bag can only become a scheduled order; the button says so.
+  const closedNow = REFUSE_ORDERS_WHEN_CLOSED && serviceOpen === false && !forcedOpen;
   const [diet, setDiet] = useState<"all" | "veg" | "nonveg">("all");
   const [active, setActive] = useState(categories[0]?.slug ?? "");
   const [sheetItem, setSheetItem] = useState<MenuItem | null>(null);
@@ -237,7 +243,7 @@ export function MenuScreen({ categories, closingLabel, banners = [] }: { categor
               </span>
             </div>
             <Link href="/checkout" className="flex h-12 items-center gap-2 rounded-[14px] bg-clay px-5 text-[15px] font-bold text-ink">
-              Checkout
+              {closedNow ? "Schedule order" : "Checkout"}
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <path d="M5 12h14M13 6l6 6-6 6" />
               </svg>
