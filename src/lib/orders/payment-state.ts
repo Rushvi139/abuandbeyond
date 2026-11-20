@@ -34,6 +34,7 @@ export function paymentState(o: Input): PaymentState {
     if (o.status === "payment_failed") return { kind: "awaiting", label: "Payment failed" };
     return { kind: "paid", label: "Paid · online" };
   }
+  if (o.collectMethod === "complimentary") return { kind: "paid", label: "Complimentary" };
   if (o.collectedAt) return { kind: "paid", label: `Paid · ${o.collectMethod === "upi" ? "UPI" : "cash"}` };
   return { kind: "collect", label: `To collect ${rupees(o.totalPaise)}` };
 }

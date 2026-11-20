@@ -71,7 +71,7 @@ const base = (sql = db()) => sql`
     o.prep_minutes as "prepMinutes", o.paid_at as "paidAt", o.delivered_at as "deliveredAt", o.created_at as "createdAt",
     o.gateway_order_id as "gatewayOrderId", o.payment_session_id as "paymentSessionId", o.gateway_env as "gatewayEnv", o.kot_printed_at as "kotPrintedAt",
     o.kitchen_note as "kitchenNote", o.alt_phone as "altPhone", o.scheduled_for as "scheduledFor", o.payment_mode as "paymentMode", o.collected_at as "collectedAt",
-    (select p.method from payments p where p.order_id = o.id and p.gateway = 'on_delivery' order by p.created_at desc limit 1) as "collectMethod",
+    coalesce((select p.method from payments p where p.order_id = o.id and p.gateway = 'on_delivery' order by p.created_at desc limit 1), case when o.comp_reason is not null then 'complimentary' end) as "collectMethod",
     coalesce((select sum(p.refunded_paise) from payments p where p.order_id = o.id), 0)::bigint as "refundedPaise",
     o.discount_paise as "discountPaise", o.promo_code as "promoCode",
     json_build_object('id', c.id, 'name', c.name, 'phone', c.phone) as customer,

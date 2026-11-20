@@ -73,6 +73,7 @@ export default async function DayClosePage({ searchParams }: { searchParams: Pro
             rows={[
               ["Net sales", formatINR(c.netPaise)],
               ["Discounts given", c.discountPaise ? `− ${formatINR(c.discountPaise)}` : "—"],
+              ["…of which complimentary", c.complimentary.orders ? `${c.complimentary.orders} order${c.complimentary.orders > 1 ? "s" : ""} · ${formatINR(c.complimentary.menuValuePaise)}` : "—"],
               ["GST collected (5%, owed to govt)", formatINR(c.gstPaise)],
               ["Delivery fees", c.deliveryPaise ? formatINR(c.deliveryPaise) : "—"],
               ["Total paid by guests", formatINR(c.grossPaise), true],

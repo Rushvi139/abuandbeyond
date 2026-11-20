@@ -39,12 +39,15 @@ const Manual = z
     propertyName: z.string().trim().max(120).optional().default(""),
     stayId: z.string().uuid().optional().or(z.literal("")),
     roomOrLandmark: z.string().trim().max(120).optional().default(""),
-    payment: z.enum(["cash", "upi", "collect"]),
+    payment: z.enum(["cash", "upi", "collect", "complimentary"]),
+    /** Why it's free. Required for a complimentary order. */
+    compReason: z.string().trim().max(200).optional().default(""),
     kitchenNote: z.string().trim().max(200).optional().default(""),
   })
   .superRefine((d, ctx) => {
     if (d.kind === "delivery" && !d.phone) ctx.addIssue({ code: "custom", path: ["phone"], message: "A delivery needs the guest's number, for the rider." });
     if (d.kind === "delivery" && !d.propertyName && !d.roomOrLandmark) ctx.addIssue({ code: "custom", path: ["propertyName"], message: "Where is it going? Add the hotel or a landmark." });
+    if (d.payment === "complimentary" && d.compReason.length < 3) ctx.addIssue({ code: "custom", path: ["compReason"], message: "Say who it's for and why it's complimentary." });
     if (d.kind === "pickup" && d.payment === "collect") ctx.addIssue({ code: "custom", path: ["payment"], message: "A pickup is paid at the counter: cash or UPI." });
   });
 
@@ -58,6 +61,8 @@ export async function createManualOrder(raw: ManualOrderInput): Promise<{ error?
   const parsed = Manual.safeParse(raw);
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Check the order." };
   const d = parsed.data;
+  // Giving food away is the owner's or manager's call, not the pass's.
+  if (d.payment === "complimentary" && !["owner", "manager"].includes(staff.role)) return { error: "Only the owner or a manager can make an order complimentary." };
 
   try {
     const order = await createOrder(
@@ -83,9 +88,19 @@ export async function createManualOrder(raw: ManualOrderInput): Promise<{ error?
     await transition(order.id, "paid", { actorId: staff.id, note: `manual order (${d.kind}, ${d.payment})` });
     if (d.kitchenNote) await sql`update orders set kitchen_note = ${d.kitchenNote} where id = ${order.id}`;
 
+    // Complimentary: nothing to pay or collect. The menu value stays as the
+    // subtotal and the whole of it is the discount, so sales count zero and
+    // Day Close can show what was given away.
+    if (d.payment === "complimentary") {
+      await sql`update orders set discount_paise = subtotal_paise, gst_paise = 0, delivery_fee_paise = 0, total_paise = 0,
+        promo_code = 'COMPLIMENTARY', comp_reason = ${d.compReason}, comp_by = ${staff.id},
+        collected_at = now(), collected_by = ${staff.id}
+        where id = ${order.id}`;
+    }
+
     // Paid at the counter: it is in hand now, so it goes straight into the
     // cash book the same way a rider's collection does.
-    if (d.payment !== "collect") {
+    if (d.payment === "cash" || d.payment === "upi") {
       await sql.begin(async (tx) => {
         await tx`update orders set collected_at = now(), collected_by = ${staff.id} where id = ${order.id}`;
         await tx`insert into payments (order_id, gateway, gateway_order_id, gateway_payment_id, status, amount_paise, method)

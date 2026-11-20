@@ -36,7 +36,7 @@ export default async function SalesPage({ searchParams }: { searchParams: Promis
     sql<Row[]>`
       select o.id, o.order_number as number, coalesce(o.paid_at, o.created_at) as "paidAt", o.status, o.payment_mode as "paymentMode",
         o.collected_at as "collectedAt", o.total_paise::bigint as "totalPaise", (o.subtotal_paise - o.discount_paise)::bigint as net, o.source,
-        (select p.method from payments p where p.order_id = o.id and p.gateway = 'on_delivery' limit 1) as "collectMethod",
+        coalesce((select p.method from payments p where p.order_id = o.id and p.gateway = 'on_delivery' limit 1), case when o.comp_reason is not null then 'complimentary' end) as "collectMethod",
         coalesce((select sum(p.refunded_paise) from payments p where p.order_id = o.id), 0)::bigint as "refundedPaise",
         c.name as guest, c.id as "customerId", nullif(concat_ws(', ', o.property_name, o.room_or_landmark), '') as where,
         (select string_agg(oi.quantity || '× ' || oi.name_snapshot, ', ') from order_items oi where oi.order_id = o.id) as items

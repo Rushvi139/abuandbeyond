@@ -25,7 +25,7 @@ type Line = {
 };
 
 type Kind = "delivery" | "pickup";
-type Pay = "cash" | "upi" | "collect";
+type Pay = "cash" | "upi" | "collect" | "complimentary";
 type Stay = "hotel" | "villa" | "homestay" | "home";
 
 const unitPrice = (l: Pick<Line, "item" | "optionIds" | "addonIds">) => {
@@ -56,6 +56,7 @@ export function Pos({ menu, deliveryFeePaise }: { menu: Category[]; deliveryFeeP
   const [room, setRoom] = useState("");
   const [kitchenNote, setKitchenNote] = useState("");
   const [pay, setPay] = useState<Pay>("cash");
+  const [compReason, setCompReason] = useState("");
 
   const [pending, start] = useTransition();
   const [err, setErr] = useState<string | null>(null);
@@ -111,6 +112,7 @@ export function Pos({ menu, deliveryFeePaise }: { menu: Category[]; deliveryFeeP
     setRoom("");
     setKitchenNote("");
     setPay("cash");
+    setCompReason("");
     setErr(null);
     setQ("");
     searchRef.current?.focus();
@@ -129,6 +131,7 @@ export function Pos({ menu, deliveryFeePaise }: { menu: Category[]; deliveryFeeP
         stayId,
         roomOrLandmark: room,
         payment: kind === "pickup" && pay === "collect" ? "cash" : pay,
+        compReason,
         kitchenNote,
       });
       if (r.error || !r.id) {
@@ -144,6 +147,7 @@ export function Pos({ menu, deliveryFeePaise }: { menu: Category[]; deliveryFeeP
       setRoom("");
       setKitchenNote("");
       setPay("cash");
+    setCompReason("");
     });
   }
 
@@ -259,7 +263,7 @@ export function Pos({ menu, deliveryFeePaise }: { menu: Category[]; deliveryFeeP
               <Row k={`Items (${count})`} v={formatINR(subtotal)} />
               {gst > 0 && <Row k="GST 5%" v={formatINR(gst)} />}
               {fee > 0 && <Row k="Delivery" v={formatINR(fee)} />}
-              <Row k="Total" v={formatINR(total, { decimals: true })} strong />
+              <Row k="Total" v={pay === "complimentary" ? "₹0 · complimentary" : formatINR(total, { decimals: true })} strong />
             </dl>
           )}
         </div>
@@ -303,13 +307,21 @@ export function Pos({ menu, deliveryFeePaise }: { menu: Category[]; deliveryFeeP
 
         <div className="rounded-2xl bg-surface p-3">
           <p className="mb-1.5 text-[11px] font-bold uppercase tracking-wide text-muted">Payment</p>
-          <div className={`grid gap-1.5 ${kind === "delivery" ? "grid-cols-3" : "grid-cols-2"}`}>
+          <div className="grid grid-cols-2 gap-1.5">
             <button type="button" onClick={() => setPay("cash")} className={chip(pay === "cash")}>Cash paid</button>
             <button type="button" onClick={() => setPay("upi")} className={chip(pay === "upi")}>UPI paid</button>
             {kind === "delivery" && <button type="button" onClick={() => setPay("collect")} className={chip(pay === "collect")}>Collect at door</button>}
+            <button type="button" onClick={() => setPay("complimentary")} className={chip(pay === "complimentary")}>Complimentary</button>
           </div>
+          {pay === "complimentary" && (
+            <input value={compReason} onChange={(e) => setCompReason(e.target.value)} placeholder="Who is it for, and why? (needed)" className={`${input} mt-1.5`} />
+          )}
           <p className="mt-1.5 text-[12px] text-muted">
-            {pay === "collect" ? "The rider collects it; it shows as To collect until they mark it." : "Money already in hand — it goes straight into the cash book."}
+            {pay === "collect"
+              ? "The rider collects it; it shows as To collect until they mark it."
+              : pay === "complimentary"
+                ? "Free for the guest. The food still comes off stock; Day Close shows what was given away."
+                : "Money already in hand — it goes straight into the cash book."}
           </p>
         </div>
 

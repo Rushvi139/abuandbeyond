@@ -21,6 +21,8 @@ const SOLD = ["pending_payment", "payment_failed", "cancelled"];
 export type DayClose = {
   orders: number;
   netPaise: number; // food after discount, before GST
+  /** Orders given free, and what they were worth at menu price. Their value is inside discountPaise. */
+  complimentary: { orders: number; menuValuePaise: number };
   discountPaise: number;
   gstPaise: number;
   deliveryPaise: number;
@@ -47,7 +49,7 @@ export async function dayClose(day: string): Promise<DayClose> {
   const inDay = (col: string) => sql`(((${sql(col)} at time zone 'Asia/Kolkata') - ${h}::interval)::date = ${day}::date)`;
 
   const [sales] = await sql<
-    { orders: number; net: number; discount: number; gst: number; delivery: number; gross: number; online: number; cash: number; uncollected: number }[]
+    { orders: number; net: number; discount: number; gst: number; delivery: number; gross: number; online: number; cash: number; uncollected: number; comp: number; compValue: number }[]
   >`
     select count(*)::int as orders,
       coalesce(sum(subtotal_paise - discount_paise), 0)::bigint as net,
@@ -57,7 +59,9 @@ export async function dayClose(day: string): Promise<DayClose> {
       coalesce(sum(total_paise), 0)::bigint as gross,
       coalesce(sum(total_paise) filter (where payment_mode = 'online'), 0)::bigint as online,
       coalesce(sum(total_paise) filter (where payment_mode = 'on_delivery'), 0)::bigint as cash,
-      coalesce(sum(total_paise) filter (where payment_mode = 'on_delivery' and collected_at is null), 0)::bigint as uncollected
+      coalesce(sum(total_paise) filter (where payment_mode = 'on_delivery' and collected_at is null), 0)::bigint as uncollected,
+      (count(*) filter (where comp_reason is not null))::int as comp,
+      coalesce(sum(subtotal_paise) filter (where comp_reason is not null), 0)::bigint as "compValue"
     from orders
     where status <> all(${SOLD}) and not is_demo and ${inDay("paid_at")}`;
 
@@ -112,6 +116,7 @@ export async function dayClose(day: string): Promise<DayClose> {
     onlinePaise: Number(sales.online),
     cashPaise: Number(sales.cash),
     cashUncollectedPaise: Number(sales.uncollected),
+    complimentary: { orders: sales.comp, menuValuePaise: Number(sales.compValue) },
     cancelled: { count: cancelled.count, paise: Number(cancelled.paise) },
     abandoned: abandoned.n,
     foodPaise: Math.round(cost.food * loading),
