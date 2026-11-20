@@ -460,6 +460,10 @@ using `public/brand/bear-eating.webp|webm`. Code animation, not AI video
 
 ## Open Questions
 
+- B2B credit: anyone holding a partner's QR link can order on its account.
+  Room number is required and the partner sees every order; ask the owner if
+  they want a per-partner daily cap or staff approval for credit orders.
+
 - Spend entries since 10 Nov: owner will send `spend-since-10nov.csv`
   (`scripts/one-off/export-spend.sql`); then move any purchase entered as an
   expense into stock and tag each with its account.
@@ -552,6 +556,23 @@ using `public/brand/bear-eating.webp|webm`. Code animation, not AI video
   accounts.
 
 ## Session Notes
+
+- 20 Nov: New pizza & burger menu via `scripts/one-off/menu-pizza-burger-2026-11-20.sql`
+  (preview / `-v apply=1`); half & half inside each pizza (optional choice,
+  half each rounded up + ₹99), add-ons (chicken on non-veg only), category
+  blurbs (0032), three offer banners in an auto-sliding carousel.
+  Free iced tea when food total ≥ settings.free_drink_min_paise (₹699): guest
+  picks the drink at checkout, server adds it at ₹0 (web orders only).
+- 20 Nov: Big "orders for now are paused, schedule one" banner when closed.
+- 20 Nov: Complimentary orders on New Order (owner/manager, reason required;
+  0033). Bill zeroed, menu value kept as discount; Day Close shows them.
+- 20 Nov: B2B partners (0034): properties.billing guest|credit, credit_days,
+  view_token. Credit partner's QR → every order payment_mode 'credit', room no.
+  required, decided server-side from the partner row. /admin/partners (list,
+  detail, statements ST-0001…, mark paid into HDFC/Saraspur/Cash → Bank & cash),
+  partner's read-only page /p/<token>. The QR `?src=` is now kept in a 2-day
+  cookie (it used to be lost between menu and checkout).
+- 20 Nov: bills-to-expenses script keeps Khandelwal/Dharamdas/Ganesh/Bahuchar bills.
 
 - 18 Nov: "Paid from" on every spend and bill payment — Cash from orders,
   Saraspur (UPI / QR lands here), HDFC (migration 0031, `src/lib/admin/paid-from.ts`).

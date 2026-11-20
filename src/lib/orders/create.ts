@@ -200,8 +200,14 @@ export async function createOrder(input: CheckoutInput, opts: { source?: string;
     const [customer] = await tx<{ id: string }[]>`insert into customers (phone, name) values (${phone}, ${input.name})
       on conflict (phone) do update set name = coalesce(excluded.name, customers.name) returning id`;
     const [property] = input.sourceRef
-      ? await tx<{ id: string }[]>`select id from properties where slug = ${input.sourceRef} and active`
+      ? await tx<{ id: string; name: string; billing: string }[]>`select id, name, billing from properties where slug = ${input.sourceRef} and active`
       : [];
+    // A partner on credit pays for every order from its link. Decided here
+    // from the partner's own setting, never from the browser; the room number
+    // is what lets the partner check each order against a guest.
+    const onAccount = property?.billing === "credit" && (opts.source ?? "web") === "web" ? property : null;
+    if (onAccount && !input.roomOrLandmark?.trim()) throw new Error(`Add your room number — this order goes on ${onAccount.name}'s account.`);
+    const paymentMode = onAccount ? "credit" : input.payOnDelivery ? "on_delivery" : "online";
     const stay = await resolveStay(tx as unknown as Sql, input);
     const [order] = await tx<{ id: string; order_code: string; order_number: number }[]>`insert into orders
       (customer_id, status, source, source_ref, property_id, stay_id, location_accuracy_m, stay_type, property_name, room_or_landmark, lat, lng, notes,
@@ -209,7 +215,7 @@ export async function createOrder(input: CheckoutInput, opts: { source?: string;
       values (${customer.id}, 'pending_payment', ${opts.source ?? "web"}, ${input.sourceRef ?? null}, ${property?.id ?? null},
         ${stay?.id ?? null}, ${input.lat != null && input.accuracy != null ? Math.round(input.accuracy) : null},
         ${input.stayType}, ${input.propertyName || null}, ${input.roomOrLandmark || null}, ${input.lat ?? null}, ${input.lng ?? null},
-        ${input.notes || null}, ${input.altPhone ? "+91" + input.altPhone : null}, ${scheduledFor}, ${input.payOnDelivery ? "on_delivery" : "online"}, ${subtotal}, ${discount}, ${coupon?.code ?? null}, ${gst}, ${deliveryFee}, ${total}, ${opts.createdBy ?? null})
+        ${input.notes || null}, ${input.altPhone ? "+91" + input.altPhone : null}, ${scheduledFor}, ${paymentMode}, ${subtotal}, ${discount}, ${coupon?.code ?? null}, ${gst}, ${deliveryFee}, ${total}, ${opts.createdBy ?? null})
       returning id, order_code, order_number`;
     if (stay?.learned) await tx`update stays set first_order_id = ${order.id} where id = ${stay.id} and first_order_id is null`;
     for (const p of priced) {
@@ -232,6 +238,6 @@ export async function createOrder(input: CheckoutInput, opts: { source?: string;
         values (${coupon.id}, ${order.id}, ${customer.id}, ${discount})`;
     }
     await tx`insert into order_status_events (order_id, from_status, to_status) values (${order.id}, null, 'pending_payment')`;
-    return { id: order.id, code: order.order_code, number: order.order_number, totalPaise: total, scheduledFor, discountPaise: discount, promoCode: coupon?.code ?? null, customerName: input.name, phone, customerId: customer.id };
+    return { id: order.id, code: order.order_code, number: order.order_number, totalPaise: total, scheduledFor, discountPaise: discount, promoCode: coupon?.code ?? null, customerName: input.name, phone, customerId: customer.id, onAccount: onAccount?.name ?? null };
   });
 }

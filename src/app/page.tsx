@@ -3,6 +3,7 @@ import { MenuScreen } from "@/components/store/menu-screen";
 import { Welcome } from "@/components/store/welcome";
 import { getBanners, getMenu, splitBanners } from "@/lib/menu/queries";
 import { TopRibbon } from "@/components/store/top-ribbon";
+import { RememberSource } from "@/components/store/remember-source";
 import { jsonLd, restaurantJsonLd } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
@@ -26,6 +27,7 @@ export default async function Home() {
   return (
     <>
       {schema}
+      <RememberSource />
       <Welcome />
       <TopRibbon ribbons={ribbons} />
       <MenuScreen categories={categories} closingLabel={null} banners={cards} />

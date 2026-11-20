@@ -29,6 +29,7 @@ const GROUPS: NavGroup[] = [
     items: [
       { href: "/admin/customers", label: "Customers", icon: "👤" },
       { href: "/admin/stays", label: "Stay Directory", icon: "📍" },
+      { href: "/admin/partners", label: "Partners (B2B)", icon: "🤝" },
     ],
   },
   {

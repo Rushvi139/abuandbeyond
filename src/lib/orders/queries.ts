@@ -51,7 +51,7 @@ export type OrderView = {
   kitchenNote: string | null;
   altPhone: string | null;
   scheduledFor: string | null;
-  paymentMode: "online" | "on_delivery";
+  paymentMode: "online" | "on_delivery" | "credit";
   collectedAt: string | null;
   /** "cash" or "upi" once a pay-on-delivery / counter order has been collected. */
   collectMethod: string | null;

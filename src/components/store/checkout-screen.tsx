@@ -23,7 +23,7 @@ const STAYS: { id: Stay; label: string }[] = [
   { id: "home", label: "Home" },
 ];
 
-export function CheckoutScreen({ deliveryFeePaise, sourceRef, paymentsOn = true, codOn = true, upiId = "", kitchenOverride = false, freeDrink = { minPaise: 0, choices: [] } }: { deliveryFeePaise: number; sourceRef?: string; paymentsOn?: boolean; codOn?: boolean; upiId?: string; kitchenOverride?: boolean; freeDrink?: FreeDrink }) {
+export function CheckoutScreen({ deliveryFeePaise, sourceRef, paymentsOn = true, codOn = true, upiId = "", kitchenOverride = false, freeDrink = { minPaise: 0, choices: [] }, onAccount = null }: { deliveryFeePaise: number; sourceRef?: string; paymentsOn?: boolean; codOn?: boolean; upiId?: string; kitchenOverride?: boolean; freeDrink?: FreeDrink; onAccount?: string | null }) {
   const cart = useCart();
   const router = useRouter();
   const [name, setName] = useState("");
@@ -34,7 +34,7 @@ export function CheckoutScreen({ deliveryFeePaise, sourceRef, paymentsOn = true,
   const [scheduledFor, setScheduledFor] = useState("");
   const [codBusy, setCodBusy] = useState(false);
   const [stay, setStay] = useState<Stay>("hotel");
-  const [propertyName, setPropertyName] = useState("");
+  const [propertyName, setPropertyName] = useState(onAccount ?? "");
   const [stayId, setStayId] = useState("");
   const [room, setRoom] = useState("");
   const [pin, setPin] = useState<Pin>(null);
@@ -51,7 +51,7 @@ export function CheckoutScreen({ deliveryFeePaise, sourceRef, paymentsOn = true,
   const gst = gstOn(cart.subtotalPaise - discount);
   const total = cart.subtotalPaise - discount + gst + deliveryFeePaise;
   const shut = open === false && !scheduledFor && !forcedOpen;
-  const valid = name.trim().length >= 2 && /^[6-9]\d{9}$/.test(phone) && cart.lines.length > 0 && !shut;
+  const valid = name.trim().length >= 2 && /^[6-9]\d{9}$/.test(phone) && cart.lines.length > 0 && !shut && (!onAccount || room.trim().length > 0);
 
   async function pay(payOnDelivery = false) {
     if (!valid || busy) return;
@@ -77,7 +77,7 @@ export function CheckoutScreen({ deliveryFeePaise, sourceRef, paymentsOn = true,
       const d = json.data as { code: string; number: number; amountPaise: number; payu?: PayuForm };
 
       // Pay-on-delivery orders are already confirmed on the server; no gateway step.
-      if ((d as { payOnDelivery?: boolean }).payOnDelivery) {
+      if ((d as { payOnDelivery?: boolean }).payOnDelivery || (d as { onAccount?: string }).onAccount) {
         cart.clear();
         router.push(`/o/${d.code}`);
         return;
@@ -244,20 +244,30 @@ export function CheckoutScreen({ deliveryFeePaise, sourceRef, paymentsOn = true,
         {gst > 0 && <div className="flex justify-between"><span className="text-muted">GST 5%</span><span>{formatINR(gst, { decimals: true })}</span></div>}
         <div className="flex justify-between"><span className="text-muted">Delivery</span><span>{deliveryFeePaise ? formatINR(deliveryFeePaise) : "Free"}</span></div>
         <div className="h-px bg-line" />
-        <div className="flex justify-between text-base font-bold"><span>To pay</span><span>{formatINR(total, { decimals: true })}</span></div>
+        <div className="flex justify-between text-base font-bold"><span>{onAccount ? `Billed to ${onAccount}` : "To pay"}</span><span>{formatINR(total, { decimals: true })}</span></div>
       </section>
 
       {error && <p role="alert" className="mt-3 rounded-xl bg-error/10 px-4 py-3 text-sm font-semibold text-error">{error}</p>}
 
       <div className="fixed inset-x-0 bottom-0 mx-auto max-w-md border-t border-line bg-paper px-3 pb-5 pt-3">
-        <CouponField subtotalPaise={cart.subtotalPaise} phone={phone} applied={coupon} onChange={setCoupon} />
+        {!onAccount && <CouponField subtotalPaise={cart.subtotalPaise} phone={phone} applied={coupon} onChange={setCoupon} />}
         {/* Manual UPI card — the fallback only when PayU is not switched on.
             With PayU live, a copied UPI payment can't be matched to an order,
             so the gateway button takes its place. */}
-        {upiId && !paymentsOn && <UpiInfoCard upiId={upiId} totalPaise={total} />}
+        {upiId && !paymentsOn && !onAccount && <UpiInfoCard upiId={upiId} totalPaise={total} />}
+
+        {/* A partner's guest: the order goes on the partner's account. */}
+        {onAccount && (
+          <button type="button" onClick={() => pay()} disabled={!valid || busy} className="flex h-[60px] w-full flex-col items-center justify-center rounded-[18px] bg-clay text-ink disabled:opacity-50">
+            <span className="text-[17px] font-bold">{shut ? "Closed right now" : busy ? "Placing your order…" : "Place order"}</span>
+            <span className="text-xs font-medium">
+              {shut ? "Pick a delivery time above to order ahead" : room.trim() ? `Billed to ${onAccount} · nothing to pay now` : "Add your room number above"}
+            </span>
+          </button>
+        )}
 
         {/* PayU online payment */}
-        {paymentsOn && (
+        {paymentsOn && !onAccount && (
         <button type="button" onClick={() => { setCodBusy(false); pay(); }} disabled={!valid || busy} className="flex h-[60px] w-full flex-col items-center justify-center rounded-[18px] bg-clay text-ink disabled:opacity-50">
           <span className="text-[17px] font-bold">
             {shut ? "Closed right now" : busy ? "Opening payment…" : `Pay ${formatINR(total, { decimals: true })}`}
@@ -275,7 +285,7 @@ export function CheckoutScreen({ deliveryFeePaise, sourceRef, paymentsOn = true,
         {/* The way to take money with no gateway — and the backup when there
             is one and it is down. The order is confirmed and cooked; the cash
             is recorded separately when the rider actually has it. */}
-        {codOn && (
+        {codOn && !onAccount && (
         <button
           type="button"
           onClick={() => { setCodBusy(true); pay(true); }}

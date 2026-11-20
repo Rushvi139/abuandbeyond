@@ -27,7 +27,7 @@ export default async function MoneyPage({ searchParams }: { searchParams: Promis
   const end = nextDay(range.to);
   const sql = db();
 
-  const [inHand, online, out, untagged] = await Promise.all([
+  const [inHand, online, out, untagged, partnerIn] = await Promise.all([
     sql<{ method: string; paise: number }[]>`
       select coalesce(p.method, 'cash') as method, sum(p.amount_paise)::bigint as paise
       from orders o join payments p on p.order_id = o.id and p.gateway = 'on_delivery'
@@ -56,12 +56,17 @@ export default async function MoneyPage({ searchParams }: { searchParams: Promis
         from vendor_payments p join vendors v on v.id = p.vendor_id left join vendor_bills b on b.id = p.vendor_bill_id
         where p.paid_from is null and p.paid_on >= ${range.from}::date and p.paid_on <= ${range.to}::date
       ) x order by day desc limit 300`,
+    // Partners settling their statements, into whichever account they paid.
+    sql<{ acct: PaidFrom; paise: number }[]>`
+      select paid_from as acct, sum(amount_paise)::bigint as paise from partner_statements
+      where paid_on >= ${range.from}::date and paid_on <= ${range.to}::date and paid_from is not null group by 1`,
   ]);
 
   const moneyIn: Record<PaidFrom, number> = { cash: 0, saraspur: 0, hdfc: 0 };
   for (const r of inHand) moneyIn[r.method === "upi" ? "saraspur" : "cash"] += Number(r.paise);
   const onlinePaise = Number(online[0]?.paise ?? 0);
   moneyIn.saraspur += onlinePaise;
+  for (const r of partnerIn) moneyIn[r.acct] += Number(r.paise);
   const moneyOut: Record<PaidFrom, number> = { cash: 0, saraspur: 0, hdfc: 0 };
   let notTagged = 0;
   for (const r of out) {
@@ -80,7 +85,7 @@ export default async function MoneyPage({ searchParams }: { searchParams: Promis
       <section className="overflow-x-auto rounded-2xl bg-surface">
         <table className="w-full min-w-[520px] text-sm tabular-nums">
           <thead className="text-left text-[11px] uppercase tracking-wide text-muted">
-            <tr><th className="px-4 py-2.5">Account</th><th className="px-2 py-2.5 text-right">In (orders)</th><th className="px-2 py-2.5 text-right">Out (spends &amp; bills)</th><th className="px-4 py-2.5 text-right">Net</th></tr>
+            <tr><th className="px-4 py-2.5">Account</th><th className="px-2 py-2.5 text-right">In (orders &amp; partners)</th><th className="px-2 py-2.5 text-right">Out (spends &amp; bills)</th><th className="px-4 py-2.5 text-right">Net</th></tr>
           </thead>
           <tbody>
             {PAID_FROM.map((f) => (

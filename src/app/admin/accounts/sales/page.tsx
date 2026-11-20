@@ -10,7 +10,7 @@ export const dynamic = "force-dynamic";
 export const metadata = { title: "Sales — Abu & Beyond" };
 
 const PAGE = 100;
-type Row = { id: string; number: number; paidAt: string; status: string; paymentMode: "online" | "on_delivery"; collectedAt: string | null; collectMethod: string | null; refundedPaise: number; totalPaise: number; net: number; source: string; guest: string | null; customerId: string; items: string | null; where: string | null };
+type Row = { id: string; number: number; paidAt: string; status: string; paymentMode: "online" | "on_delivery" | "credit"; collectedAt: string | null; collectMethod: string | null; refundedPaise: number; totalPaise: number; net: number; source: string; guest: string | null; customerId: string; items: string | null; where: string | null };
 const t = (s: string) => new Date(s).toLocaleString("en-IN", { day: "numeric", month: "short", hour: "numeric", minute: "2-digit", timeZone: "Asia/Kolkata" });
 const SOURCE: Record<string, string> = { web: "Website", manual: "Counter", whatsapp: "WhatsApp", reorder: "Reorder" };
 

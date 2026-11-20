@@ -43,12 +43,14 @@ export async function saveProperty(formData: FormData) {
     await db()`insert into properties (slug, name, kind, contact_person, phone, address, notes) values (${slug}, ${d.name}, ${d.kind}, ${d.contactPerson || null}, ${d.phone || null}, ${d.address || null}, ${d.notes || null})`;
   }
   revalidatePath("/admin/properties");
+  revalidatePath("/admin/partners");
 }
 
 export async function toggleProperty(id: string, active: boolean) {
   await assertRole(MANAGERS);
   await db()`update properties set active = ${active} where id = ${Id.parse(id)}`;
   revalidatePath("/admin/properties");
+  revalidatePath("/admin/partners");
 }
 
 export async function deleteProperty(id: string) {
@@ -58,6 +60,7 @@ export async function deleteProperty(id: string) {
   if (n > 0) throw new Error(`Cannot delete — this property has ${n} order${n === 1 ? "" : "s"} linked to it. Deactivate it instead.`);
   await sql`delete from properties where id = ${Id.parse(id)}`;
   revalidatePath("/admin/properties");
+  revalidatePath("/admin/partners");
 }
 
 export async function setItemAvailability(itemId: string, available: boolean) {

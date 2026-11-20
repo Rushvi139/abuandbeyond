@@ -7,6 +7,9 @@
  *   awaiting   — online order whose payment hasn't completed
  *   refunded   — cancelled and money sent back
  *   void       — cancelled with nothing taken
+ *
+ * An order on a B2B partner's account counts as settled for the kitchen and
+ * rider ("On partner account"); what the partner owes lives on Partners.
  */
 export type PaymentState = {
   kind: "paid" | "collect" | "awaiting" | "refunded" | "void";
@@ -15,7 +18,7 @@ export type PaymentState = {
 
 type Input = {
   status: string;
-  paymentMode: "online" | "on_delivery";
+  paymentMode: "online" | "on_delivery" | "credit";
   collectedAt: string | null;
   collectMethod?: string | null;
   refundedPaise?: number;
@@ -34,6 +37,9 @@ export function paymentState(o: Input): PaymentState {
     if (o.status === "payment_failed") return { kind: "awaiting", label: "Payment failed" };
     return { kind: "paid", label: "Paid · online" };
   }
+  // On a partner's account: no money changes hands at the door. It is
+  // settled on the partner's statement, which Partners tracks.
+  if (o.paymentMode === "credit") return { kind: "paid", label: "On partner account" };
   if (o.collectMethod === "complimentary") return { kind: "paid", label: "Complimentary" };
   if (o.collectedAt) return { kind: "paid", label: `Paid · ${o.collectMethod === "upi" ? "UPI" : "cash"}` };
   return { kind: "collect", label: `To collect ${rupees(o.totalPaise)}` };

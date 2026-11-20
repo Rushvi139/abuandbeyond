@@ -53,6 +53,14 @@ export async function POST(req: Request) {
     // the kitchen straight away; the money is a separate fact, recorded when
     // the rider actually collects it. `payment_mode` carries that distinction
     // so the books never show cash we haven't got.
+    // On a partner's account: nothing to pay now or at the door. Confirmed
+    // and sent to the kitchen; it is settled on the partner's statement.
+    if (order.onAccount) {
+      await transition(order.id, "paid", { note: `on account: ${order.onAccount}` });
+      for (const p of ["/admin", "/kitchen", "/rider"]) revalidatePath(p);
+      return NextResponse.json({ ok: true, data: { code: order.code, number: order.number, amountPaise: order.totalPaise, onAccount: order.onAccount } });
+    }
+
     if (parsed.data.payOnDelivery) {
       await transition(order.id, "paid", { note: "pay on delivery" });
       revalidatePath("/admin");
