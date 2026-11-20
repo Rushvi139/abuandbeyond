@@ -1,6 +1,8 @@
--- Empty Vendor bills so the owner can enter bills from zero. Every vendor bill
--- entered so far (eggs, milk, vegetables…) becomes an expense on its bill
--- date, with its item lines; then the bills and their payments go.
+-- Daily buys entered as vendor bills (eggs, milk, vegetables…) become expenses
+-- on their bill date, with their item lines. The real supplier bills stay in
+-- Vendor bills: Khandelwal, Dharamdas, Shree Ganesh and Bahuchar (the opening
+-- ration, equipment and disposables). A bill counts as a supplier bill when
+-- its vendor's name contains one of those words.
 --
 -- Stock is untouched: the items already went into stock through
 -- stock_movements when they were first entered, and nothing here changes that.
@@ -23,6 +25,9 @@ create table if not exists backup_bills_20261118.vendor_payments as select * fro
 create table if not exists backup_bills_20261118.spend_lines as select * from spend_lines;
 create table if not exists backup_bills_20261118.expenses as select * from expenses;
 
+create temp table keep_words (w text) on commit drop;
+insert into keep_words values ('khandelwal'), ('dharamdas'), ('ganesh'), ('bahuchar');
+
 -- One new expense id per bill, with what the bill's payments say.
 create temp table moving on commit drop as
 select b.id as bill_id, gen_random_uuid() as expense_id, b.*,
@@ -38,7 +43,14 @@ left join lateral (
     array_agg(distinct paid_from) filter (where paid_from is not null) as accounts,
     string_agg(distinct mode, ', ') as modes
   from vendor_payments where vendor_bill_id = b.id
-) p on true;
+) p on true
+where not exists (select 1 from keep_words k where v.name ilike '%' || k.w || '%');
+
+\echo
+\echo '=== Supplier bills that STAY in Vendor bills ==='
+select b.bill_date as date, v.name as vendor, coalesce(b.bill_number, '—') as bill_no, (b.amount_paise / 100.0)::numeric(12,2) as amount_inr
+from vendor_bills b join vendors v on v.id = b.vendor_id
+where exists (select 1 from keep_words k where v.name ilike '%' || k.w || '%') order by b.bill_date;
 
 \echo
 \echo '=== Vendor bills that will become expenses on their bill date ==='
@@ -49,7 +61,7 @@ from moving order by bill_date, vendor_name;
 
 select count(*) as bills, (sum(amount_paise) / 100.0)::numeric(12,2) as total_inr from moving;
 
-\echo '=== Payments not tied to any bill (also removed; they were paying off these bills) ==='
+\echo '=== Payments not tied to any bill (left as they are; check them after) ==='
 select paid_on, v.name as vendor, (amount_paise / 100.0)::numeric(12,2) as amount_inr, mode
 from vendor_payments p join vendors v on v.id = p.vendor_id where p.vendor_bill_id is null order by paid_on;
 
@@ -67,7 +79,7 @@ select expense_id,
   bill_number,
   file_path,
   created_by,
-  nullif(concat_ws(' · ', 'Moved from vendor bills 18 Nov',
+  nullif(concat_ws(' · ', 'Moved from vendor bills',
     case when paid < amount_paise then 'bill showed ₹' || ((amount_paise - paid) / 100.0)::numeric(12,2) || ' unpaid' end,
     note), ''),
   created_at
@@ -76,17 +88,17 @@ from moving;
 update spend_lines l set expense_id = m.expense_id, vendor_bill_id = null
 from moving m where l.vendor_bill_id = m.bill_id;
 
-delete from vendor_payments;
-delete from vendor_bills;
+delete from vendor_payments where vendor_bill_id in (select bill_id from moving);
+delete from vendor_bills where id in (select bill_id from moving);
 
 \echo '=== After ==='
 select (select count(*) from vendor_bills) as vendor_bills_left,
        (select count(*) from vendor_payments) as payments_left,
-       (select count(*) from expenses where note like 'Moved from vendor bills 18 Nov%') as expenses_added;
+       (select count(*) from expenses where note like 'Moved from vendor bills%') as expenses_added;
 
 \if :{?apply}
   commit;
-  \echo 'DONE: bills moved to expenses. Backup kept in schema backup_bills_20261118.'
+  \echo 'DONE: daily buys moved to expenses; supplier bills kept. Backup in schema backup_bills_20261118.'
 \else
   rollback;
   \echo 'PREVIEW ONLY: nothing was changed. Run again with -v apply=1 to do it.'
