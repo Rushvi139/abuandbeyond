@@ -19,7 +19,7 @@ export type MenuItem = {
   addons: Addon[];
 };
 
-export type Category = { id: string; name: string; slug: string; items: MenuItem[] };
+export type Category = { id: string; name: string; slug: string; blurb?: string | null; items: MenuItem[] };
 
 export const CUISINE_LABEL: Record<Cuisine, string> = {
   abu: "ABU",

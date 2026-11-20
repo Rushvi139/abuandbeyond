@@ -6,13 +6,14 @@ type Row = {
   id: string;
   name: string;
   slug: string;
+  blurb: string | null;
   items: MenuItem[] | null;
 };
 
 /** The live menu: active categories with their active items, options and add-ons. */
 export async function getMenu(): Promise<Category[]> {
   const rows = await db()<Row[]>`
-    select c.id, c.name, c.slug,
+    select c.id, c.name, c.slug, c.blurb,
       (
         select json_agg(json_build_object(
           'id', m.id, 'sku', m.sku, 'slug', m.slug, 'name', m.name, 'description', m.description,
@@ -52,7 +53,7 @@ export async function getMenu(): Promise<Category[]> {
   });
 
   return rows
-    .map((r) => ({ id: r.id, name: titleCase(r.name), slug: r.slug, items: (r.items ?? []).map(tidy) }))
+    .map((r) => ({ id: r.id, name: titleCase(r.name), slug: r.slug, blurb: r.blurb, items: (r.items ?? []).map(tidy) }))
     .filter((c) => c.items.length > 0);
 }
 

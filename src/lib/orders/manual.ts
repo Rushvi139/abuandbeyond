@@ -25,7 +25,7 @@ const Line = z.object({
   itemId: z.string().uuid(),
   qty: z.number().int().min(1).max(50),
   optionIds: z.array(z.string().uuid()).max(5).default([]),
-  addonIds: z.array(z.string().uuid()).max(5).default([]),
+  addonIds: z.array(z.string().uuid()).max(16).default([]),
   note: z.string().trim().max(120).optional().default(""),
 });
 

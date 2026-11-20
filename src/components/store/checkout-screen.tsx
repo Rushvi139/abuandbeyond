@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { useCart } from "@/hooks/use-cart";
 import { formatINR, gstOn } from "@/lib/pricing";
+import { earnsFreeDrink, type FreeDrink } from "@/lib/orders/free-drink-rule";
 import { CouponField, type Applied } from "@/components/store/coupon-field";
 import { ClosedNotice, useForcedOpen, useServiceOpen } from "@/components/store/service-gate";
 import { WhenPicker } from "@/components/store/when-picker";
@@ -22,7 +23,7 @@ const STAYS: { id: Stay; label: string }[] = [
   { id: "home", label: "Home" },
 ];
 
-export function CheckoutScreen({ deliveryFeePaise, sourceRef, paymentsOn = true, codOn = true, upiId = "", kitchenOverride = false }: { deliveryFeePaise: number; sourceRef?: string; paymentsOn?: boolean; codOn?: boolean; upiId?: string; kitchenOverride?: boolean }) {
+export function CheckoutScreen({ deliveryFeePaise, sourceRef, paymentsOn = true, codOn = true, upiId = "", kitchenOverride = false, freeDrink = { minPaise: 0, choices: [] } }: { deliveryFeePaise: number; sourceRef?: string; paymentsOn?: boolean; codOn?: boolean; upiId?: string; kitchenOverride?: boolean; freeDrink?: FreeDrink }) {
   const cart = useCart();
   const router = useRouter();
   const [name, setName] = useState("");
@@ -41,6 +42,8 @@ export function CheckoutScreen({ deliveryFeePaise, sourceRef, paymentsOn = true,
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [coupon, setCoupon] = useState<Applied>(null);
+  const [freeDrinkId, setFreeDrinkId] = useState(freeDrink.choices[0]?.id ?? "");
+  const earned = earnsFreeDrink(cart.subtotalPaise, freeDrink.minPaise);
 
   // GST is charged on what is actually paid for the food, so the discount comes
   // off first. The server works this out again before taking any money.
@@ -65,6 +68,7 @@ export function CheckoutScreen({ deliveryFeePaise, sourceRef, paymentsOn = true,
           ...(payOnDelivery ? { payOnDelivery: true } : {}),
           ...(pin ? { lat: pin.lat, lng: pin.lng, accuracy: pin.accuracy } : {}),
           stayId,
+          ...(earned ? { freeDrinkId } : {}),
           lines: cart.lines.map((l) => ({ itemId: l.itemId, qty: l.qty, optionIds: l.options.map((o) => o.optionId), addonIds: l.addons.map((a) => a.addonId), note: l.note ?? "" })),
         }),
       });
@@ -203,10 +207,39 @@ export function CheckoutScreen({ deliveryFeePaise, sourceRef, paymentsOn = true,
         <WhenPicker value={scheduledFor} onChange={setScheduledFor} forcedOpen={forcedOpen} />
       </section>
 
+      {freeDrink.minPaise > 0 && (
+        earned ? (
+          <section className="mt-5 rounded-[18px] border-[1.5px] border-ink bg-acid/40 p-4">
+            <p className="text-sm font-bold">Your free iced tea</p>
+            <p className="mb-2.5 text-[13px] text-muted">On us, for an order above {formatINR(freeDrink.minPaise)}. Pick one.</p>
+            <div className="flex flex-wrap gap-2">
+              {freeDrink.choices.map((c) => (
+                <button
+                  key={c.id}
+                  type="button"
+                  aria-pressed={freeDrinkId === c.id}
+                  onClick={() => setFreeDrinkId(c.id)}
+                  className={`h-10 rounded-full border-[1.5px] px-4 text-[13px] font-semibold ${freeDrinkId === c.id ? "border-ink bg-ink text-reversed" : "border-ink bg-paper"}`}
+                >
+                  {c.name}
+                </button>
+              ))}
+            </div>
+          </section>
+        ) : (
+          <p className="mt-5 rounded-[14px] bg-surface px-4 py-3 text-[13px]">
+            Add <b>{formatINR(freeDrink.minPaise - cart.subtotalPaise)}</b> more and get a free iced tea.
+          </p>
+        )
+      )}
+
       <section className="mt-5 flex flex-col gap-2.5 rounded-[18px] bg-surface p-4 text-sm">
         <div className="flex justify-between"><span className="text-muted">Item total</span><span>{formatINR(cart.subtotalPaise, { decimals: true })}</span></div>
         {discount > 0 && (
           <div className="flex justify-between text-success"><span>Coupon {coupon?.code}</span><span>−{formatINR(discount, { decimals: true })}</span></div>
+        )}
+        {earned && (
+          <div className="flex justify-between text-success"><span>{freeDrink.choices.find((c) => c.id === freeDrinkId)?.name ?? "Iced tea"} (free)</span><span>₹0</span></div>
         )}
         {gst > 0 && <div className="flex justify-between"><span className="text-muted">GST 5%</span><span>{formatINR(gst, { decimals: true })}</span></div>}
         <div className="flex justify-between"><span className="text-muted">Delivery</span><span>{deliveryFeePaise ? formatINR(deliveryFeePaise) : "Free"}</span></div>

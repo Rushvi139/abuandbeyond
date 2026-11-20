@@ -2,6 +2,7 @@ import "server-only";
 import { z } from "zod";
 import type { Sql } from "postgres";
 import { db } from "@/lib/db";
+import { earnsFreeDrink, getFreeDrink } from "@/lib/orders/free-drink";
 import { checkCoupon } from "@/lib/orders/coupons";
 import { isBookableSlot } from "@/lib/hours";
 import { gstOn } from "@/lib/pricing";
@@ -80,13 +81,15 @@ export const CheckoutSchema = z.object({
   /** ISO instant for a scheduled delivery; empty or absent means as soon as possible. */
   scheduledFor: z.string().trim().max(40).optional().or(z.literal("")),
   payOnDelivery: z.boolean().optional(),
+  /** Which iced tea the guest picked for the free-drink offer. Checked on the server. */
+  freeDrinkId: z.string().uuid().optional().or(z.literal("")),
   lines: z
     .array(
       z.object({
         itemId: z.string().uuid(),
         qty: z.number().int().min(1).max(20),
         optionIds: z.array(z.string().uuid()).max(5).default([]),
-        addonIds: z.array(z.string().uuid()).max(5).default([]),
+        addonIds: z.array(z.string().uuid()).max(16).default([]),
         note: z.string().trim().max(120).optional().or(z.literal("")),
       }),
     )
@@ -144,6 +147,21 @@ export async function createOrder(input: CheckoutInput, opts: { source?: string;
   }
 
   const subtotal = priced.reduce((n, p) => n + p.unit * p.qty, 0);
+
+  // Free iced tea over the threshold, on guest orders only: a counter order
+  // adds it by hand if the guest asks. The threshold and the drinks come from
+  // the database, never from the browser; a picked id that isn't one of the
+  // live drinks falls back to the first.
+  let freeDrink: ItemRow | null = null;
+  let freeDrinkNote = "";
+  if ((opts.source ?? "web") === "web") {
+    const offer = await getFreeDrink();
+    if (earnsFreeDrink(subtotal, offer.minPaise)) {
+      freeDrinkNote = `FREE — offer on orders above ₹${offer.minPaise / 100}`;
+      const id = offer.choices.find((c) => c.id === input.freeDrinkId)?.id ?? offer.choices[0]?.id;
+      if (id) [freeDrink] = await sql<ItemRow[]>`select id, name, station_id, cuisine, is_veg, price_paise, available, active from menu_items where id = ${id}`;
+    }
+  }
   const [{ value: feeJson }] = await sql<{ value: number }[]>`select value from settings where key = 'delivery_fee_paise'`;
   // A pickup from the counter has no delivery to charge for.
   const deliveryFee = opts.noDeliveryFee ? 0 : Number(feeJson) || 0;
@@ -203,6 +221,11 @@ export async function createOrder(input: CheckoutInput, opts: { source?: string;
         await tx`insert into order_item_options (order_item_id, option_id, group_name_snapshot, name_snapshot, price_delta_paise) values (${oi.id}, ${o.id}, ${o.group_name}, ${o.name}, ${o.price_delta_paise})`;
       for (const a of p.addons)
         await tx`insert into order_item_addons (order_item_id, addon_id, name_snapshot, price_paise) values (${oi.id}, ${a.id}, ${a.name}, ${a.price_paise})`;
+    }
+    if (freeDrink) {
+      await tx`insert into order_items
+        (order_id, menu_item_id, name_snapshot, station_id, cuisine, is_veg, unit_price_paise, quantity, line_total_paise, note)
+        values (${order.id}, ${freeDrink.id}, ${freeDrink.name}, ${freeDrink.station_id}, ${freeDrink.cuisine}, ${freeDrink.is_veg}, 0, 1, 0, ${freeDrinkNote})`;
     }
     if (coupon) {
       await tx`insert into coupon_redemptions (coupon_id, order_id, customer_id, discount_paise)

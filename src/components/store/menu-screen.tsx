@@ -216,6 +216,7 @@ export function MenuScreen({ categories, closingLabel, banners = [] }: { categor
             className="scroll-mt-16 pt-5"
           >
             <h2 className="mb-1 font-display text-[22px] uppercase tracking-wide">{c.name}</h2>
+            {c.blurb && <p className="mb-2 whitespace-pre-line text-[13px] leading-snug text-muted">{c.blurb}</p>}
             {c.items.map((item) => (
               <ItemRow key={item.id} item={item} sticker={stickerFor(item.slug, c.slug)} qty={cart.qtyOfItem(item.id)} onAdd={() => quickAdd(item)} onMinus={() => decrement(item)} onCustomise={() => setSheetItem(item)} />
             ))}
@@ -287,7 +288,7 @@ function ItemRow({ item, sticker, qty, onAdd, onMinus, onCustomise }: { item: Me
         {(item.description || hasChoices) && (
           <span className="text-xs leading-snug text-muted">{item.description ?? `Choose: ${item.optionGroups[0].choices.map((c) => c.name).join(" or ")}`}</span>
         )}
-        <span className="text-[15px] font-bold">{formatINR(item.pricePaise)}</span>
+        <span className="text-[15px] font-bold">{priceLabel(item)}</span>
       </div>
       {!item.available ? (
         <span className="flex-none text-xs font-semibold uppercase tracking-wide text-muted">Sold out</span>
@@ -305,6 +306,22 @@ function ItemRow({ item, sticker, qty, onAdd, onMinus, onCustomise }: { item: Me
     </div>
   );
 }
+
+/**
+ * What a dish really starts at: its own price plus the cheapest choice in
+ * every group the guest must pick from. A half-and-half pizza is ₹99 on its
+ * own, which would read as a ₹99 pizza; "from ₹498" is the truth.
+ */
+function startPrice(item: MenuItem): { paise: number; from: boolean } {
+  const extra = item.optionGroups
+    .filter((g) => g.required && g.choices.length)
+    .reduce((n, g) => n + Math.min(...g.choices.map((c) => c.priceDeltaPaise)), 0);
+  return { paise: item.pricePaise + extra, from: extra > 0 };
+}
+const priceLabel = (item: MenuItem) => {
+  const p = startPrice(item);
+  return `${p.from ? "from " : ""}${formatINR(p.paise)}`;
+};
 
 function ItemSheet({ item, sticker, onClose, onAdd }: { item: MenuItem; sticker: string | null; onClose: () => void; onAdd: (line: Omit<CartLine, "qty">, qty: number) => void }) {
   const [choice, setChoice] = useState<Record<string, string>>(() =>
@@ -365,7 +382,7 @@ function ItemSheet({ item, sticker, onClose, onAdd }: { item: MenuItem; sticker:
               </span>
               <span id="sheet-title" className="text-[22px] font-bold leading-tight">{item.name}</span>
               {item.description && <p className="text-[15px] leading-relaxed text-muted">{item.description}</p>}
-              <span className="text-lg font-bold">{formatINR(item.pricePaise)}</span>
+              <span className="text-lg font-bold">{priceLabel(item)}</span>
             </div>
           </>
         ) : (
@@ -377,7 +394,7 @@ function ItemSheet({ item, sticker, onClose, onAdd }: { item: MenuItem; sticker:
               </span>
               <span id="sheet-title" className="text-lg font-bold">{item.name}</span>
               {item.description && <p className="text-sm leading-snug text-muted">{item.description}</p>}
-              <span className="text-base font-bold">{formatINR(item.pricePaise)}</span>
+              <span className="text-base font-bold">{priceLabel(item)}</span>
             </div>
           </div>
         )}
