@@ -31,14 +31,15 @@ export const LEGAL = {
     /** What to call them on the page. */
     title: "Proprietor",
     email: "rushvikhambhu@gmail.com",
-    phone: "+919099720300",
-    phoneDisplay: "+91 90997 20300",
+    // The business number, not a personal one (owner, 22 Nov 2026).
+    phone: "+919462612045",
+    phoneDisplay: "+91 94626 12045",
   },
 
   /** The number on the Support page's call and WhatsApp buttons. */
   support: {
-    phone: "+918628910887",
-    phoneDisplay: "+91 86289 10887",
+    phone: "+919462612045",
+    phoneDisplay: "+91 94626 12045",
   },
 
   city: "Mount Abu",

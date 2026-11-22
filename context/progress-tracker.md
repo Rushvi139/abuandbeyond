@@ -561,6 +561,16 @@ using `public/brand/bear-eating.webp|webm`. Code animation, not AI video
 
 ## Session Notes
 
+- 22 Nov: Personal numbers off the site. The one public number is now
+  **+91 94626 12045** (LEGAL.support and LEGAL.operator in src/lib/legal.ts;
+  partner statement and partner page read it from there). Migration 0035
+  swaps the saved WhatsApp number in settings if it is still a personal one.
+  Help and order pages fall back to it when admin has none.
+- 22 Nov: "Loved it? Tell the hills." card (Google review, Instagram, the
+  wall) at the bottom of the menu, on Help, and on the order page once
+  delivered (src/components/store/review-links.tsx). Links come from
+  Admin → Menu → Contact & social.
+
 - 22 Nov: Add-ons are tap-to-select chips on each dish in Admin → Menu (was a
   comma-separated text box that silently dropped misspelt names). Non-veg
   add-ons are refused on a veg dish. The "Choice at order" box now only

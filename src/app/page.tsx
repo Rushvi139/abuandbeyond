@@ -5,6 +5,8 @@ import { getBanners, getMenu, splitBanners } from "@/lib/menu/queries";
 import { TopRibbon } from "@/components/store/top-ribbon";
 import { RememberSource } from "@/components/store/remember-source";
 import { jsonLd, restaurantJsonLd } from "@/lib/seo";
+import { socialLinks } from "@/lib/social";
+import { ReviewLinks } from "@/components/store/review-links";
 
 export const dynamic = "force-dynamic";
 // Set here, not in the layout: a canonical in the layout would be inherited
@@ -23,6 +25,7 @@ export default async function Home() {
   const schema = <script type="application/ld+json" dangerouslySetInnerHTML={jsonLd(restaurantJsonLd(categories))} />;
   if (!categories || categories.length === 0) return <>{schema}<ComingSoon /></>;
   const { ribbons, cards } = splitBanners(banners);
+  const social = await socialLinks();
 
   return (
     <>
@@ -30,7 +33,7 @@ export default async function Home() {
       <RememberSource />
       <Welcome />
       <TopRibbon ribbons={ribbons} />
-      <MenuScreen categories={categories} closingLabel={null} banners={cards} />
+      <MenuScreen categories={categories} closingLabel={null} banners={cards} footer={<ReviewLinks social={social} />} />
     </>
   );
 }

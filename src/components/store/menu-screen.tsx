@@ -90,7 +90,7 @@ const TILE: Record<MenuItem["cuisine"], string> = {
   abu: "bg-kraft text-ink",
 };
 
-export function MenuScreen({ categories, closingLabel, banners = [] }: { categories: Category[]; closingLabel: string | null; banners?: Banner[] }) {
+export function MenuScreen({ categories, closingLabel, banners = [], footer }: { categories: Category[]; closingLabel: string | null; banners?: Banner[]; footer?: React.ReactNode }) {
   const cart = useCart();
   const serviceOpen = useServiceOpen();
   const forcedOpen = useForcedOpen();
@@ -229,6 +229,7 @@ export function MenuScreen({ categories, closingLabel, banners = [] }: { categor
           </section>
         ))}
         {dishCount === 0 && <p className="py-16 text-center text-muted">{diet === "nonveg" ? "No non-veg dishes on the menu right now." : diet === "veg" ? "No veg dishes on the menu right now." : "Nothing here right now."}</p>}
+        {footer && <div className="mt-8">{footer}</div>}
       </main>
 
       {cart.ready && cart.count > 0 && (

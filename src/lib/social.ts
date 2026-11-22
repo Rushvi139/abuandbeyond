@@ -1,5 +1,6 @@
 import "server-only";
 import { db } from "@/lib/db";
+import { LEGAL } from "@/lib/legal";
 
 /**
  * The three places a guest can reach us or vouch for us.
@@ -32,14 +33,15 @@ export async function socialLinks(): Promise<Social> {
   // Stored as a bare handle, pasted as a full URL, or with a stray @ — all
   // three happen, and the guest should not meet a broken link because of it.
   const handle = v.instagram?.trim().replace(/^@/, "").replace(/^https?:\/\/(www\.)?instagram\.com\//i, "").replace(/\/$/, "") || null;
-  const digits = v.whatsapp?.replace(/\D/g, "") || null;
+  // No number set in admin: the business number from LEGAL, never nothing.
+  const digits = v.whatsapp?.replace(/\D/g, "") || LEGAL.support.phone.replace(/\D/g, "");
 
   return {
     instagram: handle ? `https://instagram.com/${handle}` : null,
     instagramHandle: handle ? `@${handle}` : null,
     googleReview: v.google_review?.trim() || null,
     whatsapp: digits ? `https://wa.me/${digits}` : null,
-    whatsappDisplay: v.whatsapp?.trim() || null,
+    whatsappDisplay: v.whatsapp?.trim() || LEGAL.support.phoneDisplay,
     email: v.email?.trim() || null,
   };
 }

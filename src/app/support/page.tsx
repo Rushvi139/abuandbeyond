@@ -1,5 +1,7 @@
 import Link from "next/link";
-import { operatedByLine, registrations } from "@/lib/legal";
+import { LEGAL, operatedByLine, registrations } from "@/lib/legal";
+import { socialLinks } from "@/lib/social";
+import { ReviewLinks } from "@/components/store/review-links";
 import { StoreNav } from "@/components/store/store-nav";
 import { RibbonSlot } from "@/components/store/ribbon-slot";
 import { CateringForm } from "@/components/store/catering-form";
@@ -21,7 +23,9 @@ const FAQ = [
 export default async function SupportPage() {
   const [social] = await db()<{ value: { whatsapp: string | null; instagram: string | null; email: string | null } }[]>`select value from settings where key = 'social_links'`;
   const email = social?.value?.email ?? null;
-  const waDigits = social?.value?.whatsapp?.replace(/\D/g, "") ?? "";
+  // No number in admin yet: the business number, so Help is never without one.
+  const waDigits = social?.value?.whatsapp?.replace(/\D/g, "") || LEGAL.support.phone.replace(/\D/g, "");
+  const links = await socialLinks();
   const wa = waDigits ? `https://wa.me/${waDigits}` : null;
   const tel = waDigits ? `tel:+${waDigits}` : null;
 
@@ -49,6 +53,8 @@ export default async function SupportPage() {
           </a>
         )}
       </div>
+
+      <ReviewLinks social={links} className="mx-5 mt-5" />
 
       <section className="mt-7 px-5">
         <CateringForm />

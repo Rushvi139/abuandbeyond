@@ -1,6 +1,7 @@
 import type { PartnerOrder, Statement } from "@/lib/partners/data";
 import { PAID_FROM_LABEL, isPaidFrom } from "@/lib/admin/paid-from";
 import { formatINR } from "@/lib/pricing";
+import { LEGAL } from "@/lib/legal";
 
 const day = (s: string) => new Date(`${s}T00:00:00Z`).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
 const when = (s: string) => new Date(s).toLocaleString("en-IN", { day: "numeric", month: "short", hour: "numeric", minute: "2-digit", timeZone: "Asia/Kolkata" });
@@ -59,7 +60,7 @@ export function StatementView({ partner, statement, orders }: { partner: { name:
       </div>
       {statement.note && <p className="mt-3 text-sm text-muted">Note: {statement.note}</p>}
       {statement.reference && <p className="mt-1 text-sm text-muted">Payment ref: {statement.reference}</p>}
-      <p className="mt-4 text-[12px] text-muted">Abu & Beyond, The Global Kitchen · Mount Abu · 8628910887 | 9462612045</p>
+      <p className="mt-4 text-[12px] text-muted">Abu & Beyond, The Global Kitchen · Mount Abu · {LEGAL.support.phoneDisplay}</p>
     </article>
   );
 }

@@ -1,4 +1,6 @@
 import Image from "next/image";
+import { socialLinks } from "@/lib/social";
+import { ReviewLinks } from "@/components/store/review-links";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { HappyBear } from "@/components/store/happy-bear";
@@ -8,7 +10,6 @@ import { formatINR } from "@/lib/pricing";
 import { getOrderByCode } from "@/lib/orders/queries";
 import { CUSTOMER_STEPS, STATUS_LABEL, stepIndex } from "@/lib/orders/status";
 import { ResumePayment } from "@/components/store/resume-payment";
-import { db } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 
@@ -16,8 +17,8 @@ export default async function OrderPage({ params }: { params: Promise<{ code: st
   const { code } = await params;
   const order = await getOrderByCode(code);
   if (!order) notFound();
-  const [social] = await db()<{ value: { whatsapp?: string | null } }[]>`select value from settings where key = 'social_links'`;
-  const wa = social?.value?.whatsapp ? `https://wa.me/${social.value.whatsapp.replace(/\D/g, "")}` : null;
+  const links = await socialLinks();
+  const wa = links.whatsapp;
 
   const waOn = Boolean(process.env.WHATSAPP_ACCESS_TOKEN);
   const idx = stepIndex(order.status);
@@ -142,6 +143,8 @@ export default async function OrderPage({ params }: { params: Promise<{ code: st
         )}
         <Link href="/wall" className="flex h-[52px] items-center justify-center rounded-[14px] border-[1.5px] border-ink text-sm font-semibold">The wall</Link>
       </div>
+      {/* Delivered: the moment a guest is most likely to leave a review. */}
+      {done && <ReviewLinks social={links} title="How was it?" className="mx-5 mt-4" />}
     </div>
   );
 }

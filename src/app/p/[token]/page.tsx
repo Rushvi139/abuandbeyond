@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { LEGAL } from "@/lib/legal";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { partnerByToken, partnerOrders, partnerStatements } from "@/lib/partners/data";
@@ -80,7 +81,7 @@ export default async function PartnerView({ params }: { params: Promise<{ token:
           </tbody>
         </table>
       </section>
-      <p className="text-center text-[12px] text-muted">Questions about a bill? Call or WhatsApp 8628910887 | 9462612045</p>
+      <p className="text-center text-[12px] text-muted">Questions about a bill? Call or WhatsApp {LEGAL.support.phoneDisplay}</p>
     </main>
   );
 }
