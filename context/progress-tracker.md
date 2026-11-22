@@ -460,6 +460,14 @@ using `public/brand/bear-eating.webp|webm`. Code animation, not AI video
 
 ## Open Questions
 
+- Egg in "veg" items: the Standard Recipes bases put egg in the burger bun
+  (brioche) and the Malabar parotta, so Golden Aloo Crunch, Paneer Lababdar
+  Roll and Malabar Parantha contain egg while marked veg. Owner to decide:
+  eggless bun/parotta, or mark those dishes "contains egg".
+- Dish photos: 60-dish shot list + prompts are in the Master Brand Guide
+  (claude.ai artifact Smk2uG4mNiceBGfEs15SBL). Generation waits on Higgsfield
+  credits (balance 0; ~45–55 credits for 60 photos).
+
 - B2B credit: anyone holding a partner's QR link can order on its account.
   Room number is required and the partner sees every order; ask the owner if
   they want a per-partner daily cap or staff approval for credit orders.
@@ -556,6 +564,14 @@ using `public/brand/bear-eating.webp|webm`. Code animation, not AI video
   accounts.
 
 ## Session Notes
+
+- 22 Nov: Menu rows are Zomato style: words left, 124 px photo right with the
+  ADD / − n + control over its bottom edge, "customisable" under it. Sticker or
+  cuisine tile shows in the same spot until a dish has a photo. Upload photos
+  per dish in Admin → Menu (1:1, 1200 px, WebP).
+- 22 Nov: Printed KOT recipe cards (80 mm, English + Hindi, 33 bases with
+  "one batch covers" portions, 85 dish cards) generated outside the app from
+  the Standard Recipes sheet; Master Brand Guide doc written.
 
 - 20 Nov: New pizza & burger menu via `scripts/one-off/menu-pizza-burger-2026-11-20.sql`
   (preview / `-v apply=1`); half & half inside each pizza (optional choice,

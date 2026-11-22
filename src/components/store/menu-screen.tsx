@@ -259,56 +259,65 @@ export function MenuScreen({ categories, closingLabel, banners = [] }: { categor
   );
 }
 
-function Tile({ item, sticker, size }: { item: MenuItem; sticker: string | null; size: "sm" | "lg" }) {
-  const box = size === "sm" ? "h-[72px] w-[72px] rounded-[14px]" : "h-[88px] w-[88px] rounded-2xl";
+function Tile({ item, sticker, size }: { item: MenuItem; sticker: string | null; size: "sm" | "lg" | "xl" }) {
+  const box = size === "sm" ? "h-[72px] w-[72px] rounded-[14px]" : size === "lg" ? "h-[88px] w-[88px] rounded-2xl" : "h-[124px] w-[124px] rounded-2xl";
+  const px = size === "sm" ? 66 : size === "lg" ? 82 : 112;
   if (item.imagePath) {
     // eslint-disable-next-line @next/next/no-img-element
-    return <img src={item.imagePath} alt="" className={`${box} flex-none object-cover`} />;
+    return <img src={item.imagePath} alt="" loading="lazy" className={`${box} flex-none object-cover`} />;
   }
   if (sticker) {
     return (
       <div className={`${box} flex flex-none items-center justify-center bg-surface`}>
-        <Image src={sticker} alt="" width={size === "sm" ? 66 : 82} height={size === "sm" ? 66 : 82} />
+        <Image src={sticker} alt="" width={px} height={px} />
       </div>
     );
   }
   return (
     <div className={`${box} flex flex-none items-center justify-center text-center ${TILE[item.cuisine]}`}>
-      <span className={`whitespace-pre-line font-display leading-[1.05] tracking-wide ${size === "sm" ? "text-[13px]" : "text-[15px]"}`}>{CUISINE_LABEL[item.cuisine].replace(" & ", " &\n")}</span>
+      <span className={`whitespace-pre-line font-display leading-[1.05] tracking-wide ${size === "sm" ? "text-[13px]" : size === "lg" ? "text-[15px]" : "text-[18px]"}`}>{CUISINE_LABEL[item.cuisine].replace(" & ", " &\n")}</span>
     </div>
   );
 }
 
+/**
+ * One dish, Zomato style: words on the left (veg mark, name, price, what's in
+ * it), the photo on the right with the ADD button sitting over its bottom
+ * edge. Tapping the photo or the name opens the full sheet.
+ */
 function ItemRow({ item, sticker, qty, onAdd, onMinus, onCustomise }: { item: MenuItem; sticker: string | null; qty: number; onAdd: () => void; onMinus: () => void; onCustomise: () => void }) {
   const hasChoices = item.optionGroups.length > 0;
   return (
-    <div className={`flex items-center gap-3.5 border-b border-line py-2.5 ${item.available ? "" : "opacity-50"}`}>
-      <button type="button" onClick={onCustomise} aria-label={`${item.name} details`} className="flex-none">
-        <Tile item={item} sticker={sticker} size="sm" />
-      </button>
-      <div className="flex min-w-0 flex-1 flex-col gap-1">
-        <div className="flex items-center gap-1.5">
-          <VegMark veg={item.isVeg} />
-          <span className="text-[15px] font-semibold leading-snug">{item.name}</span>
-        </div>
+    <div className={`flex gap-4 border-b border-line py-5 ${item.available ? "" : "opacity-50"}`}>
+      <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+        <VegMark veg={item.isVeg} />
+        <button type="button" onClick={onCustomise} className="text-left text-[17px] font-bold leading-snug">{item.name}</button>
+        <span className="text-[15px] font-semibold">{priceLabel(item)}</span>
         {(item.description || hasChoices) && (
-          <span className="text-xs leading-snug text-muted">{item.description ?? `Choose: ${item.optionGroups[0].choices.map((c) => c.name).join(" or ")}`}</span>
+          <span className="line-clamp-3 text-[13px] leading-snug text-muted">{item.description ?? `Choose: ${item.optionGroups[0].choices.map((c) => c.name).join(" or ")}`}</span>
         )}
-        <span className="text-[15px] font-bold">{priceLabel(item)}</span>
       </div>
-      {!item.available ? (
-        <span className="flex-none text-xs font-semibold uppercase tracking-wide text-muted">Sold out</span>
-      ) : qty > 0 ? (
-        <div className="flex h-10 flex-none items-center rounded-full bg-ink text-reversed">
-          <button type="button" onClick={onMinus} aria-label={`Remove one ${item.name}`} className="h-10 w-9 text-lg">−</button>
-          <span className="min-w-3 text-center text-sm font-bold">{qty}</span>
-          <button type="button" onClick={onAdd} aria-label={`Add one ${item.name}`} className="h-10 w-9 text-lg">+</button>
-        </div>
-      ) : (
-        <button type="button" onClick={onAdd} className="h-10 flex-none rounded-full border-[1.5px] border-ink bg-surface px-[18px] text-[13px] font-bold tracking-wider">
-          ADD
+      <div className="relative flex-none pb-4">
+        <button type="button" onClick={onCustomise} aria-label={`${item.name} details`} className="block">
+          <Tile item={item} sticker={sticker} size="xl" />
         </button>
-      )}
+        <div className="absolute inset-x-0 bottom-0 flex flex-col items-center">
+          {!item.available ? (
+            <span className="rounded-lg border border-line bg-surface px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-muted">Sold out</span>
+          ) : qty > 0 ? (
+            <div className="flex h-9 w-[104px] items-center justify-between rounded-lg bg-ink text-reversed shadow-sm">
+              <button type="button" onClick={onMinus} aria-label={`Remove one ${item.name}`} className="h-9 w-9 text-lg">−</button>
+              <span className="text-sm font-bold">{qty}</span>
+              <button type="button" onClick={onAdd} aria-label={`Add one ${item.name}`} className="h-9 w-9 text-lg">+</button>
+            </div>
+          ) : (
+            <button type="button" onClick={onAdd} className="h-9 w-[104px] rounded-lg border-[1.5px] border-clay bg-surface text-[14px] font-extrabold tracking-wider text-clay shadow-sm">
+              ADD
+            </button>
+          )}
+          {hasChoices && item.available && <span className="mt-0.5 text-[10px] text-muted">customisable</span>}
+        </div>
+      </div>
     </div>
   );
 }
