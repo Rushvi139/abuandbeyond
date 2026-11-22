@@ -460,10 +460,6 @@ using `public/brand/bear-eating.webp|webm`. Code animation, not AI video
 
 ## Open Questions
 
-- Egg in "veg" items: the Standard Recipes bases put egg in the burger bun
-  (brioche) and the Malabar parotta, so Golden Aloo Crunch, Paneer Lababdar
-  Roll and Malabar Parantha contain egg while marked veg. Owner to decide:
-  eggless bun/parotta, or mark those dishes "contains egg".
 - Dish photos: 60-dish shot list + prompts are in the Master Brand Guide
   (claude.ai artifact Smk2uG4mNiceBGfEs15SBL). Generation waits on Higgsfield
   credits (balance 0; ~45–55 credits for 60 photos).
@@ -572,6 +568,9 @@ using `public/brand/bear-eating.webp|webm`. Code animation, not AI video
 - 22 Nov: Printed KOT recipe cards (80 mm, English + Hindi, 33 bases with
   "one batch covers" portions, 85 dish cards) generated outside the app from
   the Standard Recipes sheet; Master Brand Guide doc written.
+- 22 Nov: Owner decided burger bun (brioche) and Malabar parotta are EGGLESS
+  (curd replaces egg), so Golden Aloo Crunch, Paneer Lababdar Roll and Malabar
+  Parantha stay veg. Sheet + recipe cards updated.
 
 - 20 Nov: New pizza & burger menu via `scripts/one-off/menu-pizza-burger-2026-11-20.sql`
   (preview / `-v apply=1`); half & half inside each pizza (optional choice,
