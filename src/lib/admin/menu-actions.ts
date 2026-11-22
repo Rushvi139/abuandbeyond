@@ -20,12 +20,18 @@ const ItemSchema = z.object({
   priceInr: z.coerce.number().min(1).max(5000),
   packagingInr: z.coerce.number().min(0).max(500).default(0),
   options: z.string().trim().max(200).optional().or(z.literal("")), // "Base: Fried rice | Noodles"
-  addonNames: z.string().trim().max(200).optional().or(z.literal("")), // "Extra cheese, Add egg"
+  optionsOriginal: z.string().trim().max(400).optional(),
+  addonsSent: z.literal("1").optional(),
 });
 
 export async function saveMenuItem(formData: FormData) {
   await assertRole(MANAGERS);
   const d = ItemSchema.parse(Object.fromEntries(formData));
+  const addonIds = z.array(z.string().uuid()).max(40).parse(formData.getAll("addonIds"));
+  if (d.addonsSent && addonIds.length) {
+    const [veg] = await db()<{ n: number }[]>`select count(*)::int as n from addons where id = any(${addonIds}) and not is_veg`;
+    if (d.isVeg === "veg" && veg.n > 0) throw new Error("A non-veg add-on can't go on a veg dish.");
+  }
   d.category = titleCase(d.category);
   const photo = formData.get("photo");
   const sql = db();
@@ -68,7 +74,10 @@ export async function saveMenuItem(formData: FormData) {
       id = row.id;
     }
     // options "Group: a | b"
-    if (d.options !== undefined) {
+    // Only when the box was changed: a dish can have several choice groups with
+    // prices (half & half) that this one-line box can't show, and rewriting it
+    // from the box would wipe them.
+    if (d.options !== undefined && (!d.id || d.options !== (d.optionsOriginal ?? ""))) {
       await tx`delete from option_groups where menu_item_id = ${id}`;
       if (d.options) {
         const [g, rest] = d.options.split(":");
@@ -81,12 +90,11 @@ export async function saveMenuItem(formData: FormData) {
     }
     // Only rewrite the add-on links when the form actually carried the field.
     // A partial save that omitted it was silently unlinking every add-on.
-    if (d.addonNames !== undefined) {
+    if (d.addonsSent) {
       await tx`delete from menu_item_addons where menu_item_id = ${id}`;
-      for (const n of (d.addonNames ?? "").split(",").map((s) => s.trim()).filter(Boolean)) {
-        const [a] = await tx<{ id: string }[]>`select id from addons where lower(name) = ${n.toLowerCase()}`;
-        if (a) await tx`insert into menu_item_addons (menu_item_id, addon_id) values (${id}, ${a.id}) on conflict do nothing`;
-      }
+      for (const a of addonIds)
+        await tx`insert into menu_item_addons (menu_item_id, addon_id)
+          select ${id}, id from addons where id = ${a} and active on conflict do nothing`;
     }
   });
   revalidatePath("/admin/menu");
@@ -107,12 +115,27 @@ export async function retireMenuItem(id: string) {
   revalidatePath("/");
 }
 
-/** Puts a retired dish back on the live menu, in stock. */
-export async function restoreMenuItem(id: string) {
+/**
+ * Puts a retired dish back on the live menu, in stock. A dish added without a
+ * price (it carries a 1-paisa placeholder) needs one first, so nobody can
+ * order it for nothing.
+ */
+export async function restoreMenuItem(id: string, priceInr?: number): Promise<{ error?: string }> {
   await assertRole(MANAGERS);
-  await db()`update menu_items set active = true, available = true where id = ${z.string().uuid().parse(id)}`;
+  const itemId = z.string().uuid().parse(id);
+  const sql = db();
+  if (priceInr !== undefined) {
+    const p = z.number().min(1).max(5000).safeParse(priceInr);
+    if (!p.success) return { error: "Price must be between ₹1 and ₹5,000." };
+    await sql`update menu_items set price_paise = ${Math.round(p.data * 100)} where id = ${itemId}`;
+  }
+  const [row] = await sql<{ price: number }[]>`select price_paise::int as price from menu_items where id = ${itemId}`;
+  if (!row) return { error: "Dish not found." };
+  if (row.price < 100) return { error: "Set a price first." };
+  await sql`update menu_items set active = true, available = true where id = ${itemId}`;
   revalidatePath("/admin/menu");
   revalidatePath("/");
+  return {};
 }
 
 const AddonSchema = z.object({

@@ -561,6 +561,18 @@ using `public/brand/bear-eating.webp|webm`. Code animation, not AI video
 
 ## Session Notes
 
+- 22 Nov: Add-ons are tap-to-select chips on each dish in Admin → Menu (was a
+  comma-separated text box that silently dropped misspelt names). Non-veg
+  add-ons are refused on a veg dish. The "Choice at order" box now only
+  rewrites a dish's choices when it was changed: before, saving any pizza
+  wiped its priced half & half group.
+- 22 Nov: `scripts/one-off/menu-locked-2026-11-22.sql` adds the locked menu
+  (83 dishes). Preview by default; `-v apply=1` applies; `-v retire=1` also
+  hides live dishes not on the locked menu. Existing dishes are left as the
+  owner typed them; new dishes without a price go in hidden with a 1-paisa
+  placeholder, and Admin → Off the menu shows a price box ("Price & put on
+  menu"); restoring refuses a dish under ₹1.
+
 - 22 Nov: Menu rows are Zomato style: words left, 124 px photo right with the
   ADD / − n + control over its bottom edge, "customisable" under it. Sticker or
   cuisine tile shows in the same spot until a dish has a photo. Upload photos

@@ -287,6 +287,7 @@ function Tile({ item, sticker, size }: { item: MenuItem; sticker: string | null;
  */
 function ItemRow({ item, sticker, qty, onAdd, onMinus, onCustomise }: { item: MenuItem; sticker: string | null; qty: number; onAdd: () => void; onMinus: () => void; onCustomise: () => void }) {
   const hasChoices = item.optionGroups.length > 0;
+  const customisable = hasChoices || item.addons.length > 0;
   return (
     <div className={`flex gap-4 border-b border-line py-5 ${item.available ? "" : "opacity-50"}`}>
       <div className="flex min-w-0 flex-1 flex-col gap-1.5">
@@ -315,7 +316,7 @@ function ItemRow({ item, sticker, qty, onAdd, onMinus, onCustomise }: { item: Me
               ADD
             </button>
           )}
-          {hasChoices && item.available && <span className="mt-0.5 text-[10px] text-muted">customisable</span>}
+          {customisable && item.available && <span className="mt-0.5 text-[10px] text-muted">customisable</span>}
         </div>
       </div>
     </div>

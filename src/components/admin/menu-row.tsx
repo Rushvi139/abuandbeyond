@@ -68,21 +68,38 @@ export function MenuRow({ item, canPrice, edit }: { item: Item; canPrice: boolea
   );
 }
 
-/** A dish that is off the live menu but still ours. */
+/** A dish that is off the live menu but still ours. A dish added without a
+ *  price shows a price box: it can only go back on once it has one. */
 export function RetiredRow({ item }: { item: Item }) {
   const [pending, start] = useTransition();
+  const unpriced = item.pricePaise < 100;
+  const [price, setPrice] = useState("");
+  const [err, setErr] = useState<string | null>(null);
   return (
-    <div className={`flex items-center gap-3 px-4 py-2.5 ${pending ? "opacity-60" : ""}`}>
+    <div className={`flex flex-wrap items-center gap-3 px-4 py-2.5 ${pending ? "opacity-60" : ""}`}>
       <VegMark veg={item.isVeg} />
       <span className="flex-1 text-sm font-semibold text-muted">{item.name}</span>
-      <span className="text-sm text-muted">{formatINR(item.pricePaise)}</span>
+      {unpriced ? (
+        <label className="flex items-center gap-1 text-sm">
+          <span className="rounded-full bg-acid px-2 py-0.5 text-[10px] font-bold uppercase text-ink">No price yet</span>
+          ₹<input value={price} onChange={(e) => setPrice(e.target.value)} inputMode="decimal" placeholder="Price" aria-label={`Price for ${item.name}`} className="h-8 w-20 rounded-lg border border-line bg-paper px-2 text-sm" />
+        </label>
+      ) : (
+        <span className="text-sm text-muted">{formatINR(item.pricePaise)}</span>
+      )}
       <button
         type="button"
-        onClick={() => start(() => restoreMenuItem(item.id))}
-        className="h-8 flex-none rounded-lg bg-ink px-3 text-xs font-semibold text-reversed"
+        disabled={pending || (unpriced && !price)}
+        onClick={() => start(async () => {
+          setErr(null);
+          const r = await restoreMenuItem(item.id, unpriced ? Number(price) : undefined);
+          if (r.error) setErr(r.error);
+        })}
+        className="h-8 flex-none rounded-lg bg-ink px-3 text-xs font-semibold text-reversed disabled:opacity-40"
       >
-        {pending ? "…" : "Put back"}
+        {pending ? "…" : unpriced ? "Price & put on menu" : "Put back"}
       </button>
+      {err && <p role="alert" className="w-full text-xs font-semibold text-error">{err}</p>}
     </div>
   );
 }

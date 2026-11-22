@@ -19,13 +19,13 @@ export default async function MenuAdmin() {
     select m.id, m.name, m.description, c.name as category, m.station_id as station, m.cuisine, m.is_veg as "isVeg",
       m.price_paise as "pricePaise", m.packaging_cost_paise as "packagingPaise", m.available, m.price_status as "priceStatus", m.image_path as "imagePath",
       coalesce((select g.name || ': ' || string_agg(o.name, ' | ' order by o.sort_order) from option_groups g join options o on o.option_group_id = g.id where g.menu_item_id = m.id group by g.name limit 1), '') as options,
-      coalesce((select string_agg(a.name, ', ') from menu_item_addons ma join addons a on a.id = ma.addon_id where ma.menu_item_id = m.id), '') as addons,
+      coalesce((select array_agg(ma.addon_id::text) from menu_item_addons ma join addons a on a.id = ma.addon_id where ma.menu_item_id = m.id and a.active), '{}') as "addonIds",
       (select round(sum(r.quantity * i.rate_paise_per_unit) * 1.15) from recipe_lines r join ingredients i on i.id = r.ingredient_id where r.menu_item_id = m.id) + m.packaging_cost_paise as "foodCostPaise"
     from menu_items m join categories c on c.id = m.category_id where m.active order by c.sort_order, c.name, m.price_paise, m.name`;
   const retired = await sql<Item[]>`
     select m.id, m.name, m.is_veg as "isVeg", m.price_paise as "pricePaise", m.available, m.price_status as "priceStatus",
       null::int as "foodCostPaise"
-    from menu_items m where not m.active order by m.name`;
+    from menu_items m where not m.active order by (m.price_paise < 100) desc, m.name`;
   const addons = await sql<Addon[]>`
     select a.id, a.name, a.price_paise as "pricePaise", a.is_veg as "isVeg",
       (select count(*)::int from menu_item_addons ma where ma.addon_id = a.id) as "usedBy"
@@ -53,7 +53,7 @@ export default async function MenuAdmin() {
       </section>
       <section>
         <h2 className="mb-2 text-xs font-bold uppercase tracking-wide text-muted">Add a dish</h2>
-        <MenuItemForm categories={groups} />
+        <MenuItemForm categories={groups} addons={addons} />
       </section>
       {groups.map((g) => (
         <section key={g}>
@@ -61,7 +61,7 @@ export default async function MenuAdmin() {
           <div className="overflow-hidden rounded-2xl bg-surface">
             {items.filter((i) => i.category === g).map((i) => (
               <div key={i.id} className="border-b border-line last:border-0">
-                <MenuRow item={i} canPrice={["owner", "manager"].includes(staff.role)} edit={<MenuItemForm item={i} categories={groups} />} />
+                <MenuRow item={i} canPrice={["owner", "manager"].includes(staff.role)} edit={<MenuItemForm item={i} categories={groups} addons={addons} />} />
               </div>
             ))}
           </div>
@@ -96,7 +96,7 @@ export default async function MenuAdmin() {
 
       <section>
         <h2 className="mb-1 font-display text-[18px] uppercase">Add-ons</h2>
-        <p className="mb-2 text-sm text-muted">Make an add-on here once, then type its name into a dish&apos;s add-on box to offer it on that dish.</p>
+        <p className="mb-2 text-sm text-muted">Make an add-on here once, then tick it on any dish (Edit → Add-ons). Guests see the ticked ones as a checklist when they tap ADD.</p>
         <AddonForm />
         <div className="mt-3 overflow-hidden rounded-2xl bg-surface">
           {addons.map((a) => (

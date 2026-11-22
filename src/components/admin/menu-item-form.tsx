@@ -5,13 +5,18 @@ import { retireMenuItem, saveMenuItem } from "@/lib/admin/menu-actions";
 
 export type EditableItem = {
   id: string; name: string; description: string | null; category: string; station: string; cuisine: string; isVeg: boolean;
-  pricePaise: number; packagingPaise: number; options: string; addons: string; imagePath: string | null;
+  pricePaise: number; packagingPaise: number; options: string; addonIds: string[]; imagePath: string | null;
 };
+
+export type AddonChoice = { id: string; name: string; pricePaise: number; isVeg: boolean };
 
 const inp = "h-10 rounded-xl border border-line bg-paper px-3 text-sm";
 
-export function MenuItemForm({ item, categories }: { item?: EditableItem; categories: string[] }) {
+export function MenuItemForm({ item, categories, addons = [] }: { item?: EditableItem; categories: string[]; addons?: AddonChoice[] }) {
   const [open, setOpen] = useState(!item);
+  const [picked, setPicked] = useState<string[]>(item?.addonIds ?? []);
+  const [veg, setVeg] = useState(item ? item.isVeg : true);
+  const toggle = (id: string) => setPicked((p) => (p.includes(id) ? p.filter((x) => x !== id) : [...p, id]));
   const [pending, start] = useTransition();
   const [err, setErr] = useState<string | null>(null);
 
@@ -28,7 +33,7 @@ export function MenuItemForm({ item, categories }: { item?: EditableItem; catego
       <input name="description" defaultValue={item?.description ?? ""} placeholder="One line about it (shows on the menu)" className={`${inp} sm:col-span-2`} />
       <input name="category" required list="cats" defaultValue={item?.category} placeholder="Category (pick or type a new one)" className={inp} />
       <datalist id="cats">{categories.map((c) => <option key={c} value={c} />)}</datalist>
-      <select name="isVeg" defaultValue={item ? (item.isVeg ? "veg" : "nonveg") : "veg"} className={inp}><option value="veg">Veg</option><option value="nonveg">Non-veg</option></select>
+      <select name="isVeg" value={veg ? "veg" : "nonveg"} onChange={(e) => setVeg(e.target.value === "veg")} className={inp}><option value="veg">Veg</option><option value="nonveg">Non-veg</option></select>
       <label className="flex items-center gap-2 text-sm">₹ <input name="priceInr" type="number" step="1" min="1" required defaultValue={item ? item.pricePaise / 100 : ""} placeholder="Price on the menu" className={`${inp} flex-1`} /></label>
       <label className="flex items-center gap-2 text-sm">Pack ₹ <input name="packagingInr" type="number" step="0.1" min="0" defaultValue={item ? item.packagingPaise / 100 : 12} className={`${inp} flex-1`} /></label>
       <select name="station" defaultValue={item?.station ?? "wok_momos"} className={inp}>
@@ -38,7 +43,35 @@ export function MenuItemForm({ item, categories }: { item?: EditableItem; catego
         <option value="abu">ABU</option><option value="italy">ABU & ITALY</option><option value="mexico">ABU & MEXICO</option><option value="china">ABU & CHINA</option><option value="lebanon">ABU & LEBANON</option>
       </select>
       <input name="options" defaultValue={item?.options ?? ""} placeholder="Choice at order, e.g. Base: Fried rice | Noodles" className={`${inp} sm:col-span-2`} />
-      <input name="addonNames" defaultValue={item?.addons ?? ""} placeholder="Add-ons, comma-separated: Extra cheese, Add egg" className={`${inp} sm:col-span-2`} />
+      {/* Sent back untouched so the server only rewrites choices you actually changed:
+          a pizza's half & half choices carry prices this one-line box can't show. */}
+      <input type="hidden" name="optionsOriginal" value={item?.options ?? ""} />
+      <fieldset className="sm:col-span-2">
+        <legend className="mb-1.5 text-xs font-semibold text-muted">
+          Add-ons guests can tick on this dish {picked.length > 0 && <span className="text-ink">· {picked.length} picked</span>}
+        </legend>
+        <input type="hidden" name="addonsSent" value="1" />
+        {addons.length === 0 ? (
+          <p className="text-xs text-muted">No add-ons yet. Make them in the Add-ons section at the bottom of this page.</p>
+        ) : (
+          <div className="flex flex-wrap gap-1.5">
+            {addons.map((a) => {
+              const on = picked.includes(a.id);
+              const clash = veg && !a.isVeg;
+              return (
+                <label key={a.id} className={`flex cursor-pointer items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold ${on ? "border-ink bg-ink text-reversed" : "border-line bg-paper"} ${clash && !on ? "opacity-40" : ""}`}>
+                  <input type="checkbox" name="addonIds" value={a.id} checked={on} onChange={() => toggle(a.id)} className="sr-only" />
+                  <span className={`h-2 w-2 rounded-full ${a.isVeg ? "bg-veg" : "bg-error"}`} aria-hidden="true" />
+                  {a.name} <span className={on ? "text-kraft" : "text-muted"}>+₹{a.pricePaise / 100}</span>
+                </label>
+              );
+            })}
+          </div>
+        )}
+        {veg && addons.some((a) => !a.isVeg && picked.includes(a.id)) && (
+          <p className="mt-1 text-xs font-semibold text-error">A non-veg add-on is ticked on a veg dish.</p>
+        )}
+      </fieldset>
       <label className="flex items-center gap-2 text-xs text-muted sm:col-span-2">
         Photo (square, JPG/PNG/WebP, up to 8 MB)
         <input name="photo" type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" className="text-xs" />
