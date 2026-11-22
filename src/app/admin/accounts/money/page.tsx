@@ -29,14 +29,15 @@ export default async function MoneyPage({ searchParams }: { searchParams: Promis
 
   const [inHand, online, out, untagged, partnerIn] = await Promise.all([
     sql<{ method: string; paise: number }[]>`
-      select coalesce(p.method, 'cash') as method, sum(p.amount_paise)::bigint as paise
+      select coalesce(p.method, 'cash') as method, sum(p.amount_paise - p.refunded_paise)::bigint as paise
       from orders o join payments p on p.order_id = o.id and p.gateway = 'on_delivery'
-      where o.collected_at is not null and not o.is_demo
-        and (o.collected_at at time zone 'Asia/Kolkata') >= ${range.from}::date
-        and (o.collected_at at time zone 'Asia/Kolkata') < ${end}::date
+      where not o.is_demo and p.status in ('captured', 'partially_refunded')
+        -- the door collection itself, or the extra collected after an edit
+        and (p.created_at at time zone 'Asia/Kolkata') >= ${range.from}::date
+        and (p.created_at at time zone 'Asia/Kolkata') < ${end}::date
       group by 1`,
     sql<{ paise: number; n: number }[]>`
-      select coalesce(sum(total_paise), 0)::bigint as paise, count(*)::int as n from orders
+      select coalesce(sum(total_paise - balance_collected_paise), 0)::bigint as paise, count(*)::int as n from orders
       where payment_mode = 'online' and paid_at is not null and status <> 'cancelled' and not is_demo
         and (paid_at at time zone 'Asia/Kolkata') >= ${range.from}::date
         and (paid_at at time zone 'Asia/Kolkata') < ${end}::date`,

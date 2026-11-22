@@ -62,10 +62,22 @@ export default async function KotPage({
         {reprint ? " - REPRINT" : ""}
       </div>
       <div>{RULE}</div>
+      {/* Edited after it was placed: the kitchen must see this is a new
+          version of a ticket it may already be cooking, and what changed. */}
+      {o.editCount > 0 && (
+        <>
+          <div className="alert">** UPDATED ORDER{o.editCount > 1 ? ` (${o.editCount})` : ""} **</div>
+          {o.lastEdit && <div>CHANGED: {p(o.lastEdit)}</div>}
+          <div>{RULE}</div>
+        </>
+      )}
 
       {o.scheduledFor && <div className="alert">** DELIVER AT {clockLabel(new Date(o.scheduledFor))} **</div>}
       {o.paymentMode === "on_delivery" && !o.collectedAt && (
         <div className="alert">** COLLECT Rs {(o.totalPaise / 100).toLocaleString("en-IN")} - NOT PAID **</div>
+      )}
+      {Number(o.balancePaise) > 0 && (
+        <div className="alert">** COLLECT Rs {(Number(o.balancePaise) / 100).toLocaleString("en-IN")} EXTRA (ORDER EDITED) **</div>
       )}
       <div>{o.stayType.toUpperCase()}</div>
       {where && <div className="where">{where}</div>}

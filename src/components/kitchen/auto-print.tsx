@@ -63,14 +63,17 @@ export function AutoPrint({ orderIds }: { orderIds: string[] }) {
     if (!ready || !on) return;
     let cancelled = false;
     (async () => {
-      for (const id of orderIds) {
-        if (cancelled || seen.current.has(id)) continue;
-        seen.current.add(id); // claim locally first, so a re-render can't double-fire
+      for (const job of orderIds) {
+        // "id" or "id#2": an edited order is a new ticket (version 2, 3…),
+        // so this screen's memory of having printed version 1 doesn't stop it.
+        const id = job.split("#")[0];
+        if (cancelled || seen.current.has(job)) continue;
+        seen.current.add(job); // claim locally first, so a re-render can't double-fire
         try {
           const { mine } = await claimKot(id);
           if (mine && !cancelled) printKot(id);
         } catch {
-          seen.current.delete(id); // a failed claim should be retried on the next tick
+          seen.current.delete(job); // a failed claim should be retried on the next tick
         }
       }
     })();

@@ -1,5 +1,8 @@
 "use client";
 
+import { ContactPhones } from "@/components/admin/contact-phones";
+import { EditOrderButton } from "@/components/admin/order-editor";
+import { BalanceBanner } from "@/components/admin/balance-banner";
 import { useState, useTransition } from "react";
 import { acceptOrder, cancelOrder, setStatus } from "@/lib/orders/actions";
 import type { OrderView } from "@/lib/orders/queries";
@@ -277,20 +280,14 @@ function OrderRow({
                   </select>
                 </div>
               )}
-              {/* Contacts */}
-              <div className="min-w-[160px]">
+              {/* Contacts: both numbers, readable and copyable on a desktop */}
+              <div className="min-w-[280px] flex-1">
                 <p className="mb-1.5 text-[11px] font-bold uppercase tracking-wider text-muted">Contact</p>
-                <div className="flex flex-wrap gap-2">
-                  <a href={`tel:${order.customer.phone}`}
-                    className="flex h-8 items-center gap-1.5 rounded-lg bg-paper px-3 text-xs font-semibold">
-                    📞 {order.customer.phone.replace("+91", "")}
-                  </a>
-                  <a href={`https://wa.me/${order.customer.phone.replace("+", "")}?text=${encodeURIComponent(`Hi! Your order #${order.number} from Abu %26 Beyond.`)}`}
-                    target="_blank" rel="noreferrer"
-                    className="flex h-8 items-center gap-1.5 rounded-lg bg-paper px-3 text-xs font-semibold">
-                    WA
-                  </a>
-                </div>
+                <ContactPhones phone={order.customer.phone} altPhone={order.altPhone} orderNumber={order.number} />
+                <div className="mt-2"><BalanceBanner orderId={order.id} balancePaise={Number(order.balancePaise)} role={role} /></div>
+                {["owner", "manager"].includes(role) && ["paid", "accepted", "preparing", "ready"].includes(order.status) && (
+                  <div className="mt-2"><EditOrderButton orderId={order.id} /></div>
+                )}
               </div>
             </div>
           </td>

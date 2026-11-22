@@ -56,6 +56,12 @@ export type OrderView = {
   /** "cash" or "upi" once a pay-on-delivery / counter order has been collected. */
   collectMethod: string | null;
   refundedPaise: number;
+  /** How many times staff changed the order after it was placed. */
+  editCount: number;
+  /** After an edit on money already taken: + collect at the door, − refund owed. */
+  balancePaise: number;
+  /** The latest edit, for the KOT. */
+  lastEdit: string | null;
   customer: { id: string; name: string | null; phone: string };
   rider: { id: string; name: string } | null;
   lines: OrderLine[];
@@ -74,6 +80,8 @@ const base = (sql = db()) => sql`
     coalesce((select p.method from payments p where p.order_id = o.id and p.gateway = 'on_delivery' order by p.created_at desc limit 1), case when o.comp_reason is not null then 'complimentary' end) as "collectMethod",
     coalesce((select sum(p.refunded_paise) from payments p where p.order_id = o.id), 0)::bigint as "refundedPaise",
     o.discount_paise as "discountPaise", o.promo_code as "promoCode",
+    o.edit_count as "editCount", o.balance_paise::bigint as "balancePaise",
+    (select e.summary from order_edits e where e.order_id = o.id and e.summary not like 'Collected %' and e.summary not like 'Refunded %' order by e.created_at desc limit 1) as "lastEdit",
     json_build_object('id', c.id, 'name', c.name, 'phone', c.phone) as customer,
     case when r.id is null then null else json_build_object('id', r.id, 'name', r.full_name) end as rider,
     coalesce((select json_agg(json_build_object(

@@ -14,6 +14,9 @@ import { orderClock } from "@/lib/orders/clock";
 import { PAYMENT_TONE, paymentState } from "@/lib/orders/payment-state";
 import { WhatsAppButton, CopyWhatsAppButton } from "@/components/admin/whatsapp-button";
 import { VegMark } from "@/components/store/veg-mark";
+import { ContactPhones } from "@/components/admin/contact-phones";
+import { EditOrderButton } from "@/components/admin/order-editor";
+import { BalanceBanner } from "@/components/admin/balance-banner";
 
 const CUISINE: Record<string, string> = { abu: "ABU", italy: "ABU & ITALY", mexico: "ABU & MEXICO", china: "ABU & CHINA", lebanon: "ABU & LEBANON" };
 const STATUS_TONE: Record<string, string> = {
@@ -57,6 +60,9 @@ export function OrderCard({ order, riders, role, compact = false, dark = false }
             {pay.kind !== "collect" && (
               <span className={`rounded-full px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide ${PAYMENT_TONE[pay.kind]}`}>{pay.label}</span>
             )}
+            {order.editCount > 0 && (
+              <span className="rounded-full border border-current px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider">Edited{order.editCount > 1 ? ` ×${order.editCount}` : ""}</span>
+            )}
           </div>
           <div className={`text-[13px] ${dark ? "text-kraft" : "text-muted"}`}>
             {order.customer.name ?? "Guest"} · {[order.propertyName, order.roomOrLandmark].filter(Boolean).join(", ") || order.stayType}
@@ -67,6 +73,12 @@ export function OrderCard({ order, riders, role, compact = false, dark = false }
           {order.prepMinutes && <div className={`text-[11px] ${dark ? "text-kraft" : "text-muted"}`}>prep {order.prepMinutes}m</div>}
         </div>
       </header>
+
+      {/* The numbers, always: readable and copyable on a desktop with no phone. */}
+      {!compact || ["ready", "out_for_delivery"].includes(order.status) ? (
+        <ContactPhones phone={order.customer.phone} altPhone={order.altPhone} orderNumber={order.number} dark={dark} />
+      ) : null}
+      <BalanceBanner orderId={order.id} balancePaise={Number(order.balancePaise)} role={role} dark={dark} />
 
       <ul className="flex flex-col gap-1.5">
         {order.lines.map((l) => (
@@ -129,6 +141,7 @@ export function OrderCard({ order, riders, role, compact = false, dark = false }
             {riders.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
           </select>
         )}
+        {canManage && ["paid", "accepted", "preparing", "ready"].includes(order.status) && <EditOrderButton orderId={order.id} dark={dark} />}
         {canManage && ["paid", "accepted", "preparing"].includes(order.status) && (
           <button onClick={() => { const r = prompt("Reason for cancelling (customer is refunded):"); if (r) run(() => cancelOrder(order.id, r)); }} className="h-10 rounded-xl px-3 text-xs font-semibold text-error">Cancel</button>
         )}
@@ -141,9 +154,7 @@ export function OrderCard({ order, riders, role, compact = false, dark = false }
             text={`Hi${order.customer.name ? " " + order.customer.name.split(" ")[0] : ""}, this is Abu & Beyond. Your order #${order.number} is on the way to ${[order.propertyName, order.roomOrLandmark].filter(Boolean).join(", ") || "you"}.`}
           />
         )}
-        {(order.status === "ready" || order.status === "out_for_delivery") && (
-          <a href={`tel:${order.customer.phone}`} className={`h-10 rounded-xl px-3 text-xs font-semibold leading-10 ${dark ? "bg-paper/15" : "bg-paper"}`}>Call {order.customer.phone.replace("+91", "")}</a>
-        )}
+
         {canManage && order.status === "pending_payment" && order.gatewayOrderId && <PaymentLink code={order.code} />}
         {canKitchen && <PrintButton orderId={order.id} printed={order.kotPrintedAt != null} />}
         {/* Only whoever actually handles the money, and only once the food has
@@ -153,15 +164,7 @@ export function OrderCard({ order, riders, role, compact = false, dark = false }
           ["ready", "out_for_delivery", "delivered"].includes(order.status) && (
           <CollectButton orderId={order.id} amountPaise={order.totalPaise} collected={order.collectedAt != null} />
         )}
-        {order.altPhone && (
-          <a
-            href={`tel:${order.altPhone}`}
-            title="Alternate number the guest gave"
-            className={`h-10 rounded-xl px-3 text-xs font-semibold leading-10 ${dark ? "bg-paper/15" : "bg-paper"}`}
-          >
-            Call 2nd
-          </a>
-        )}
+
         {/* Always offer directions, by the rule in lib/orders/nav.ts:
             precise pin, then the hotel's Google place, then a rough pin,
             then the typed address. A rider on a bike should never have to

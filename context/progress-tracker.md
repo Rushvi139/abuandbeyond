@@ -561,6 +561,20 @@ using `public/brand/bear-eating.webp|webm`. Code animation, not AI video
 
 ## Session Notes
 
+- 22 Nov: Order cards (board, kitchen, orders table) show the guest's number
+  and the 2nd number as big selectable text with Copy / WhatsApp / Call
+  (desktop has no phone to call with).
+- 22 Nov: Edit order (owner/manager, statuses paid → ready, not on a partner
+  statement): change qty, remove, add dishes, choices and add-ons
+  (src/lib/orders/edit.ts, migration 0036). Untouched lines keep their sold
+  price; new/changed lines priced from the menu; coupon discount kept but
+  capped; complimentary stays free. KOT reprints marked UPDATED ORDER with
+  the change list (auto-print keys tickets id#editCount). If money was
+  already taken, orders.balance_paise: + "collect ₹X extra" (Got cash / Got
+  UPI → a payments row, counted as door money in Day Close and Bank & cash),
+  − "refund ₹X" (Refund done records it against the payment). Every edit is
+  in order_edits. Guest is not messaged about an edit yet.
+
 - 22 Nov: Personal numbers off the site. The one public number is now
   **+91 94626 12045** (LEGAL.support and LEGAL.operator in src/lib/legal.ts;
   partner statement and partner page read it from there). Migration 0035

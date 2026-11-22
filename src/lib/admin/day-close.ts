@@ -57,8 +57,11 @@ export async function dayClose(day: string): Promise<DayClose> {
       coalesce(sum(gst_paise), 0)::bigint as gst,
       coalesce(sum(delivery_fee_paise), 0)::bigint as delivery,
       coalesce(sum(total_paise), 0)::bigint as gross,
-      coalesce(sum(total_paise) filter (where payment_mode = 'online'), 0)::bigint as online,
-      coalesce(sum(total_paise) filter (where payment_mode = 'on_delivery'), 0)::bigint as cash,
+      -- An online order edited upward has its extra collected at the door:
+      -- that part is door money, not PayU.
+      coalesce(sum(total_paise - balance_collected_paise) filter (where payment_mode = 'online'), 0)::bigint as online,
+      coalesce(sum(total_paise) filter (where payment_mode = 'on_delivery'), 0)::bigint
+        + coalesce(sum(balance_collected_paise) filter (where payment_mode = 'online'), 0)::bigint as cash,
       coalesce(sum(total_paise) filter (where payment_mode = 'on_delivery' and collected_at is null), 0)::bigint as uncollected,
       (count(*) filter (where comp_reason is not null))::int as comp,
       coalesce(sum(subtotal_paise) filter (where comp_reason is not null), 0)::bigint as "compValue"
