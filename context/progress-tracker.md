@@ -561,6 +561,13 @@ using `public/brand/bear-eating.webp|webm`. Code animation, not AI video
 
 ## Session Notes
 
+### 23 Nov 2026 — dish art for the locked menu
+- 48 new dish stickers drawn in Canva (text prompts in the house sticker style), composited with scripts/art (roundel.py). Raw drawings in scripts/art/raw/.
+- Shared drawings with their own badge name: papad (roasted/fried), raita (plain/veg), lassi (sweet/salted), garlic noodles and garlic rice (veg/chicken), Amritsari tikka (murgh/mutton), butter chicken roll art also used for Ghee Chicken Bhuna Roll.
+- Renamed dishes reuse old art (Margherita Bella, Indiano Garden, burgers, fries, Chinese bowls, laffa rolls); Paneer Lababdar Roll uses the paneer laffa art.
+- All 83 active dishes now resolve to their own sticker (checked against the DB). Needs ./deploy.sh.
+
+
 - 23 Nov: Photos: Add spend takes several photos (first → file_path, rest →
   spend_photos, migration 0037); every expense row in the register shows
   numbered photo chips and "+ photo" to attach more later. New Finance tab
