@@ -24,7 +24,7 @@ export function MenuItemForm({ item, categories, addons = [] }: { item?: Editabl
 
   return (
     <form
-      action={async (fd) => { setErr(null); start(async () => { try { await saveMenuItem(fd); if (item) setOpen(false); else (document.getElementById("mform") as HTMLFormElement | null)?.reset(); } catch (e) { setErr(e instanceof Error ? e.message : "Couldn't save"); } }); }}
+      action={async (fd) => { setErr(null); start(async () => { try { const r = await saveMenuItem(fd); if (r.error) { setErr(r.error); return; } if (item) setOpen(false); else (document.getElementById("mform") as HTMLFormElement | null)?.reset(); } catch { setErr("Couldn't save. Check your connection and try again."); } }); }}
       id={item ? undefined : "mform"}
       className={`grid w-full gap-2 rounded-2xl bg-surface p-4 sm:grid-cols-2 ${item ? "mt-2 border border-line" : ""}`}
     >
@@ -69,7 +69,7 @@ export function MenuItemForm({ item, categories, addons = [] }: { item?: Editabl
           </div>
         )}
         {veg && addons.some((a) => !a.isVeg && picked.includes(a.id)) && (
-          <p className="mt-1 text-xs font-semibold text-error">A non-veg add-on is ticked on a veg dish.</p>
+          <p className="mt-1 text-xs text-muted">A non-veg add-on is ticked: a guest who picks it gets a non-veg dish.</p>
         )}
       </fieldset>
       <label className="flex items-center gap-2 text-xs text-muted sm:col-span-2">

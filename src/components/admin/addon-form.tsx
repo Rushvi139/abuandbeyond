@@ -10,6 +10,8 @@ const inp = "h-10 rounded-xl border border-line bg-paper px-3 text-sm";
 
 export function AddonForm({ addon }: { addon?: Addon }) {
   const [open, setOpen] = useState(!addon);
+  const [err, setErr] = useState<string | null>(null);
+  const [pending, setPending] = useState(false);
   if (addon && !open) {
     return (
       <button type="button" onClick={() => setOpen(true)} className="h-9 rounded-xl border border-ink px-3 text-xs font-semibold">
@@ -18,7 +20,22 @@ export function AddonForm({ addon }: { addon?: Addon }) {
     );
   }
   return (
-    <form action={saveAddon} className="grid gap-2 rounded-2xl bg-surface p-3 sm:grid-cols-[1fr_7rem_7rem_auto]">
+    <form
+      action={async (fd) => {
+        setErr(null);
+        setPending(true);
+        try {
+          const r = await saveAddon(fd);
+          if (r.error) setErr(r.error);
+          else if (addon) setOpen(false);
+        } catch {
+          setErr("Couldn't save. Check your connection and try again.");
+        } finally {
+          setPending(false);
+        }
+      }}
+      className="grid gap-2 rounded-2xl bg-surface p-3 sm:grid-cols-[1fr_7rem_7rem_auto]"
+    >
       {addon && <input type="hidden" name="id" value={addon.id} />}
       <input name="name" defaultValue={addon?.name} required placeholder="Add-on name, e.g. Extra cheese" className={inp} />
       <input name="priceInr" type="number" step="1" min="0" defaultValue={addon ? addon.pricePaise / 100 : ""} required placeholder="₹" className={inp} />
@@ -27,13 +44,14 @@ export function AddonForm({ addon }: { addon?: Addon }) {
         <option value="nonveg">Non-veg</option>
       </select>
       <div className="flex gap-2">
-        <button className="h-10 rounded-xl bg-ink px-4 text-sm font-semibold text-reversed">Save</button>
+        <button disabled={pending} className="h-10 rounded-xl bg-ink px-4 text-sm font-semibold text-reversed disabled:opacity-50">{pending ? "Saving…" : "Save"}</button>
         {addon && (
           <button type="button" onClick={() => setOpen(false)} className="h-10 rounded-xl px-3 text-sm text-muted">
             Cancel
           </button>
         )}
       </div>
+      {err && <p role="alert" className="text-xs font-semibold text-error sm:col-span-4">{err}</p>}
     </form>
   );
 }

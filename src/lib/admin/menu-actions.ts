@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { MANAGERS, assertRole } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { saveUpload } from "@/lib/files";
+import { UploadError, saveUpload } from "@/lib/files";
 import { titleCase } from "@/lib/text";
 
 const slugify = (s: string) => s.toLowerCase().replace(/&/g, "and").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 60);
@@ -24,14 +24,34 @@ const ItemSchema = z.object({
   addonsSent: z.literal("1").optional(),
 });
 
-export async function saveMenuItem(formData: FormData) {
+/**
+ * Saves a dish from the menu form. Returns a plain-words error instead of
+ * throwing, because a thrown message is hidden in production and the owner
+ * only saw "An error occurred in the Server Components render".
+ * A non-veg add-on on a veg dish is allowed (chicken on a veg pizza is on the
+ * menu sheet); the form only notes it.
+ */
+export async function saveMenuItem(formData: FormData): Promise<{ error?: string }> {
+  try {
+    await saveMenuItemOrThrow(formData);
+    return {};
+  } catch (e) {
+    if (e instanceof z.ZodError) {
+      const f = e.issues[0];
+      return { error: `Check ${String(f?.path?.[0] ?? "the form")}: ${f?.message ?? "not valid"}.` };
+    }
+    if (e instanceof UploadError) return { error: e.message };
+    if ((e as { code?: string }).code === "23505") return { error: "Another dish already has that name." };
+    if (e instanceof Error && /^[A-Z][^\n]{0,160}$/.test(e.message) && !(e as { code?: string }).code) return { error: e.message };
+    console.error("saveMenuItem", e);
+    return { error: "Couldn't save that dish. Try again; if it keeps failing, send a screenshot." };
+  }
+}
+
+async function saveMenuItemOrThrow(formData: FormData) {
   await assertRole(MANAGERS);
   const d = ItemSchema.parse(Object.fromEntries(formData));
   const addonIds = z.array(z.string().uuid()).max(40).parse(formData.getAll("addonIds"));
-  if (d.addonsSent && addonIds.length) {
-    const [veg] = await db()<{ n: number }[]>`select count(*)::int as n from addons where id = any(${addonIds}) and not is_veg`;
-    if (d.isVeg === "veg" && veg.n > 0) throw new Error("A non-veg add-on can't go on a veg dish.");
-  }
   d.category = titleCase(d.category);
   const photo = formData.get("photo");
   const sql = db();
@@ -173,19 +193,26 @@ const AddonSchema = z.object({
 });
 
 /** Add-ons are shared across dishes; a dish picks them up by name on its own form. */
-export async function saveAddon(formData: FormData) {
+export async function saveAddon(formData: FormData): Promise<{ error?: string }> {
   await assertRole(MANAGERS);
-  const d = AddonSchema.parse(Object.fromEntries(formData));
+  const parsed = AddonSchema.safeParse(Object.fromEntries(formData));
+  if (!parsed.success) return { error: "Give it a name (2+ letters) and a price from ₹0 to ₹1,000." };
+  const d = parsed.data;
   const paise = Math.round(d.priceInr * 100);
   const sql = db();
+  const [clash] = await sql<{ id: string; active: boolean }[]>`
+    select id, active from addons where lower(name) = lower(${d.name}) and id is distinct from ${d.id || null}::uuid`;
+  if (clash?.active) return { error: `There is already an add-on called "${d.name}". Edit that one instead.` };
+  // A taken-down add-on with the same name: free the name, keep its history.
+  if (clash) await sql`update addons set name = name || ' (old ' || left(id::text, 4) || ')' where id = ${clash.id}`;
   if (d.id) {
     await sql`update addons set name = ${d.name}, price_paise = ${paise}, is_veg = ${d.isVeg === "veg"} where id = ${d.id}`;
   } else {
-    await sql`insert into addons (name, price_paise, is_veg) values (${d.name}, ${paise}, ${d.isVeg === "veg"})
-      on conflict (name) do update set price_paise = excluded.price_paise, is_veg = excluded.is_veg, active = true`;
+    await sql`insert into addons (name, price_paise, is_veg) values (${d.name}, ${paise}, ${d.isVeg === "veg"})`;
   }
   revalidatePath("/admin/menu");
   revalidatePath("/");
+  return {};
 }
 
 export async function retireAddon(id: string) {
