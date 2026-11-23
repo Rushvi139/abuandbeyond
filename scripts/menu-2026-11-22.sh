@@ -45,12 +45,14 @@ echo "Saved to $log"
 bold "STEP 3 of 3: apply the menu changes?"
 printf 'Type YES to add the new menu (anything else stops here): '
 read -r answer
+answer=$(printf %s "$answer" | tr "[:lower:]" "[:upper:]" | tr -d "[:space:]")
 if [ "$answer" != "YES" ]; then
   echo "Stopped. The site is updated; the menu is exactly as it was."
   exit 0
 fi
 printf 'Also take the old dishes off the menu (section 4 of the preview)? Type YES or NO: '
 read -r retire
+retire=$(printf %s "$retire" | tr "[:lower:]" "[:upper:]" | tr -d "[:space:]")
 
 if [ "$pizza" = "yes" ]; then
   psqlf -v apply=1 -f - < scripts/one-off/menu-pizza-burger-2026-11-20.sql > /dev/null
