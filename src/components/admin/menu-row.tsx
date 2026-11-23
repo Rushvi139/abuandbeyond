@@ -56,7 +56,7 @@ export function MenuRow({ item, canPrice, edit }: { item: Item; canPrice: boolea
         type="button"
         title="Take off the live menu. The dish, its recipe and its history are kept."
         onClick={() => {
-          if (confirm(`Take ${item.name} off the live menu?\n\nIt keeps its recipe and past orders, and you can put it back any time from "Off the menu" at the bottom of this page.`))
+          if (confirm(`Take ${item.name} off the live menu?\n\nIt keeps its recipe and past orders, and you can put it back any time from the "Off the menu" tab.`))
             start(() => retireMenuItem(item.id));
         }}
         className="h-8 flex-none rounded-lg px-2 text-xs font-semibold text-muted hover:text-error"

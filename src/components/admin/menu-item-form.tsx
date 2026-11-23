@@ -52,7 +52,7 @@ export function MenuItemForm({ item, categories, addons = [] }: { item?: Editabl
         </legend>
         <input type="hidden" name="addonsSent" value="1" />
         {addons.length === 0 ? (
-          <p className="text-xs text-muted">No add-ons yet. Make them in the Add-ons section at the bottom of this page.</p>
+          <p className="text-xs text-muted">No add-ons yet. Make them in the Add-ons tab (+ Add-on at the top).</p>
         ) : (
           <div className="flex flex-wrap gap-1.5">
             {addons.map((a) => {
