@@ -561,6 +561,13 @@ using `public/brand/bear-eating.webp|webm`. Code animation, not AI video
 
 ## Session Notes
 
+### 24 Nov 2026 — real dish photos (Canva)
+- 60 studio photos made in Canva from the Master Brand Guide shot list (green backdrop, hard light, props, no text). Links: project doc "Dish Photos — Canva links (24 Nov 2026)"; Canva folder "Abu & Beyond — Dish Photos (Nov 2026)".
+- Bundled at 400px in public/brand/photos/dishes/<slug>.webp. src/lib/menu/dish-photos.ts: photo uploaded in /admin wins, else the bundled photo, else the sticker. Nothing in the DB is touched, so a deploy never overrides the owner.
+- Most are upscaled from Canva's 200px previews (Canva downloads are blocked from the build box). For sharper copies, download full size from Canva and upload in Admin, or drop a <slug>.webp at 800px into the folder.
+- Drinks, shakes, breads, raita, papad, lassi keep stickers (not in the shot list).
+
+
 ### 23 Nov 2026 — dish art for the locked menu
 - 48 new dish stickers drawn in Canva (text prompts in the house sticker style), composited with scripts/art (roundel.py). Raw drawings in scripts/art/raw/.
 - Shared drawings with their own badge name: papad (roasted/fried), raita (plain/veg), lassi (sweet/salted), garlic noodles and garlic rice (veg/chicken), Amritsari tikka (murgh/mutton), butter chicken roll art also used for Ghee Chicken Bhuna Roll.

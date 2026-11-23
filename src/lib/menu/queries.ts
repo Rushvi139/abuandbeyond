@@ -1,5 +1,6 @@
 import { db } from "@/lib/db";
 import { sentenceCase, titleCase } from "@/lib/text";
+import { dishPhoto } from "./dish-photos";
 import type { Category, MenuItem } from "./types";
 
 type Row = {
@@ -47,6 +48,7 @@ export async function getMenu(): Promise<Category[]> {
   const tidy = (m: MenuItem): MenuItem => ({
     ...m,
     name: titleCase(m.name),
+    imagePath: dishPhoto(m.slug, m.imagePath),
     description: m.description ? sentenceCase(m.description) : m.description,
     optionGroups: m.optionGroups.map((g) => ({ ...g, name: titleCase(g.name), choices: g.choices.map((c) => ({ ...c, name: titleCase(c.name) })) })),
     addons: m.addons.map((a) => ({ ...a, name: titleCase(a.name) })),
