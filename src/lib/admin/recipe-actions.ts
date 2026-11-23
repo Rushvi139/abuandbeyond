@@ -69,10 +69,13 @@ export async function addRecipePhoto(formData: FormData) {
   await assertRole(MANAGERS);
   const menuItemId = Id.parse(formData.get("menuItemId"));
   const caption = z.string().trim().max(120).optional().parse(formData.get("caption") || undefined);
-  const file = formData.get("photo");
-  if (!(file instanceof File) || file.size === 0) return;
-  const path = "/files/" + (await saveUpload(file, "menu"));
-  await db()`insert into recipe_photos (menu_item_id, file_path, caption) values (${menuItemId}, ${path}, ${caption ?? null})`;
+  const kind = formData.get("kind") === "prep" ? "prep" : "final";
+  const files = formData.getAll("photo").filter((f): f is File => f instanceof File && f.size > 0).slice(0, 12);
+  if (!files.length) return;
+  for (const file of files) {
+    const path = "/files/" + (await saveUpload(file, "menu"));
+    await db()`insert into recipe_photos (menu_item_id, file_path, caption, kind) values (${menuItemId}, ${path}, ${caption ?? null}, ${kind})`;
+  }
   refresh(menuItemId);
 }
 

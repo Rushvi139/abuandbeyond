@@ -32,7 +32,7 @@ export default async function MenuAdmin() {
     from addons a where a.active order by a.name`;
   const banners = await sql<BannerRow[]>`
     select id, title, subtitle, link_url as "linkUrl", image_path as "imagePath", tone, placement, motif,
-      cta_label as "ctaLabel", sort_order as "sortOrder", starts_on as "startsOn", ends_on as "endsOn"
+      cta_label as "ctaLabel", sort_order as "sortOrder", starts_on::text as "startsOn", ends_on::text as "endsOn"
     from banners where active order by sort_order, created_at desc`;
   const [social] = await sql<{ value: { instagram: string | null; google_review: string | null; whatsapp: string | null; email: string | null } }[]>`select value from settings where key = 'social_links'`;
   const groups = [...new Set(items.map((i) => i.category))];

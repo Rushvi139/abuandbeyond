@@ -1,5 +1,6 @@
 import "server-only";
 import { db } from "@/lib/db";
+import { dishPhoto } from "@/lib/menu/dish-photos";
 
 /**
  * Costing follows the same rule as the menu screen: ingredients at their last
@@ -27,10 +28,10 @@ export type RecipeCard = {
 };
 
 export async function recipeCards(): Promise<RecipeCard[]> {
-  return db()<RecipeCard[]>`
+  const rows = await db()<(RecipeCard & { slug: string })[]>`
     select m.id, m.name, c.name as category, m.is_veg as "isVeg",
-      m.price_paise as "pricePaise", m.packaging_cost_paise as "packagingPaise", m.image_path as "imagePath",
-      (select p.file_path from recipe_photos p where p.menu_item_id = m.id order by p.sort_order, p.created_at limit 1) as photo,
+      m.price_paise as "pricePaise", m.packaging_cost_paise as "packagingPaise", m.image_path as "imagePath", m.slug,
+      (select p.file_path from recipe_photos p where p.menu_item_id = m.id order by (p.kind = 'final') desc, p.sort_order, p.created_at limit 1) as photo,
       (select count(*)::int from recipe_lines r where r.menu_item_id = m.id) as lines,
       (select sum(r.quantity * i.rate_paise_per_unit)::float from recipe_lines r join ingredients i on i.id = r.ingredient_id where r.menu_item_id = m.id) as "ingredientPaise",
       coalesce((select length(coalesce(rc.method, '')) > 0 from recipes rc where rc.menu_item_id = m.id), false) as "hasMethod",
@@ -41,6 +42,8 @@ export async function recipeCards(): Promise<RecipeCard[]> {
     from menu_items m join categories c on c.id = m.category_id
     where m.active
     order by c.sort_order, m.sort_order`;
+  // A card with no photo of its own shows the menu's studio photo.
+  return rows.map(({ slug, ...r }) => ({ ...r, imagePath: dishPhoto(slug, r.imagePath) }));
 }
 
 export type RecipeLine = {
@@ -73,8 +76,8 @@ export type RecipeDetail = {
 
 export async function recipeDetail(id: string) {
   const sql = db();
-  const [dish] = await sql<RecipeDetail[]>`
-    select m.id, m.name, c.name as category, m.is_veg as "isVeg", m.description,
+  const [found] = await sql<(RecipeDetail & { slug: string })[]>`
+    select m.id, m.slug, m.name, c.name as category, m.is_veg as "isVeg", m.description,
       m.price_paise as "pricePaise", m.packaging_cost_paise as "packagingPaise", m.image_path as "imagePath",
       r.method, r.chef_notes as "chefNotes", r.prep_minutes as "prepMinutes", r.yield_note as "yieldNote",
       r.updated_at as "updatedAt", u.full_name as "updatedBy",
@@ -87,6 +90,7 @@ export async function recipeDetail(id: string) {
     left join recipes r on r.menu_item_id = m.id
     left join staff_users u on u.id = r.updated_by
     where m.id = ${id}`;
+  const dish: RecipeDetail | undefined = found ? (({ slug, ...d }) => ({ ...d, imagePath: dishPhoto(slug, d.imagePath) }))(found) : undefined;
   if (!dish) return null;
 
   const lines = await sql<RecipeLine[]>`
@@ -99,8 +103,8 @@ export async function recipeDetail(id: string) {
     where r.menu_item_id = ${id}
     order by i.procurement_group nulls last, i.name`;
 
-  const photos = await sql<{ id: string; filePath: string; caption: string | null }[]>`
-    select id, file_path as "filePath", caption from recipe_photos where menu_item_id = ${id} order by sort_order, created_at`;
+  const photos = await sql<{ id: string; filePath: string; caption: string | null; kind: "prep" | "final" }[]>`
+    select id, file_path as "filePath", caption, kind from recipe_photos where menu_item_id = ${id} order by sort_order, created_at`;
 
   const pantry = await sql<{ id: string; name: string; unit: string }[]>`
     select id, name, unit from ingredients where active order by name`;

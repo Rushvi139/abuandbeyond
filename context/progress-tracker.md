@@ -561,6 +561,14 @@ using `public/brand/bear-eating.webp|webm`. Code animation, not AI video
 
 ## Session Notes
 
+### 24 Nov 2026 (night) — live fixes
+- Migration 0035 failed on live: settings saved from Admin were double-encoded JSON strings (JSON.stringify into a jsonb param). 0035/0038 unquote them; writers use sql.json. Kitchen and /admin were down until migrations ran.
+- Banner Edit crashed (date column came as a Date, form called .slice): starts_on/ends_on now ::text.
+- Banners auto-slide again after a touch (6 s) and still advance with reduced motion (jump, no slide).
+- Recipe photos: kind 'prep' | 'final' (0039), two shelves, several files per upload; recipe cards fall back to the menu studio photo.
+- scripts/menu-2026-11-22.sh: locked menu without rebuild; accepts yes/no in any case.
+
+
 ### 24 Nov 2026 — real dish photos (Canva)
 - 60 studio photos made in Canva from the Master Brand Guide shot list (green backdrop, hard light, props, no text). Links: project doc "Dish Photos — Canva links (24 Nov 2026)"; Canva folder "Abu & Beyond — Dish Photos (Nov 2026)".
 - Bundled at 400px in public/brand/photos/dishes/<slug>.webp. src/lib/menu/dish-photos.ts: photo uploaded in /admin wins, else the bundled photo, else the sticker. Nothing in the DB is touched, so a deploy never overrides the owner.

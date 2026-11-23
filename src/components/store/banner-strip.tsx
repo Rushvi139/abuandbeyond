@@ -28,18 +28,24 @@ const EVERY_MS = 4500;
 /**
  * Offers across the top of the menu. One card at a time, sliding on by itself
  * every few seconds; a swipe or a touch takes over and the slides stop until
- * the guest leaves it alone. Still for anyone who asks for reduced motion.
+ * the guest leaves it alone for a few seconds. With reduced motion it jumps
+ * instead of sliding.
  */
+const RESUME_MS = 6000;
+
 export function BannerStrip({ banners }: { banners: Banner[] }) {
   const track = useRef<HTMLDivElement>(null);
   const [index, setIndex] = useState(0);
   const held = useRef(false);
+  const release = useRef<number | undefined>(undefined);
 
   const go = useCallback((i: number) => {
     const el = track.current;
     if (!el) return;
     const card = el.children[i] as HTMLElement | undefined;
-    if (card) el.scrollTo({ left: card.offsetLeft - el.offsetLeft, behavior: "smooth" });
+    // Reduced motion still advances, as a jump instead of a slide.
+    const still = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    if (card) el.scrollTo({ left: card.offsetLeft - el.offsetLeft, behavior: still ? "auto" : "smooth" });
   }, []);
 
   // Which card is showing, from where the track has scrolled to.
@@ -56,7 +62,6 @@ export function BannerStrip({ banners }: { banners: Banner[] }) {
 
   useEffect(() => {
     if (banners.length < 2) return;
-    if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return;
     const t = window.setInterval(() => {
       if (held.current || document.hidden) return;
       setIndex((i) => {
@@ -69,8 +74,14 @@ export function BannerStrip({ banners }: { banners: Banner[] }) {
   }, [banners.length, go]);
 
   if (!banners.length) return null;
+  // A touch pauses the slides; they pick up again once the guest lets go
+  // and leaves the cards alone for a few seconds.
   const hold = () => {
     held.current = true;
+    window.clearTimeout(release.current);
+    release.current = window.setTimeout(() => {
+      held.current = false;
+    }, RESUME_MS);
   };
 
   return (

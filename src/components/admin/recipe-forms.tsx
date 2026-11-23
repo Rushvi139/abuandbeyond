@@ -65,17 +65,30 @@ export function AddIngredient({ menuItemId, pantry, used }: { menuItemId: string
   );
 }
 
-export function RecipePhotos({ menuItemId, photos }: { menuItemId: string; photos: { id: string; filePath: string; caption: string | null }[] }) {
+type RecipePhoto = { id: string; filePath: string; caption: string | null; kind: "prep" | "final" };
+
+/** Two shelves: how it is prepped, and how it must look when it leaves. */
+export function RecipePhotos({ menuItemId, photos }: { menuItemId: string; photos: RecipePhoto[] }) {
+  return (
+    <div className="flex flex-col gap-3">
+      <PhotoShelf menuItemId={menuItemId} kind="prep" title="Prep" hint="Mise en place, the bases, each stage: what the counter should look like before it goes on the fire." photos={photos.filter((p) => p.kind === "prep")} />
+      <PhotoShelf menuItemId={menuItemId} kind="final" title="Finished dish" hint="How it must look when it goes in the box: portion, garnish, packing." photos={photos.filter((p) => p.kind !== "prep")} />
+    </div>
+  );
+}
+
+function PhotoShelf({ menuItemId, kind, title, hint, photos }: { menuItemId: string; kind: "prep" | "final"; title: string; hint: string; photos: RecipePhoto[] }) {
   return (
     <div className="rounded-2xl bg-surface p-3">
+      <h3 className="mb-2 text-xs font-bold uppercase tracking-wide text-muted">{title}</h3>
       {photos.length > 0 && (
         <div className="mb-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
-          {photos.map((p) => (
+          {photos.map((p, i) => (
             <figure key={p.id} className="overflow-hidden rounded-xl bg-paper">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={p.filePath} alt={p.caption ?? ""} className="h-28 w-full object-cover" />
+              <a href={p.filePath} target="_blank" rel="noreferrer"><img src={p.filePath} alt={p.caption ?? ""} className="h-28 w-full object-cover" /></a>
               <figcaption className="flex items-center justify-between gap-1 px-2 py-1.5">
-                <span className="truncate text-xs text-muted">{p.caption ?? ""}</span>
+                <span className="truncate text-xs text-muted">{kind === "prep" ? `${i + 1}. ` : ""}{p.caption ?? ""}</span>
                 <form action={removeRecipePhoto.bind(null, p.id, menuItemId)}>
                   <button className="text-xs font-semibold text-error">Remove</button>
                 </form>
@@ -86,11 +99,12 @@ export function RecipePhotos({ menuItemId, photos }: { menuItemId: string; photo
       )}
       <form action={addRecipePhoto} className="flex flex-wrap items-center gap-2">
         <input type="hidden" name="menuItemId" value={menuItemId} />
-        <input name="photo" type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" required className="text-xs" />
+        <input type="hidden" name="kind" value={kind} />
+        <input name="photo" type="file" multiple accept="image/jpeg,image/png,image/webp,image/heic,image/heif" required className="text-xs" />
         <input name="caption" maxLength={120} placeholder="What this shows (optional)" className={`${inp} min-w-40 flex-1`} />
-        <button className="h-10 rounded-xl bg-ink px-4 text-sm font-semibold text-reversed">Add photo</button>
+        <button className="h-10 rounded-xl bg-ink px-4 text-sm font-semibold text-reversed">Add {kind === "prep" ? "prep" : "dish"} photo</button>
       </form>
-      {photos.length === 0 && <p className="mt-2 text-xs text-muted">Plating shots, the mise en place, what it should look like at each stage.</p>}
+      {photos.length === 0 && <p className="mt-2 text-xs text-muted">{hint}</p>}
     </div>
   );
 }
