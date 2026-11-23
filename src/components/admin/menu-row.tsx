@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { setItemAvailability, setItemPrice } from "@/lib/crm/actions";
-import { restoreMenuItem, retireMenuItem } from "@/lib/admin/menu-actions";
+import { removeMenuItemForever, restoreMenuItem, retireMenuItem } from "@/lib/admin/menu-actions";
 import { formatINR } from "@/lib/pricing";
 import { VegMark } from "@/components/store/veg-mark";
 
@@ -75,6 +75,9 @@ export function RetiredRow({ item }: { item: Item }) {
   const unpriced = item.pricePaise < 100;
   const [price, setPrice] = useState("");
   const [err, setErr] = useState<string | null>(null);
+  const [confirming, setConfirming] = useState(false);
+  const [gone, setGone] = useState(false);
+  if (gone) return null;
   return (
     <div className={`flex flex-wrap items-center gap-3 px-4 py-2.5 ${pending ? "opacity-60" : ""}`}>
       <VegMark veg={item.isVeg} />
@@ -99,6 +102,28 @@ export function RetiredRow({ item }: { item: Item }) {
       >
         {pending ? "…" : unpriced ? "Price & put on menu" : "Put back"}
       </button>
+      {confirming ? (
+        <span className="flex items-center gap-1">
+          <button
+            type="button"
+            disabled={pending}
+            onClick={() => start(async () => {
+              setErr(null);
+              const r = await removeMenuItemForever(item.id);
+              if (r.error) setErr(r.error);
+              else setGone(true);
+            })}
+            className="h-8 flex-none rounded-lg bg-error px-3 text-xs font-semibold text-reversed"
+          >
+            Yes, remove forever
+          </button>
+          <button type="button" onClick={() => setConfirming(false)} className="h-8 px-2 text-xs text-muted">Keep</button>
+        </span>
+      ) : (
+        <button type="button" onClick={() => setConfirming(true)} className="h-8 flex-none rounded-lg border border-line px-3 text-xs font-semibold text-error">
+          Remove forever
+        </button>
+      )}
       {err && <p role="alert" className="w-full text-xs font-semibold text-error">{err}</p>}
     </div>
   );

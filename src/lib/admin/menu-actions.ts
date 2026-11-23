@@ -138,6 +138,33 @@ export async function restoreMenuItem(id: string, priceInr?: number): Promise<{ 
   return {};
 }
 
+/**
+ * Owner only. A dish nobody ever ordered is deleted with its recipe, photos
+ * and choices. One that was ordered is archived: hidden from Admin for good,
+ * while past orders and reports keep their line.
+ */
+export async function removeMenuItemForever(id: string): Promise<{ error?: string; outcome?: "deleted" | "archived" }> {
+  await assertRole(["owner"]);
+  const itemId = z.string().uuid().parse(id);
+  const sql = db();
+  const [row] = await sql<{ active: boolean }[]>`select active from menu_items where id = ${itemId}`;
+  if (!row) return { error: "Dish not found." };
+  if (row.active) return { error: "Take it off the menu first." };
+  let outcome: "deleted" | "archived" = "deleted";
+  try {
+    await sql.begin(async (tx) => {
+      await tx`delete from menu_items where id = ${itemId}`;
+    });
+  } catch (e) {
+    if ((e as { code?: string }).code !== "23503") throw e;
+    await sql`update menu_items set archived_at = now(), active = false, available = false where id = ${itemId}`;
+    outcome = "archived";
+  }
+  revalidatePath("/admin/menu");
+  revalidatePath("/admin/recipes");
+  return { outcome };
+}
+
 const AddonSchema = z.object({
   id: z.string().uuid().optional().or(z.literal("")),
   name: z.string().trim().min(2).max(60),

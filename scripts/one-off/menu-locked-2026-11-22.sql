@@ -150,7 +150,8 @@ from matched l where l.alias is not null and x.id = l.live_id and x.slug = l.ali
 
 -- matched but hidden, with a real price: back on
 update menu_items x set active = true, available = true, updated_at = now()
-from matched l where x.id = l.live_id and not x.active and x.price_paise >= 100;
+from matched l where x.id = l.live_id and not x.active and x.price_paise >= 100
+  and (to_jsonb(x) ->> 'archived_at') is null;  -- removed forever in Admin: stays gone
 
 do $$ declare clash text; begin
   select string_agg(l.slug, ', ') into clash from matched l join menu_items x on x.slug = l.slug where l.live_id is null;

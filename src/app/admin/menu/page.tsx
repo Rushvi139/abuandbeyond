@@ -25,7 +25,7 @@ export default async function MenuAdmin() {
   const retired = await sql<Item[]>`
     select m.id, m.name, m.is_veg as "isVeg", m.price_paise as "pricePaise", m.available, m.price_status as "priceStatus",
       null::int as "foodCostPaise"
-    from menu_items m where not m.active order by (m.price_paise < 100) desc, m.name`;
+    from menu_items m where not m.active and m.archived_at is null order by (m.price_paise < 100) desc, m.name`;
   const addons = await sql<Addon[]>`
     select a.id, a.name, a.price_paise as "pricePaise", a.is_veg as "isVeg",
       (select count(*)::int from menu_item_addons ma where ma.addon_id = a.id) as "usedBy"
@@ -85,7 +85,7 @@ export default async function MenuAdmin() {
         <section>
           <h2 className="mb-1 font-display text-[18px] uppercase">Off the menu</h2>
           <p className="mb-2 text-sm text-muted">
-            {retired.length} dish{retired.length === 1 ? "" : "es"} taken off the live menu. Nothing has been deleted — each one
+            {retired.length} dish{retired.length === 1 ? "" : "es"} taken off the live menu. Nothing has been deleted unless you remove it forever — each one
             keeps its recipe, its costing and every past order, and goes straight back when you put it back.
           </p>
           <div className="overflow-hidden rounded-2xl bg-surface">
