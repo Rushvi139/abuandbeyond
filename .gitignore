@@ -44,3 +44,6 @@ next-env.d.ts
 backups/
 .claude/skills/
 release-logs/
+
+# Local uploads (bills, photos) from running the app; real ones live on the server volume
+.uploads/
