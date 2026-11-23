@@ -85,15 +85,17 @@ export async function addSpend(formData: FormData): Promise<{ error?: string; sa
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Check the form." };
   const d = parsed.data;
 
-  const file = formData.get("attachment");
-  let filePath: string | null = null;
+  // Any number of photos: the first is the spend's own file, the rest go to spend_photos.
+  const files = formData.getAll("attachment").filter((f): f is File => f instanceof File && f.size > 0).slice(0, 10);
+  const saved: string[] = [];
   try {
-    if (file instanceof File && file.size > 0) filePath = await saveUpload(file, d.pay === "credit" ? "bills" : "expenses", { maxBytes: 15 * 1024 * 1024 });
+    for (const f of files) saved.push(await saveUpload(f, d.pay === "credit" ? "bills" : "expenses", { maxBytes: 15 * 1024 * 1024 }));
   } catch (e) {
     if (e instanceof UploadError) return { error: e.message };
     throw e;
   }
 
+  const filePath = saved[0] ?? null;
   const sql = db();
   const [cat] = await sql<{ id: string; name: string }[]>`select id, name from expense_categories where id = ${d.category}`;
   if (!cat) return { error: "Pick a category." };
@@ -150,6 +152,9 @@ export async function addSpend(formData: FormData): Promise<{ error?: string; sa
         returning id`;
       expenseId = e.id;
     }
+
+    for (const extra of saved.slice(1))
+      await tx`insert into spend_photos (expense_id, vendor_bill_id, file_path, created_by) values (${expenseId}, ${billId}, ${extra}, ${staff.id})`;
 
     for (const l of lines) {
       await tx`insert into spend_lines (expense_id, vendor_bill_id, ingredient_id, item_name, quantity, amount_paise)

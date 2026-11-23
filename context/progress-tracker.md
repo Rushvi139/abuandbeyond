@@ -561,6 +561,13 @@ using `public/brand/bear-eating.webp|webm`. Code animation, not AI video
 
 ## Session Notes
 
+- 23 Nov: Photos: Add spend takes several photos (first → file_path, rest →
+  spend_photos, migration 0037); every expense row in the register shows
+  numbered photo chips and "+ photo" to attach more later. New Finance tab
+  **Daily book** (/admin/accounts/daybook): photos of the handwritten book
+  page per date (daybook_pages, files in uploads/daybook, staff-only);
+  owner can remove a wrong one.
+
 - 22 Nov: Order cards (board, kitchen, orders table) show the guest's number
   and the 2nd number as big selectable text with Copy / WhatsApp / Call
   (desktop has no phone to call with).

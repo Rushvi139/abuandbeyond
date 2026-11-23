@@ -36,6 +36,7 @@ export default async function ExpenseRegisterPage({ searchParams }: { searchPara
       select e.id, e.spent_on::text as "spentOn", e.description, e.category_id as "categoryId", c.name as category,
         v.name as vendor, e.vendor_id as "vendorId", e.amount_paise::bigint as amount, e.mode, e.reference, e.note,
         e.file_path as "filePath", u.full_name as "updatedBy",
+        array_remove(array[e.file_path], null) || coalesce((select array_agg(sp.file_path order by sp.created_at) from spend_photos sp where sp.expense_id = e.id), '{}') as photos,
         e.ingredient_id as "ingredientId", i.name as "ingredientName", i.unit::text as "ingredientUnit",
         e.quantity::float as quantity
       from expenses e

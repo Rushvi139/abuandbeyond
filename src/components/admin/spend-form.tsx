@@ -106,8 +106,7 @@ export function SpendForm({
     };
     const fd = new FormData();
     fd.set("payload", JSON.stringify(payload));
-    const f = fileRef.current?.files?.[0];
-    if (f) fd.set("attachment", f);
+    for (const f of Array.from(fileRef.current?.files ?? [])) fd.append("attachment", f);
     start(async () => {
       const r = await addSpend(fd).catch(() => ({ error: "Didn't save. Check your connection and try again." }));
       if ("error" in r && r.error) return setErr(r.error);
@@ -223,8 +222,8 @@ export function SpendForm({
         )}
         <input value={note} onChange={(e) => setNote(e.target.value)} placeholder="Note (optional)" className={`${input} mt-2`} />
         <label className="mt-2 flex items-center gap-2 text-[13px] text-muted">
-          {pay === "credit" ? "Photo of the bill" : "Photo of the slip"}
-          <input ref={fileRef} type="file" accept="image/*,application/pdf" className="min-w-0 flex-1 text-xs" />
+          {pay === "credit" ? "Photos of the bill" : "Photos of the slip"}
+          <input ref={fileRef} type="file" multiple accept="image/*,application/pdf" className="min-w-0 flex-1 text-xs" />
         </label>
       </section>
 

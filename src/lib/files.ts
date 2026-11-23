@@ -43,10 +43,10 @@ function kindOf(file: File): string {
 /** Saves an uploaded file under UPLOAD_DIR/<folder>/ and returns its relative path (for /files/...). */
 export async function saveUpload(
   file: File,
-  folder: "menu" | "bills" | "expenses" | "wall",
+  folder: "menu" | "bills" | "expenses" | "wall" | "daybook",
   opts: { maxBytes?: number; kinds?: Set<string> } = {},
 ) {
-  const docs = folder === "bills" || folder === "expenses";
+  const docs = folder === "bills" || folder === "expenses" || folder === "daybook";
   const kinds = opts.kinds ?? (docs ? DOC : IMAGE);
   const kind = kindOf(file);
 

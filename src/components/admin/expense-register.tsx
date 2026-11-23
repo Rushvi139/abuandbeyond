@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Cell, DeleteCell } from "@/components/admin/editable-cell";
 import { deleteExpense, updateExpenseCell } from "@/lib/admin/register-actions";
 import { formatINR } from "@/lib/pricing";
+import { PhotoCell } from "@/components/admin/photo-cell";
 
 export type ExpenseRow = {
   id: string;
@@ -19,6 +20,8 @@ export type ExpenseRow = {
   reference: string | null;
   note: string | null;
   filePath: string | null;
+  /** Every photo on the spend, the first one included. */
+  photos: string[];
   updatedBy: string | null;
   // Stock link (may be null for non-ingredient expenses)
   ingredientId: string | null;
@@ -27,7 +30,7 @@ export type ExpenseRow = {
   quantity: number | null;
 };
 
-const COLS = "md:grid-cols-[6rem_minmax(9rem,1fr)_7.5rem_7.5rem_5rem_6rem_6.5rem_4.5rem]";
+const COLS = "md:grid-cols-[6rem_minmax(9rem,1fr)_7.5rem_7.5rem_5rem_6rem_6.5rem_10rem]";
 
 const day = (s: string) => new Date(`${s}T00:00:00Z`).toLocaleDateString("en-IN", { day: "numeric", month: "short", timeZone: "UTC" });
 
@@ -91,7 +94,7 @@ export function ExpenseRegister({
         <span>Mode</span>
         <span>Ref</span>
         <span className="text-right">Amount</span>
-        <span className="text-right">Slip</span>
+        <span className="text-right">Photos</span>
       </div>
 
       {weeks.map(([start, rs]) => {
@@ -214,13 +217,7 @@ function Row({ row: r, categories, canEdit, canDelete }: { row: ExpenseRow; cate
                   </Field>
 
                   <div className="flex items-center justify-end gap-2 md:justify-end">
-                    {r.filePath ? (
-                      <a href={`/files/${r.filePath}`} target="_blank" rel="noreferrer" className="text-[11px] font-semibold text-hill underline-offset-2 hover:underline">
-                        slip
-                      </a>
-                    ) : (
-                      <span className="text-[11px] text-muted">—</span>
-                    )}
+                    <PhotoCell expenseId={r.id} photos={r.photos} canEdit={canEdit} />
                     {canDelete && <DeleteCell what={r.description} onDelete={() => deleteExpense(r.id)} />}
                   </div>
 

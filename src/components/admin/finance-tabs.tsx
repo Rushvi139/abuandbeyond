@@ -14,6 +14,7 @@ const TABS: { href: string; label: string; exact?: boolean }[] = [
   { href: "/admin/accounts/cash", label: "Cash book" },
   { href: "/admin/accounts/money", label: "Bank & cash" },
   { href: "/admin/accounts/expenses", label: "Expenses" },
+  { href: "/admin/accounts/daybook", label: "Daily book" },
   { href: "/admin/accounts/vendors", label: "Vendor bills", exact: true },
   { href: "/admin/accounts/vendor-list", label: "Vendors" },
 ];
