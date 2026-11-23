@@ -57,7 +57,7 @@ export async function cancelOrder(orderId: string, reason: string) {
       values (${id}, ${token}, ${pay.amount_paise}, 'PENDING', ${reason.slice(0, 200)}, ${JSON.stringify(r)}, ${staff.id})
       on conflict (refund_id) do nothing`;
     await sql`update payments set status = 'refunded', refunded_paise = ${pay.amount_paise},
-      raw = coalesce(raw, '{}'::jsonb) || ${JSON.stringify({ refund: r })}::jsonb where gateway_payment_id = ${pay.gateway_payment_id}`;
+      raw = coalesce(raw, '{}'::jsonb) || ${db().json({ refund: r } as never)} where gateway_payment_id = ${pay.gateway_payment_id}`;
   }
   refreshAll();
 }

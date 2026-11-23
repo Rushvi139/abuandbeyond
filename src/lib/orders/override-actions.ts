@@ -23,7 +23,7 @@ export async function setKitchenOverride(on: boolean): Promise<void> {
   const value = on ? { until } : false;
   await db()`
     insert into settings (key, value)
-    values ('kitchen_override', ${JSON.stringify(value)}::jsonb)
+    values ('kitchen_override', ${db().json(value as never)})
     on conflict (key) do update set value = excluded.value
   `;
   revalidatePath("/kitchen");
